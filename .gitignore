@@ -1,0 +1,19 @@
+# ---- Godot 4 导入缓存 / 编辑器状态（换机器就作废，且体积大）----
+.godot/
+.mono/
+
+# ---- .NET 构建产物 ----
+bin/
+obj/
+*.user
+*.suo
+
+# ---- IDE ----
+.idea/
+.vscode/
+
+# ---- 本机覆盖 ----
+# local.props 是本机路径覆盖（保留 local.props.template 进库即可）。
+# 如果你也想忽略它，把下面这行取消注释，并执行：
+#   git rm --cached local.props
+# local.props

@@ -12,15 +12,17 @@ namespace STS2_Aeonglass.Core.Systems.Cards;
 /// <item><description><b>无死锁兜底</b>：若这一批要洗的牌**全是**迟滞牌，则这一次忽略迟滞（否则抽牌堆永远是空的）。</description></item>
 /// </list>
 /// <para>
-/// <b>怎么给一张牌打上迟滞</b>：卡表落地时在卡的创建路径上调 <see cref="Mark" />（或按"卡定义 → 关键词槽位"映射，
-/// 等卡表定稿再定）；在那之前可以先用控制面板「卡组」页的测试按钮打标验证洗牌行为。
+/// <b>怎么给一张牌打上迟滞</b>（两条路都生效）：
+/// ① **正规路**：卡定义实现标记接口 <see cref="IHysteresisCard" />（词条显示另按"声明 CardKeyword.None"那套做，
+/// 见接口注释里说明的槽位限制）；
+/// ② **测试路**：<see cref="Mark" />，控制面板「卡组」页有对应按钮。
 /// </para>
 /// </remarks>
 internal static class Hysteresis
 {
     private static readonly HashSet<CardModel> Marked = [];
 
-    /// <summary>给一张牌打上迟滞（幂等）。</summary>
+    /// <summary>给一张牌打上迟滞（幂等）。**测试用**：正规做法是在卡定义里声明关键词。</summary>
     public static void Mark(CardModel card)
     {
         if (Marked.Add(card))
@@ -32,8 +34,11 @@ internal static class Hysteresis
     /// <summary>去掉迟滞标记。</summary>
     public static void Unmark(CardModel card) => Marked.Remove(card);
 
-    /// <summary>这张牌带不带迟滞。</summary>
-    public static bool IsStuck(CardModel card) => Marked.Contains(card);
+    /// <summary>
+    /// 这张牌带不带迟滞。
+    /// </summary>
+    /// <remarks>判定 = 卡定义实现了 <see cref="IHysteresisCard" />（卡表的正规路）**或**运行时打过标（测试路）。</remarks>
+    public static bool IsStuck(CardModel card) => card is IHysteresisCard || Marked.Contains(card);
 
     /// <summary>现在有几张带迟滞。</summary>
     public static int Count => Marked.Count;

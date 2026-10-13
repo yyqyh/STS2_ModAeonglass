@@ -1,0 +1,27 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="STS2_Aeonglass"
+run/main_scene="res://STS2_Aeonglass/scenes/screens/char_select/char_select_bg_aeonglass.tscn"
+config/features=PackedStringArray("4.5", "C#", "Mobile")
+
+[dotnet]
+
+project/assembly_name="STS2_Aeonglass"
+
+[editor]
+
+export/convert_text_resources_to_binary=false
+
+[rendering]
+
+renderer/rendering_method="mobile"

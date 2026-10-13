@@ -1,0 +1,120 @@
+<Project Sdk="Godot.NET.Sdk/4.5.1">
+    <Import Project=".\local.props" Condition="Exists('.\local.props')" />
+    <Import Project=".\Sts2PathDiscovery.props" Condition="Exists('.\Sts2PathDiscovery.props')" />
+    <Target Name="EnsureLocalProps" BeforeTargets="PrepareForBuild" Condition="!Exists('.\local.props')">
+        <Error Text="缺少 '.\local.props'。把 '.\local.props.template' 复制成 '.\local.props'，再按本机改 Sts2Dir / GodotExe。" />
+    </Target>
+
+    <PropertyGroup>
+        <RootNamespace>STS2_Aeonglass</RootNamespace>
+        <AssemblyName>STS2_Aeonglass</AssemblyName>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>true</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+        <NoWarn>CS0436</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <GodotExportPreset>BasicExport</GodotExportPreset>
+        <ModOutputDir>$(Sts2Dir)\mods\$(MSBuildProjectName)\</ModOutputDir>
+        <ModOutputDir Condition="'$(IsOSX)' == 'true'">$(Sts2Dir)\MacOS\mods\$(MSBuildProjectName)\</ModOutputDir>
+        <ModPckPath>$(ModOutputDir)$(MSBuildProjectName).pck</ModPckPath>
+
+        <!-- 默认导出 PCK：本地化 / 图片 / 场景（含 spine 骨架）都靠它才生效。
+             只改 C# 想快点时：dotnet build -p:RunPckExport=false
+             只验编译（不碰 Godot）：dotnet build -p:STS2_SKIP_PCK_EXPORT=1 -->
+        <RunPckExport Condition="'$(RunPckExport)' == ''">true</RunPckExport>
+    </PropertyGroup>
+
+    <!-- 引用设置：全部 <Private>false</Private> —— 运行时由游戏本体带，不复制。 -->
+    <ItemGroup>
+        <Reference Include="0Harmony">
+            <HintPath>$(Sts2DataDir)\0Harmony.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="GodotSharp">
+            <HintPath>$(Sts2DataDir)\GodotSharp.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="sts2">
+            <HintPath>$(Sts2DataDir)\sts2.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+
+        <!-- 角色 / 卡牌 / 卡池 / 本地化 / 自动注册 / 设置框架全部走 RitsuLib。
+             按约定不使用 BaseLib。 -->
+        <PackageReference Include="STS2.RitsuLib" Version="0.5.18" />
+    </ItemGroup>
+
+    <!-- 版本号一致性：清单 json 是游戏真正读的那份，Const.cs 里那份只用于日志/显示。 -->
+    <Target Name="CheckVersionConsistency" BeforeTargets="CoreCompile" Condition="'$(SkipVersionCheck)' != '1'">
+        <PropertyGroup>
+            <_ManifestText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\$(MSBuildProjectName).json'))</_ManifestText>
+            <_ManifestVersion>$([System.Text.RegularExpressions.Regex]::Match($(_ManifestText), '"version"\s*:\s*"([^"]+)"').Groups[1].Value)</_ManifestVersion>
+            <_ConstText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\Const.cs'))</_ConstText>
+            <_ConstVersion>$([System.Text.RegularExpressions.Regex]::Match($(_ConstText), 'Version\s*=\s*"([^"]+)"').Groups[1].Value)</_ConstVersion>
+        </PropertyGroup>
+        <Error Condition="'$(_ManifestVersion)' != '$(_ConstVersion)'"
+               Text="版本号不一致：$(MSBuildProjectName).json 是 $(_ManifestVersion)，Const.cs 是 $(_ConstVersion)。两处要改成同一个（清单才是游戏读的那份）。" />
+        <Message Importance="high" Text="版本号一致：$(_ManifestVersion)" />
+    </Target>
+
+    <!-- 发布配置：Release 去符号 + 源码路径映射。 -->
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <Optimize>true</Optimize>
+        <DebugType>none</DebugType>
+        <PathMap>$(AppOutputBase)=.\</PathMap>
+    </PropertyGroup>
+
+    <!-- 调试配置：Debug 关优化 + 可移植符号（断点 / 热重载需要）。 -->
+    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+        <Optimize>false</Optimize>
+        <DebugType>portable</DebugType>
+    </PropertyGroup>
+
+    <!-- 拷贝到游戏 mods 目录便于测试。 -->
+    <Target Name="Copy Mod" AfterTargets="PostBuildEvent">
+        <Message Text="Copying mod to Slay the Spire 2 mods folder..." Importance="high" />
+        <MakeDir Directories="$(ModOutputDir)" />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModOutputDir)" />
+        <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ModOutputDir)" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+        <Copy SourceFiles="$(MSBuildProjectDirectory)\$(MSBuildProjectName).json" DestinationFolder="$(ModOutputDir)" />
+    </Target>
+
+    <Target Name="Export Mod PCK" AfterTargets="Build" Condition="'$(RunPckExport)' == 'true' and '$(STS2_SKIP_PCK_EXPORT)' != '1' and Exists('$(GodotExe)')">
+        <Message Text="Exporting mod PCK with Godot..." Importance="high" />
+        <MakeDir Directories="$(ModOutputDir)" />
+        <Exec Command="&quot;$(GodotExe)&quot; --headless --path &quot;$(MSBuildProjectDirectory)&quot; --export-pack &quot;$(GodotExportPreset)&quot; &quot;$(ModPckPath)&quot;" EnvironmentVariables="STS2_SKIP_PCK_EXPORT=1" />
+    </Target>
+
+    <Target Name="Warn Missing Godot" AfterTargets="Build" Condition="'$(RunPckExport)' == 'true' and '$(STS2_SKIP_PCK_EXPORT)' != '1' and !Exists('$(GodotExe)')">
+        <Warning Text="没有找到 Godot：$(GodotExe)，已跳过 PCK 导出。" />
+    </Target>
+
+    <!-- ⚠️ 导出完必须把 Debug 版 DLL 放回去。
+
+         godot 的 export-pack 会**自己先跑一次 ExportRelease 构建**，而那次构建同样会命中上面的
+         "Copy Mod" 目标 ⇒ mods 目录里的 DLL 会被换成优化版，于是
+         "mods 里的 DLL 等于 .godot\mono\temp\bin\Debug\ 里那份" 这条核对规矩会被悄悄破坏
+         （2026-10-12 实测：导出后 mods 的 DLL 从 391680 字节变成 367104 字节）。
+         这里在导出之后**再拷一次**，让 dotnet build -p:RunPckExport=true 的结果永远可预期。 -->
+    <Target Name="ReCopyDebugDllAfterPckExport"
+            AfterTargets="Export Mod PCK"
+            Condition="'$(RunPckExport)' == 'true' and '$(STS2_SKIP_PCK_EXPORT)' != '1'">
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModOutputDir)" />
+        <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ModOutputDir)" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+        <Message Text="已把 Debug 版 DLL/PDB 覆盖回 mods（抵消 export-pack 触发的 ExportRelease 构建）。" Importance="high" />
+    </Target>
+
+    <ItemGroup>
+        <Compile Remove=".godot\**" />
+        <None Remove=".godot\**" />
+        <Content Remove=".godot\**" />
+        <EmbeddedResource Remove=".godot\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="$(MSBuildProjectName).json" />
+    </ItemGroup>
+</Project>

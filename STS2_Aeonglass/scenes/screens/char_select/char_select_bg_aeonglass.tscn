@@ -1,0 +1,120 @@
+[gd_scene load_steps=13 format=3 uid="uid://r2e41xra12dx"]
+
+[ext_resource type="Texture2D" uid="uid://iwcm8s5ce8wp" path="res://STS2_Aeonglass/images/ui/aeonglass_select_background.png" id="1_bg"]
+[ext_resource type="Script" uid="uid://cndorrxewmv6w" path="res://Core/Presentation/Visuals/AeonglassSelectBgVisuals.cs" id="2_script"]
+[ext_resource type="Shader" uid="uid://bppboxgg87im7" path="res://STS2_Aeonglass/shaders/scrolling_smoke.tres" id="3_fog_shader"]
+[ext_resource type="Texture2D" uid="uid://dvsxjn0o6mlvr" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_scrolling_smoke.png" id="4_smoke_tex"]
+[ext_resource type="SpineSkeletonDataResource" uid="uid://dkm1bksuxw32m" path="res://STS2_Aeonglass/scenes/combat/spine/aeonglass_data.tres" id="5_spine_data"]
+[ext_resource type="Texture2D" uid="uid://cd84dqg3cyu62" path="res://STS2_Aeonglass/images/vfx/tiny_spark_particle.png" id="6_dust_tex"]
+[ext_resource type="Texture2D" uid="uid://bmojhpbap1iut" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_liquid_mask.png" id="7_liquid_mask"]
+
+[sub_resource type="Gradient" id="Gradient_white"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_white"]
+gradient = SubResource("Gradient_white")
+width = 8
+height = 8
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fog"]
+shader = ExtResource("3_fog_shader")
+shader_parameter/Color = Color(0.283, 0.497, 0.458, 1)
+shader_parameter/ScrollSpeed = -0.08
+shader_parameter/timeOffset = 0.0
+shader_parameter/smokeTex = ExtResource("4_smoke_tex")
+shader_parameter/AlphaStep = Vector2(0.5, 0.78)
+shader_parameter/alphaGradient = SubResource("GradientTexture2D_white")
+shader_parameter/Ovarall_Alpha = 0.38
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_liquid"]
+shader = ExtResource("3_fog_shader")
+shader_parameter/Color = Color(0.40469998, 0.71, 0.6540283, 1)
+shader_parameter/ScrollSpeed = -0.2
+shader_parameter/timeOffset = 0.0
+shader_parameter/smokeTex = ExtResource("4_smoke_tex")
+shader_parameter/AlphaStep = Vector2(0.13, 0.16)
+shader_parameter/alphaGradient = ExtResource("7_liquid_mask")
+shader_parameter/Ovarall_Alpha = 1.0
+
+[sub_resource type="Gradient" id="Gradient_dust"]
+offsets = PackedFloat32Array(0, 0.2, 0.75, 1)
+colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
+
+[node name="AeonglassSelectBg" type="Control"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -960.0
+offset_top = -521.0
+offset_right = 1600.0
+offset_bottom = 679.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(1280, 600)
+mouse_filter = 2
+script = ExtResource("2_script")
+BodyAnimation = "idle_loop"
+RingAnimation = "_track1/rings_normal"
+Loop = true
+metadata/visible_range = "左上角 (149, 48) / 右下角 (1895, 1030)  ← 画布 1920x1080 时真正可见的矩形"
+metadata/spine_note = "别把 preview_animation / BodyAnimation 设成 wither：wither 姿态有附件引用了 atlas 里不存在的 region，spine 会回退画成占位贴图（aeonglass_2.png 那张粉白方格）"
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = -437.0
+offset_top = -107.0
+offset_right = 2197.0
+offset_bottom = 1129.0
+mouse_filter = 2
+texture = ExtResource("1_bg")
+expand_mode = 2
+
+[node name="Fog" type="TextureRect" parent="."]
+material = SubResource("ShaderMaterial_fog")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_smoke_tex")
+expand_mode = 1
+
+[node name="Character" type="SpineSprite" parent="."]
+skeleton_data_res = ExtResource("5_spine_data")
+preview_skin = "Default"
+preview_animation = "_track1/rings_normal"
+preview_frame = false
+preview_time = 0.0
+position = Vector2(1601, 997)
+scale = Vector2(-0.36, 0.36)
+
+[node name="LiquidSlot" type="SpineSlotNode" parent="Character"]
+normal_material = SubResource("ShaderMaterial_liquid")
+slot_name = "liquid_fx"
+show_behind_parent = true
+position = Vector2(45.93701, -1281.5171)
+rotation = -0.34906584
+scale = Vector2(0.99999994, 1)
+
+[node name="Dust" type="CPUParticles2D" parent="."]
+position = Vector2(1022, 539)
+amount = 22
+texture = ExtResource("6_dust_tex")
+lifetime = 15.0
+preprocess = 15.0
+local_coords = true
+emission_shape = 3
+emission_rect_extents = Vector2(800, 500)
+gravity = Vector2(6, -10)
+orbit_velocity_max = 0.03
+radial_accel_max = 1.0
+angle_max = 353.6
+scale_amount_min = 0.3
+scale_amount_max = 0.7
+color = Color(0.55, 0.9, 0.83, 0.15)
+color_ramp = SubResource("Gradient_dust")

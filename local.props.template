@@ -1,0 +1,11 @@
+<Project>
+    <!--
+      复制为 local.props 后按自己的机器改（local.props 不进版本库）。
+      Sts2Dir 省略时，由 Sts2PathDiscovery.props 按平台自动探测。
+    -->
+    <PropertyGroup>
+        <Sts2Dir>E:\game_part2\SteamLibrary\steamapps\common\Slay the Spire 2</Sts2Dir>
+        <GodotExe>E:\game_part2\mod_c\sts2\base\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64.exe</GodotExe>
+        <RitsuLibDir>E:\game_part2\mod_c\sts2\base\mods\STS2-RitsuLib\</RitsuLibDir>
+    </PropertyGroup>
+</Project>

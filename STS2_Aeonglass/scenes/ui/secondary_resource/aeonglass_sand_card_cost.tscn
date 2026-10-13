@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Core/Presentation/UI/SandCardCostUi.cs" id="1_script"]
+
+[node name="AeonglassSandCardCost" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -170.0
+offset_top = -180.0
+offset_right = -122.0
+offset_bottom = -132.0
+custom_minimum_size = Vector2(48, 48)
+mouse_filter = 2
+script = ExtResource("1_script")

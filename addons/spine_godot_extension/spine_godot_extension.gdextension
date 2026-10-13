@@ -1,0 +1,21 @@
+; Spine-Godot 4.2（社区兼容构建，Windows x86_64 / Godot 4.5 stable）
+;
+; 来源：remake/spine/gdextension-windows-4.5-stable（同目录另有 godot4.7 构建，本工程用的是 4.5 那版）。
+;
+; 用途：只给**做 mod 用的 Godot 编辑器**用来导入 .skel / .spine-json + .atlas，
+; 生成 SpineSkeletonDataResource / .ctex。游戏运行时不用它 —— 运行时 spine 是游戏本体
+; （MegaDot 4.5.1）自带的，而且 GDExtension 的原生库也没法从 PCK 里加载，
+; 所以这个目录已在 export_presets.cfg 的 exclude_filter 里排除，不会打进 PCK。
+;
+; 换 Godot 版本时：把 windows/ 下三个 dll 换成同版本构建的即可，本文件不用改。
+
+[configuration]
+
+entry_symbol = "spine_godot_library_init"
+compatibility_minimum = "4.1"
+
+[libraries]
+
+windows.editor.x86_64 = "windows/libspine_godot.windows.editor.x86_64.dll"
+windows.debug.x86_64 = "windows/libspine_godot.windows.template_debug.x86_64.dll"
+windows.release.x86_64 = "windows/libspine_godot.windows.template_release.x86_64.dll"

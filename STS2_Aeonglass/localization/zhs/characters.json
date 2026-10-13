@@ -1,0 +1,19 @@
+{
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.title": "永世沙漏",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.titleObject": "永世沙漏",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.description": "一座会行走的沙漏。\n它记得自己被倒过来几次，也记得每一次。",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.flavor": "占位文本，之后替换。",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.pronounSubject": "它",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.pronounObject": "它",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.pronounPossessive": "它的",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.possessiveAdjective": "它的",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.cardsModifierTitle": "永世沙漏卡牌",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.cardsModifierDescription": "永世沙漏的卡牌现在会出现在奖励和商店中。",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.eventDeathPrevention": "……时间还没走完。",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.aromaPrinciple": "[sine][teal]沙粒落下的声音，就是它心跳的声音。[/teal][/sine]",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.goldMonologue": "[sine]这些足够买下一段时间了吗……[/sine]",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.bestiaryQuote": "（占位）",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.unlockText": "用[pink]{Prerequisite}[/pink]进行一局游戏来解锁这个角色。",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.banter.alive.endTurnPing": "[jitter]……沙还在落。[/jitter]",
+  "STS2_AEONGLASS_CHARACTER_AEONGLASS.banter.dead.endTurnPing": "……"
+}

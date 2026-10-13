@@ -1,0 +1,89 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://Core/Presentation/UI/SandCounterArtUi.cs" id="1_art"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/sand_counter/aeonglass_sand_counter_layer_1_shell.png" id="2_shell"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/sand_counter/aeonglass_sand_counter_layer_4_stream.png" id="3_stream"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/sand_counter/aeonglass_sand_counter_layer_5_orb.png" id="4_orb"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/sand_counter/aeonglass_sand_counter_top_3.png" id="5_top"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/sand_counter/aeonglass_sand_counter_bottom_3.png" id="6_bottom"]
+
+[node name="AeonglassSandCounterArt" type="Control"]
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 96.0
+offset_bottom = 96.0
+mouse_filter = 2
+script = ExtResource("1_art")
+
+[node name="Layers" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 80.0
+offset_bottom = 80.0
+pivot_offset = Vector2(32, 32)
+scale = Vector2(1.5, 1.5)
+mouse_filter = 2
+
+[node name="Shell" type="TextureRect" parent="Layers"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 64.0
+mouse_filter = 2
+texture = ExtResource("2_shell")
+expand_mode = 1
+
+[node name="Top" type="TextureRect" parent="Layers"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 64.0
+mouse_filter = 2
+texture = ExtResource("5_top")
+expand_mode = 1
+
+[node name="Bottom" type="TextureRect" parent="Layers"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 64.0
+mouse_filter = 2
+texture = ExtResource("6_bottom")
+expand_mode = 1
+
+[node name="StreamClip" type="Control" parent="Layers"]
+clip_contents = true
+layout_mode = 0
+offset_left = 26.5
+offset_top = 25.75
+offset_right = 38.0
+offset_bottom = 37.5
+mouse_filter = 2
+
+[node name="StreamA" type="TextureRect" parent="Layers/StreamClip"]
+layout_mode = 0
+offset_left = -26.5
+offset_top = -25.75
+offset_right = 37.5
+offset_bottom = 38.25
+mouse_filter = 2
+texture = ExtResource("3_stream")
+expand_mode = 1
+
+[node name="StreamB" type="TextureRect" parent="Layers/StreamClip"]
+layout_mode = 0
+offset_left = -26.5
+offset_top = -35.5
+offset_right = 37.5
+offset_bottom = 28.5
+mouse_filter = 2
+texture = ExtResource("3_stream")
+expand_mode = 1
+
+[node name="Orb" type="TextureRect" parent="Layers"]
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 64.0
+mouse_filter = 2
+texture = ExtResource("4_orb")
+expand_mode = 1

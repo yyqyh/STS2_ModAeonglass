@@ -1,0 +1,18 @@
+{
+  "STS2_AEONGLASS_CARD_AEONGLASS_STRIKE.title": "打击",
+  "STS2_AEONGLASS_CARD_AEONGLASS_STRIKE.description": "造成{Damage:diff()}点伤害。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_DEFEND.title": "防御",
+  "STS2_AEONGLASS_CARD_AEONGLASS_DEFEND.description": "获得{Block:diff()}点[gold]格挡[/gold]。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_STASIS.title": "滞留",
+  "STS2_AEONGLASS_CARD_AEONGLASS_STASIS.description": "打出后离开牌组，进入[gold]搁浅[/gold]。\n{Combats} 场战斗后回到当时的当前卡组。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_COLLAPSE.title": "坍缩",
+  "STS2_AEONGLASS_CARD_AEONGLASS_COLLAPSE.description": "把整手牌置于[gold]时间裂隙[/gold]。\n每次坍缩花 2 点沙砾；每回合只能激活一次，且坍缩与唤回必须交替。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_RECALL.title": "唤回",
+  "STS2_AEONGLASS_CARD_AEONGLASS_RECALL.description": "丢弃当前手牌，用[gold]时间裂隙[/gold]里的牌替换。\n每次唤回花 2 点沙砾；每回合只能激活一次，且坍缩与唤回必须交替。"
+,
+  "STS2_AEONGLASS_CARD_AEONGLASS_INTENT_CARD.title": "",
+  "STS2_AEONGLASS_CARD_AEONGLASS_INTENT_CARD.description": "[center]{Number}[/center]"
+,
+  "STS2_AEONGLASS_CARD_AEONGLASS_WITHER_CARD.title": "凋萎",
+  "STS2_AEONGLASS_CARD_AEONGLASS_WITHER_CARD.description": "在怪物手牌中：怪物行动后，你损失 {Wither} 点生命，随后它被消耗。\n（可被「剥夺」点名清除；强化后掉血递增。）"
+}

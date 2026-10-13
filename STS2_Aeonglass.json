@@ -1,0 +1,18 @@
+{
+  "id": "STS2_Aeonglass",
+  "pck_name": "STS2_Aeonglass",
+  "name": "AEONGLASS",
+  "author": "b4c",
+  "description": "《杀戮尖塔 2》可玩角色：永世沙漏（原版 Act 3 boss「Aeonglass」）。第 ① 步只把 boss 的 Spine 接成玩家角色的战斗外观（含最小可玩壳与调试面板），机制后续逐步接入。",
+  "version": "0.0.1",
+  "has_pck": true,
+  "has_dll": true,
+  "affects_gameplay": true,
+  "min_game_version": "0.111.0",
+  "dependencies": [
+    {
+      "id": "STS2-RitsuLib",
+      "min_version": "0.5.18"
+    }
+  ]
+}

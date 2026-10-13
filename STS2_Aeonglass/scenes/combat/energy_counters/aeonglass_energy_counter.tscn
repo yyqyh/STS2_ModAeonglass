@@ -1,0 +1,165 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://Core/Presentation/UI/EnergyCounters/AeonglassEnergyCounter.cs" id="1_counter_script"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/energy/aeonglass_orb_layer_1.png" id="2_layer1"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/energy/aeonglass_orb_layer_2.png" id="3_layer2"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/energy/aeonglass_orb_layer_3.png" id="4_layer3"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/energy/aeonglass_orb_layer_4.png" id="5_layer4"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/energy/aeonglass_orb_layer_5.png" id="6_layer5"]
+[ext_resource type="FontFile" path="res://STS2_Aeonglass/fonts/kreon_bold.ttf" id="7_font"]
+[ext_resource type="Script" path="res://Core/Presentation/UI/EnergyCounters/AeonglassCounterLabel.cs" id="8_label_script"]
+[ext_resource type="Script" path="res://Core/Presentation/UI/EnergyCounters/AeonglassEnergyVfxParticles.cs" id="9_vfx_script"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_stub"]
+particle_flag_disable_z = true
+gravity = Vector3(0, 0, 0)
+
+[sub_resource type="FontVariation" id="FontVariation_label"]
+base_font = ExtResource("7_font")
+spacing_glyph = 2
+
+[node name="AeonglassEnergyCounter" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 128.0
+offset_bottom = 128.0
+pivot_offset = Vector2(64, 64)
+script = ExtResource("1_counter_script")
+
+[node name="EnergyVfxBack" type="Node2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(64, 64)
+script = ExtResource("9_vfx_script")
+
+[node name="BackGpuParticles" type="GPUParticles2D" parent="EnergyVfxBack"]
+visible = false
+emitting = false
+amount = 1
+lifetime = 0.01
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_stub")
+
+[node name="Layers" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Layer1" type="TextureRect" parent="Layers"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_layer1")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RotationLayers" type="Control" parent="Layers"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Layer2" type="TextureRect" parent="Layers/RotationLayers"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(64, 64)
+mouse_filter = 2
+texture = ExtResource("3_layer2")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Layer3" type="TextureRect" parent="Layers/RotationLayers"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(64, 64)
+mouse_filter = 2
+texture = ExtResource("4_layer3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Layer4" type="TextureRect" parent="Layers"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(64, 64)
+mouse_filter = 2
+texture = ExtResource("5_layer4")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Layer5" type="TextureRect" parent="Layers"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6_layer5")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EnergyVfxFront" type="Node2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(64, 64)
+script = ExtResource("9_vfx_script")
+
+[node name="FrontGpuParticles" type="GPUParticles2D" parent="EnergyVfxFront"]
+visible = false
+emitting = false
+amount = 1
+lifetime = 0.01
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_stub")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -29.0
+offset_right = -16.0
+offset_bottom = 29.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.964706, 0.886275, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.188235)
+theme_override_colors/font_outline_color = Color(0.117647, 0.407843, 0.396078, 1)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 16
+theme_override_constants/shadow_outline_size = 16
+theme_override_fonts/font = SubResource("FontVariation_label")
+theme_override_font_sizes/font_size = 36
+text = "3/3"
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("8_label_script")
+MinFontSize = 32
+MaxFontSize = 36

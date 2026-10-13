@@ -1,0 +1,49 @@
+[gd_scene load_steps=8 format=3 uid="uid://h2j8qiaau7v6"]
+
+[ext_resource type="SpineSkeletonDataResource" uid="uid://dkm1bksuxw32m" path="res://STS2_Aeonglass/scenes/combat/spine/aeonglass_data.tres" id="1_data"]
+[ext_resource type="Script" uid="uid://bn6ms2kqwfrge" path="res://Core/Presentation/Visuals/AeonglassRestSiteVisuals.cs" id="2_script"]
+[ext_resource type="Shader" path="res://STS2_Aeonglass/shaders/scrolling_smoke.tres" id="3_liquid_shader"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_scrolling_smoke.png" id="4_smoke_tex"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_liquid_mask.png" id="5_liquid_mask"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_liquid"]
+shader = ExtResource("3_liquid_shader")
+shader_parameter/Color = Color(0.40469998, 0.71, 0.6540283, 1)
+shader_parameter/ScrollSpeed = -0.2
+shader_parameter/timeOffset = 0.0
+shader_parameter/smokeTex = ExtResource("4_smoke_tex")
+shader_parameter/AlphaStep = Vector2(0.13, 0.16)
+shader_parameter/alphaGradient = ExtResource("5_liquid_mask")
+shader_parameter/Ovarall_Alpha = 1.0
+
+[node name="AeonglassRestSite" type="Node2D"]
+scale = Vector2(0.12, 0.12)
+script = ExtResource("2_script")
+
+[node name="SpineSprite" type="SpineSprite" parent="."]
+skeleton_data_res = ExtResource("1_data")
+preview_skin = "Default"
+preview_animation = "_track1/rings_normal"
+preview_frame = false
+preview_time = 0.0
+
+[node name="LiquidSlot" type="SpineSlotNode" parent="SpineSprite"]
+normal_material = SubResource("ShaderMaterial_liquid")
+slot_name = "liquid_fx"
+show_behind_parent = true
+position = Vector2(45.937218, -1281.5168)
+rotation = -0.34906584
+scale = Vector2(0.9999998, 0.9999999)
+
+[node name="ControlRoot" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="Hitbox" type="Control" parent="ControlRoot"]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_left = -155.0
+offset_top = -351.0
+offset_right = 266.0
+offset_bottom = 332.0
+mouse_filter = 2

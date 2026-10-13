@@ -1,0 +1,6 @@
+{
+  "STS2_AEONGLASS_KEYWORD_WITHER.title": "凋萎",
+  "STS2_AEONGLASS_KEYWORD_WITHER.description": "只出现在怪物手牌里。怪物行动结束后，若它还在怪物手牌中：你损失 X 点生命，随后它被消耗。\n可以被「剥夺」直接点名清除。",
+  "STS2_AEONGLASS_KEYWORD_HYSTERESIS.title": "迟滞",
+  "STS2_AEONGLASS_KEYWORD_HYSTERESIS.description": "这张牌不参与洗牌：抽牌堆洗回时它留在弃牌堆。\n不影响任何「把某张牌拿回来」的效果（它只挡随机洗牌）。"
+}

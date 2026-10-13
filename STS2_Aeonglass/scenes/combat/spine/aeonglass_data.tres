@@ -1,0 +1,8 @@
+[gd_resource type="SpineSkeletonDataResource" load_steps=3 format=3 uid="uid://dkm1bksuxw32m"]
+
+[ext_resource type="SpineSkeletonFileResource" uid="uid://crlcu5tx1veia" path="res://STS2_Aeonglass/images/character/spine/aeonglass.skel" id="1_skel"]
+[ext_resource type="SpineAtlasResource" uid="uid://c6f83a2ikm8gr" path="res://STS2_Aeonglass/images/character/spine/aeonglass.atlas" id="2_atlas"]
+
+[resource]
+atlas_res = ExtResource("2_atlas")
+skeleton_file_res = ExtResource("1_skel")

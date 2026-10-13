@@ -1,0 +1,71 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://Core/Presentation/UI/CollapseButtonArtUi.cs" id="1_script"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/collapse/collapse_rim_256.png" id="2_rim"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/collapse/collapse_inner_normal_256.png" id="3_inner"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/collapse/collapse_inner_rose_256.png" id="4_rose"]
+[ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/collapse/collapse_crack_256.png" id="5_crack"]
+
+[sub_resource type="Shader" id="Shader_crack"]
+code = "shader_type canvas_item;\n\n// 裂缝着色：tint = 要闪的颜色（玫红 / 白），amount = 0 时保持原样的近黑裂缝。\n// 素材本身是近黑（均色约 34,30,22），没法用 modulate 提亮（multiply 只会更黑），所以用 mix 换色。\nuniform vec4 tint : source_color = vec4(1.0, 1.0, 1.0, 1.0);\nuniform float amount : hint_range(0.0, 1.0) = 0.0;\n\nvoid fragment() {\n\tvec4 tex = texture(TEXTURE, UV);\n\tCOLOR.rgb = mix(tex.rgb, tint.rgb, amount);\n\tCOLOR.a = tex.a;\n}\n"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crack"]
+shader = SubResource("Shader_crack")
+shader_parameter/tint = Color(1, 1, 1, 1)
+shader_parameter/amount = 0.0
+
+[node name="AeonglassCollapseButton" type="Control"]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 128.0
+offset_bottom = 128.0
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="Rim" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 128.0
+offset_bottom = 128.0
+mouse_filter = 2
+texture = ExtResource("2_rim")
+expand_mode = 1
+
+[node name="InnerSway" type="Control" parent="."]
+layout_mode = 0
+offset_right = 128.0
+offset_bottom = 128.0
+pivot_offset = Vector2(64, 67)
+mouse_filter = 2
+
+[node name="InnerNormal" type="TextureRect" parent="InnerSway"]
+layout_mode = 0
+offset_right = 128.0
+offset_bottom = 128.0
+mouse_filter = 2
+texture = ExtResource("3_inner")
+expand_mode = 1
+
+[node name="RoseClip" type="Control" parent="InnerSway"]
+clip_contents = true
+layout_mode = 0
+offset_right = 128.0
+offset_bottom = 0.0
+mouse_filter = 2
+
+[node name="InnerRose" type="TextureRect" parent="InnerSway/RoseClip"]
+layout_mode = 0
+offset_right = 128.0
+offset_bottom = 128.0
+mouse_filter = 2
+texture = ExtResource("4_rose")
+expand_mode = 1
+
+[node name="Crack" type="TextureRect" parent="."]
+material = SubResource("ShaderMaterial_crack")
+layout_mode = 0
+offset_right = 128.0
+offset_bottom = 128.0
+mouse_filter = 2
+texture = ExtResource("5_crack")
+expand_mode = 1

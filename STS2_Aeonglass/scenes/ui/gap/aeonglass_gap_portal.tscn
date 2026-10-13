@@ -1,0 +1,158 @@
+[gd_scene load_steps=11 format=3 uid="uid://b47cwabmh8sd4"]
+
+[ext_resource type="Texture2D" uid="uid://dgq0p6v8rrk1y" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_ray.png" id="1_nyg08"]
+[ext_resource type="Texture2D" uid="uid://dvsxjn0o6mlvr" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_scrolling_smoke.png" id="2_6n3q0"]
+[ext_resource type="Texture2D" uid="uid://b7thyukflj15m" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_glob.png" id="3_7ixgu"]
+[ext_resource type="Texture2D" uid="uid://bmojhpbap1iut" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_liquid_mask.png" id="4_wave"]
+[ext_resource type="Texture2D" uid="uid://docdchepjtgae" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_ring.png" id="5_ring"]
+
+[sub_resource type="Shader" id="Shader_wave"]
+code = "shader_type canvas_item;
+
+// 环中间的\"波浪\"：贴图竖向循环滚动 + 正弦横向推 —— 本体沙漏 LiquidSlot 那套流动感。
+uniform float speed : hint_range(-3.0, 3.0) = 0.35;
+uniform float wave_strength : hint_range(0.0, 0.3) = 0.05;
+uniform float wave_frequency : hint_range(1.0, 40.0) = 9.0;
+uniform float twist_speed : hint_range(0.0, 6.0) = 1.4;
+
+void fragment() {
+	vec2 uv = UV;
+	uv.y = fract(uv.y - TIME * speed);
+	uv.x = clamp(uv.x + sin(uv.y * wave_frequency + TIME * twist_speed) * wave_strength, 0.0, 1.0);
+	vec4 tex = texture(TEXTURE, uv);
+	COLOR = vec4(tex.rgb * COLOR.rgb, tex.a * COLOR.a);
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wave"]
+shader = SubResource("Shader_wave")
+shader_parameter/speed = 0.35
+shader_parameter/wave_strength = 0.05
+shader_parameter/wave_frequency = 9.0
+shader_parameter/twist_speed = 1.4
+
+[sub_resource type="Animation" id="Animation_kckhp"]
+resource_name = "breath"
+length = 2.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 1, 1.5, 2),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0.75), Color(1, 1, 1, 0.9), Color(1, 1, 1, 0.75), Color(1, 1, 1, 0.6), Color(1, 1, 1, 0.75)]
+}
+
+[sub_resource type="Animation" id="Animation_k68nt"]
+resource_name = "ray_spin"
+length = 24.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Ray:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 24),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 6.283185307179586]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_gw4e4"]
+_data = {
+&"breath": SubResource("Animation_kckhp"),
+&"ray_spin": SubResource("Animation_k68nt")
+}
+
+[node name="AeonglassGapPortal" type="Control"]
+modulate = Color(1, 1, 1, 0.72875065)
+custom_minimum_size = Vector2(104, 104)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 104.0
+offset_bottom = 104.0
+pivot_offset = Vector2(52, 52)
+mouse_filter = 2
+
+[node name="Ray" type="TextureRect" parent="."]
+visible = false
+modulate = Color(0.498039, 0.905882, 0.866667, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(52, 52)
+mouse_filter = 2
+texture = ExtResource("1_nyg08")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Glob" type="TextureRect" parent="."]
+modulate = Color(0.498039, 0.905882, 0.866667, 0.9)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_7ixgu")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HourglassRing" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(52, 52)
+mouse_filter = 2
+texture = ExtResource("5_ring")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Wave" type="TextureRect" parent="."]
+visible = false
+modulate = Color(0.498039, 0.905882, 0.866667, 0.85)
+material = SubResource("ShaderMaterial_wave")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_wave")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Smoke" type="TextureRect" parent="."]
+visible = false
+modulate = Color(0.498039, 0.905882, 0.866667, 0.5)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_6n3q0")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Anim" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_gw4e4")
+}
+autoplay = "breath"

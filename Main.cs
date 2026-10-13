@@ -67,6 +67,9 @@ public static class Main
         // 迟滞：注册 mod 关键词「迟滞」（同上，必须在内容冻结之前）。
         Core.Content.Keywords.HysteresisKeyword.Register();
 
+        // 搁浅（M7）：注册 mod 关键词「搁浅」（同上）。
+        Core.Content.Keywords.StasisKeyword.Register();
+
         var (applied, failed) = InstallHarmonyPatches(assembly);
 
         // 本地化键对不上时看这几行最快。

@@ -3,8 +3,11 @@ using Godot;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.HoverTips;
+using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Nodes.Combat;
 using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
+using MegaCrit.Sts2.Core.Nodes.HoverTips;
 using MegaCrit.Sts2.Core.Nodes.Rooms;
 using MegaCrit.Sts2.Core.Runs;
 
@@ -311,10 +314,15 @@ internal sealed partial class GapActionButton : NButton
     private static readonly Color TextColor = new(0.992157f, 0.956863f, 0.890196f);
     private static readonly Color OutlineColor = new(0.121569f, 0.25098f, 0.270588f);
 
+    /// <summary>官方 hover tip 的表 / 条目前缀（条目见 <c>localization/zhs/static_hover_tips.json</c>）。</summary>
+    private const string TipTable = "static_hover_tips";
+
+    /// <summary>提示框相对按钮的偏移（按钮在能量计数器下方 ⇒ 往上放）。想挪位置就改这里。</summary>
+    private static readonly Vector2 TipOffset = new(0f, -140f);
+
     private CollapseButtonArtUi _art = null!;
     private Label _label = null!;
     private bool _recall;
-    private string _tooltip = string.Empty;
 
     public override void _Ready()
     {
@@ -331,6 +339,10 @@ internal sealed partial class GapActionButton : NButton
         AddChild(_art);
         _label = BuildLabel();
         AddChild(_label);
+
+        // 悬停说明走**官方**那套 hover tip（与卡牌 / 遗物 / 能量球同一个框）：进出各一次。
+        MouseEntered += OnHovered;
+        MouseExited += OnUnhovered;
 
         SetAction(recall: false, enabled: false);
     }
@@ -353,14 +365,6 @@ internal sealed partial class GapActionButton : NButton
             _label.Text = text;
         }
 
-        var tip = recall ? GapActionButtons.RecallTip : GapActionButtons.CollapseTip;
-        if (_tooltip != tip)
-        {
-            _tooltip = tip;
-            // TODO（用户 2026-10-13）：换成**原版** hover tip（需要先给 static_hover_tips 加条目 + 重导 PCK）。
-            TooltipText = tip;
-        }
-
         if (enabled != IsEnabled)
         {
             if (enabled)
@@ -373,6 +377,21 @@ internal sealed partial class GapActionButton : NButton
             }
         }
     }
+
+    /// <summary>悬停：弹官方提示框（文案按"此刻代表哪个动作"取，所以进/出之间切动作也没问题）。</summary>
+    private void OnHovered()
+    {
+        var key = _recall ? "STS2_AEONGLASS_GAP_RECALL" : "STS2_AEONGLASS_GAP_COLLAPSE";
+        var tip = new HoverTip(
+            new LocString(TipTable, key + ".title"),
+            new LocString(TipTable, key + ".description"));
+
+        // 照本体 NStarCounter 的接法：CreateAndShow 后自己摆位置，离开时 Remove。
+        NHoverTipSet.CreateAndShow(this, tip)?.SetGlobalPosition(GlobalPosition + TipOffset);
+    }
+
+    /// <summary>离开：收掉提示框。</summary>
+    private void OnUnhovered() => NHoverTipSet.Remove(this);
 
     /// <summary>松手才算点击（原版 NClickableControl 的语义）。</summary>
     protected override void OnRelease()

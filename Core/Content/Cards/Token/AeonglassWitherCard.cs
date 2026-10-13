@@ -46,14 +46,20 @@ public sealed class AeonglassWitherCard : ModCardTemplate
     protected override HashSet<CardTag> CanonicalTags => [];
 
     /// <summary>
-    /// 声明 <c>CardKeyword.None</c> 这个**原版没在用**的槽位 ⇒ 让 RitsuLib 的卡片描述注入器
-    /// 能把已注册的「凋萎」词条（`STS2_AEONGLASS_KEYWORD_WITHER`）挂到这张卡上（卡面高亮 + 悬停说明）。
+    /// 这张卡的两个关键词：<c>None</c>（承载 mod 词条「凋萎」）+ <c>Ethereal</c>（规则 4b 的「虚无」）。
     /// </summary>
     /// <remarks>
-    /// RitsuLib 的注入器是按 <c>TryGetByCardKeyword(card.Keywords 里的枚举值)</c> 匹配的，
-    /// 而我们的关键词定义 <c>CardKeywordValue</c> 默认就是 <c>None</c> ⇒ 声明它即可，不用劫持原版关键词。
+    /// <para>
+    /// <c>None</c>：RitsuLib 的卡片描述注入器按 <c>TryGetByCardKeyword(card.Keywords 里的枚举值)</c> 匹配，
+    /// 而我们的 mod 关键词定义 <c>CardKeywordValue</c> 默认就是 <c>None</c> ⇒ 声明它就能把「凋萎」词条
+    /// 挂到这张卡上（卡面高亮 + 悬停说明）。
+    /// </para>
+    /// <para>
+    /// <c>Ethereal</c>（2026-10-14 规则 4b 定稿）：凋萎卡**带虚无关键词** ⇒ 进手牌后回合结束即消耗，
+    /// 每张只生效一次。它同时让卡面出现原版的「虚无」词条，与玩法一致。
+    /// </para>
     /// </remarks>
-    public override IEnumerable<CardKeyword> CanonicalKeywords => [CardKeyword.None];
+    public override IEnumerable<CardKeyword> CanonicalKeywords => [CardKeyword.None, CardKeyword.Ethereal];
 
     /// <summary>卡面只显示"凋萎：…X 点生命…"，X 随强化实时变（模板在 cards.json 里带 {Wither}）。</summary>
     protected override void AddExtraArgsToDescription(LocString description)

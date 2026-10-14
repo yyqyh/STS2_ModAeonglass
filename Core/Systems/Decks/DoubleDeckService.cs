@@ -52,6 +52,9 @@ internal static class DoubleDeckService
     /// <summary>第二副牌组的牌堆是否已注册（M6 关掉时是 false）。</summary>
     public static bool IsReady => _pileType is not null;
 
+    /// <summary>第二副牌组的牌堆类型（用于"认出顶栏上那颗副卡组按钮"；未注册时 null）。</summary>
+    public static PileType? DeckBPileType => _pileType;
+
     /// <summary>由 <c>DecksModule.Register()</c> 在注册牌堆后调用。</summary>
     public static void Configure(ModCardPileDefinition definition)
     {
@@ -348,6 +351,9 @@ internal static class DoubleDeckService
 
         // 交换会让"牌组"整副换人（数量也变）+ 战斗中热切换还会重铺五堆 ⇒ 立刻全刷 UI（用户 2026-10-12）。
         Core.Presentation.UI.CombatUiRefresh.RefreshAll(player);
+
+        // 顶栏两颗牌组按钮的图标也要跟着换人（提示词是在悬浮时算的，图标不行）。
+        Core.Presentation.UI.DeckButtonIcons.Refresh(player);
 
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Decks} 切换卡组：{text}");
         return DeckSwitchOutcome.Done(text);

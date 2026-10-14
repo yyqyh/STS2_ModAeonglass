@@ -212,4 +212,15 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
     /// <summary>M6：距上次"主动切换"已经过了几场战斗（主动切换的冷却用）。</summary>
     [SavedProperty]
     public int CombatsSinceManualSwitch { get; set; }
+
+    /// <summary>
+    /// M4：<b>本局（跨战斗）累计回溯次数</b> —— 「因果」的加成读它。
+    /// </summary>
+    /// <remarks>
+    /// 和 M6 那几个状态同一个理由放在遗物上：本体的"局内可存字段"只认 <c>[SavedProperty]</c>，
+    /// 而遗物是这局真正持有、随存档走的对象 ⇒ 跨战斗、跨读档都在。
+    /// <b>只存状态</b>：写入点在 <c>RunHistory</c>（机制层），遗物自己不写机制逻辑。
+    /// </remarks>
+    [SavedProperty]
+    public int RewindsThisRun { get; set; }
 }

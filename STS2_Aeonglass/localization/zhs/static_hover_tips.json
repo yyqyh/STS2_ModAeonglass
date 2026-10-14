@@ -15,10 +15,17 @@
   "STS2_AEONGLASS_CARDPILE_DECK_B.title": "另一副牌组",
   "STS2_AEONGLASS_CARDPILE_DECK_B.description": "现在不在生效的那一副牌组。\n每场战斗胜利后自动轮换；也可以按调试键主动切换（战斗内切换会重铺本场牌堆）。\n点开只是预览，零副作用。",
   "STS2_AEONGLASS_CARDPILE_DECK_B.empty": "另一副牌组暂时是空的。",
+  "STS2_AEONGLASS_DECKTIP_PRIMARY.title": "永时",
+  "STS2_AEONGLASS_DECKTIP_PRIMARY.active": "[gold]生效中[/gold]。\n点开查看。",
+  "STS2_AEONGLASS_DECKTIP_PRIMARY.inactive": "[gold]不生效[/gold]。\n点开预览。",
+  "STS2_AEONGLASS_DECKTIP_SECONDARY.title": "消逝",
+  "STS2_AEONGLASS_DECKTIP_SECONDARY.active": "[gold]生效中[/gold]。\n点开查看。",
+  "STS2_AEONGLASS_DECKTIP_SECONDARY.inactive": "[gold]不生效[/gold]。\n点开预览。",
   "STS2_AEONGLASS_GAP_COLLAPSE.title": "坍缩",
-  "STS2_AEONGLASS_GAP_COLLAPSE.description": "把整手牌置于[gold]时间裂隙[/gold]。\n花 2 点沙砾；坍缩与唤回必须交替（同一种不能连做两次）。",
+  "STS2_AEONGLASS_GAP_COLLAPSE.description": "花 2 点沙砾,将手牌置于[gold]时间裂隙[/gold]。",
   "STS2_AEONGLASS_GAP_RECALL.title": "唤回",
-  "STS2_AEONGLASS_GAP_RECALL.description": "丢弃当前手牌，用[gold]时间裂隙[/gold]里的牌替换。\n花 2 点沙砾；坍缩与唤回必须交替（同一种不能连做两次）。",
+  "STS2_AEONGLASS_GAP_RECALL.description": "花 2 点沙砾，用[gold]时间裂隙[/gold]里的牌替换当前手牌。",
+  
   "STS2_AEONGLASS_PROMPT_PUT_BACK_TOP": "选择要放到抽牌堆顶的牌"
 ,
   "STS2_AEONGLASS_PROMPT_POUR_TOP": "选择要取回并放到抽牌堆顶的牌"

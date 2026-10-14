@@ -203,6 +203,8 @@ internal static class RewindModule
 
             // 战斗历史：本场回溯次数 +1（RW 通道的卡读它）。
             Systems.History.CombatHistory.RecordRewind(player);
+            // 本局历史：跨战斗累计回溯次数 +1（v2「因果」读它）。
+            Systems.History.RunHistory.RecordRewind(player);
         });
 
         return true;

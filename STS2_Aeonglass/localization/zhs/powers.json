@@ -70,5 +70,8 @@
   ,
   "STS2_AEONGLASS_POWER_AEONGLASS_DEFERRAL_POWER.title": "延宕",
   "STS2_AEONGLASS_POWER_AEONGLASS_DEFERRAL_POWER.description": "本回合你受到的伤害将在{Amount}回合后一次性结算（走普通伤害，可被格挡；战斗结束时未结清的部分作废）。",
-  "STS2_AEONGLASS_POWER_AEONGLASS_DEFERRAL_POWER.smartDescription": "本回合你受到的伤害将在[blue]{Amount}[/blue]回合后一次性结算（走普通伤害，可被格挡；战斗结束时未结清的部分作废）。"
+  "STS2_AEONGLASS_POWER_AEONGLASS_DEFERRAL_POWER.smartDescription": "本回合你受到的伤害将在[blue]{Amount}[/blue]回合后一次性结算（走普通伤害，可被格挡；战斗结束时未结清的部分作废）。",
+  "STS2_AEONGLASS_POWER_AEONGLASS_SKIP_NEXT_TURN_POWER.title": "跳过回合",
+  "STS2_AEONGLASS_POWER_AEONGLASS_SKIP_NEXT_TURN_POWER.description": "你的下一个回合什么都不发生：不抽牌、不给能量、立刻结束。",
+  "STS2_AEONGLASS_POWER_AEONGLASS_SKIP_NEXT_TURN_POWER.smartDescription": "你的下一个回合什么都不发生：不抽牌、不给能量、立刻结束。"
 }

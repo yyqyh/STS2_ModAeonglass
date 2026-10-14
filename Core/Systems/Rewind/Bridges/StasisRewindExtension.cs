@@ -16,14 +16,17 @@ internal sealed record ZoneEntry(ulong NetId, CardModel Card, int CombatsLeft);
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>这是"必须回档"的一条</b>：只在 <c>OnCapture</c> 存数据、不撤销的话，
-/// 快照之后才打出的滞留卡会**悬空**（母本已离队、搁浅里那张不在快照里），等于丢牌。
-/// 所以 <c>OnBeforeRestore</c> 要把"快照之后才进搁浅"的牌撤销滞留（从搁浅删除 + 母本回牌组 + 清计数），
-/// <c>OnAfterRestore</c> 再把快照里那张归位。
+/// <b>2026-10-14 用户口径：搁浅不能回溯</b> —— 搁浅区完全随 run 走，回溯<b>不撤销</b>任何一次滞留。
 /// </para>
 /// <para>
-/// <b>数据存在 <see cref="ISnapshotDraft"/> 里（随快照走），不用实例字段缓存</b> ——
-/// 回档事务会先拍一份"备份快照"，用实例字段会被那份备份覆盖，导致撤销作用于错误的时刻。
+/// 为什么不能简单"什么都不做"：回溯会把<b>牌组</b>恢复成上一回合的样子，
+/// 快照之后才被搁浅的那张母本会<b>又出现在牌组里</b>（它在搁浅里也有一份），等于凭空多一张。
+/// 所以 <c>OnAfterRestore</c> 要做的是"<b>重新落实离队</b>"：把还在搁浅里的牌从被恢复的牌堆里再摘掉一次，
+/// 而不是把搁浅撤销掉。
+/// </para>
+/// <para>
+/// <b>数据存在 <see cref="ISnapshotDraft"/> 里</b>（随快照走）—— 现在只用于日志与核对；
+/// 真正的搁浅状态以 <c>StasisZone</c> 的当前内容为准。
 /// </para>
 /// <para>
 /// 全部用 <c>CardPile.RemoveInternal/AddInternal</c>（同步、静默），不走 <c>CardPileCmd</c>：
@@ -50,9 +53,13 @@ internal sealed class StasisRewindExtension : IRewindExtension
 
     public void OnBeforeRestore(RewindContext ctx)
     {
+        // 刻意空实现：搁浅不回档（用户 2026-10-14），恢复前的搁浅内容原样保留。
+    }
+
+    public void OnAfterRestore(RewindContext ctx)
+    {
         var captured = EntriesOf(ctx);
-        var known = captured.Select(e => e.Card).ToHashSet(ReferenceEqualityComparer.Instance);
-        var undone = 0;
+        var reasserted = 0;
 
         foreach (var player in BridgeAccess.Players())
         {
@@ -61,59 +68,28 @@ internal sealed class StasisRewindExtension : IRewindExtension
                 continue;
             }
 
-            foreach (var card in zone.Cards.ToList())
+            foreach (var card in StasisZone.ZoneCards(player).ToList())
             {
-                if (known.Contains(card))
+                // ① 引擎刚把牌组/牌堆恢复过，搁浅里这张可能又被放回了某个牌堆：重新落实"离队"。
+                if (card.Pile is { } pile && pile.Type != zone.Type)
                 {
-                    continue;
+                    pile.RemoveInternal(card, true);
+                    reasserted++;
                 }
 
-                // 快照之后才进的搁浅 ⇒ 撤销滞留：从搁浅删除 + 母本放回原牌组 + 清计数。
-                zone.RemoveInternal(card, true);
-                card.HasBeenRemovedFromState = false;
-                ReturnMasterToDeck(player, card);
-                undone++;
+                // ② 万一它连着搁浅一起被恢复动作摘掉了，放回搁浅（倒计时不动：搁浅不回档）。
+                if (card.Pile is null && !zone.Cards.Contains(card))
+                {
+                    zone.AddInternal(card, -1, true);
+                }
             }
+
+            Core.Presentation.UI.CombatUiRefresh.RefreshAll(player);
         }
 
         Const.Logger.Info(
-            $"[{Const.ModId}] {Const.Prefix.Stasis} 回溯 beforeRestore：撤销滞留 {undone} 张"
-            + $"（快照里有 {captured.Count} 张）");
-    }
-
-    public void OnAfterRestore(RewindContext ctx)
-    {
-        var captured = EntriesOf(ctx);
-        var restored = 0;
-
-        foreach (var entry in captured)
-        {
-            var player = BridgeAccess.Players().FirstOrDefault(p => p.NetId == entry.NetId);
-            if (player is null || StasisZone.Zone(player) is not { } zone)
-            {
-                continue;
-            }
-
-            // 如果这张牌在快照之后归了队，先把它从牌组摘回搁浅。
-            if (entry.Card.Pile?.Type == PileType.Deck)
-            {
-                entry.Card.Pile.RemoveInternal(entry.Card, true);
-            }
-
-            if (entry.Card.Pile is null)
-            {
-                zone.AddInternal(entry.Card, -1, true);
-            }
-
-            if (entry.Card is IStasisCard stasis)
-            {
-                stasis.CombatsLeft = entry.CombatsLeft;
-            }
-
-            restored++;
-        }
-
-        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Stasis} 回溯 afterRestore：搁浅归位 {restored} 张（计数已复位）");
+            $"[{Const.ModId}] {Const.Prefix.Stasis} 回溯 afterRestore：搁浅不回档｜重新落实离队 {reasserted} 张"
+            + $"｜快照拍下时有 {captured.Count} 张（现在按当前内容保留）");
     }
 
     private static List<ZoneEntry> EntriesOf(RewindContext ctx) =>

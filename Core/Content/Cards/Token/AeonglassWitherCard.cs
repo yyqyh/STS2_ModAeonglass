@@ -30,7 +30,11 @@ public sealed class AeonglassWitherCard : ModCardTemplate
     /// <summary>每强化一级增加的掉血。</summary>
     public const int PerUpgrade = 1;
 
-    public AeonglassWitherCard() : base(0, CardType.Skill, CardRarity.Basic, TargetType.Self)
+    /// <summary>
+    /// <b>v2：凋萎是「状态牌」</b>（<c>CardType.Status</c>）—— 卡框按状态牌画，
+    /// 也让「净化」升级档那句"消耗所有[状态牌]"天然把它包括进去。
+    /// </summary>
+    public AeonglassWitherCard() : base(0, CardType.Status, CardRarity.Basic, TargetType.Self)
     {
     }
 

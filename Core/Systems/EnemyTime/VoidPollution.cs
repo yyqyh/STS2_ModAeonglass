@@ -36,6 +36,50 @@ internal static class VoidPollution
         IntentDeck.TryGet(creature, out var state) ? state.Discard.Count(c => c.IsVoid) : 0;
 
     /// <summary>
+    /// 这只怪**场上（三个意图堆）**一共有几张凋萎 —— 「净化」（WTH-3）按它算伤害。
+    /// </summary>
+    /// <remarks>三堆都算：抽牌堆里还没抽到的、手上的、弃牌堆里的。</remarks>
+    public static int WithersTotal(Creature creature) =>
+        IntentDeck.TryGet(creature, out var state)
+            ? state.Hand.Count(c => c.IsVoid) + state.Discard.Count(c => c.IsVoid) + state.Deck.Count(c => c.IsVoid)
+            : 0;
+
+    /// <summary>
+    /// 清掉这只怪**三个意图堆里的所有凋萎**（「净化」用），返回清掉几张。
+    /// </summary>
+    /// <remarks>
+    /// 与 <see cref="PurgeFromDiscard" /> 的区别：那个只动弃牌堆（挑一张），这个把**整只怪身上的污染**一次清空。
+    /// 只记一笔 <c>VoidsSpent</c>（与另外两个清法同口径，别双计）。
+    /// </remarks>
+    public static int PurgeAll(Creature creature)
+    {
+        if (!IntentDeck.TryGet(creature, out var state))
+        {
+            return 0;
+        }
+
+        var purged = 0;
+        foreach (var pile in new[] { state.Hand, state.Discard, state.Deck })
+        {
+            foreach (var card in pile.Where(c => c.IsVoid).ToList())
+            {
+                pile.Remove(card);
+                purged++;
+            }
+        }
+
+        state.VoidsSpent += purged;
+        if (purged > 0)
+        {
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Wither} 净化：清空 {MonsterAccess.IdOf(creature)} 的全部凋萎 {purged} 张"
+                + $"｜{state.Counts()}");
+        }
+
+        return purged;
+    }
+
+    /// <summary>
     /// 从该怪**手牌**里拿走最多 <paramref name="count" /> 张凋萎（进"消耗"，不再参与循环）。
     /// </summary>
     /// <remarks>这是"净化"要用的写入口；"剥夺"走的是另一条（进弃牌堆、会被洗回）—— 两者语义不同，都留着。</remarks>

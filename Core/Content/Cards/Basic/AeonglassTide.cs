@@ -14,12 +14,12 @@ using STS2_Aeonglass.Core.Systems.EnemyTime;
 namespace STS2_Aeonglass.Core.Content.Cards.Basic;
 
 /// <summary>
-/// <b>潮汐</b>（CardB2，起始差分）：基础 = 1 费 6 伤；<b>永恒副</b>改为 3 伤 + 向怪物弃牌堆塞 2 张凋萎。
-/// （升级：基础伤害 +3；永恒副的凋萎张数 +1。）
+/// <b>潮汐</b>（CardB2，起始差分 · v2）：基础 = 1 费 9 伤；<b>永时副</b>改为 3 伤 + 向怪物弃牌堆塞 2 张凋萎。
+/// （升级：基础伤害 +3；永时副的凋萎张数 +1。）
 /// </summary>
 [RegisterCard(typeof(AeonglassCardPool))]
 [RegisterCharacterStarterCard(typeof(Aeonglass), 1)]
-public sealed class AeonglassTide() : AeonglassAttackTemplate(1, CardRarity.Basic, 6m, 3m),
+public sealed class AeonglassTide() : AeonglassAttackTemplate(1, CardRarity.Basic, 9m, 3m),
     IDeckVariantCard
 {
     /// <summary>永恒副的伤害（定值 3，不随升级变 —— 卡表口径）。</summary>

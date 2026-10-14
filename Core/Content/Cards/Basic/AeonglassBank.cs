@@ -15,8 +15,8 @@ using STS2_Aeonglass.Core.Systems.Decks;
 namespace STS2_Aeonglass.Core.Content.Cards.Basic;
 
 /// <summary>
-/// <b>堤岸</b>（CardB4，起始差分）：1 费 · 基础 5 挡（升级 8）；
-/// <b>消逝副</b>：改为 6 挡 + 本回合你受到的伤害<b>延宕 1</b>（升级：延宕 2，挡不变）。
+/// <b>堤岸</b>（CardB4，起始差分 · v2）：1 费 · 基础 6 挡（升级 9）；
+/// <b>消逝副</b>：改为 7 挡 + 本回合你受到的伤害<b>延宕 1</b>（升级：延宕 2，挡不变）。
 /// </summary>
 /// <remarks>
 /// <para>
@@ -34,10 +34,10 @@ public sealed class AeonglassBank() : ModCardTemplate(1, CardType.Skill, CardRar
     IDeckVariantCard
 {
     /// <summary>永恒副的基础格挡（升级 +3）。</summary>
-    private const decimal BlockA = 5m;
+    private const decimal BlockA = 6m;
 
     /// <summary>消逝副的格挡（升级不变）。</summary>
-    private const decimal BlockB = 6m;
+    private const decimal BlockB = 7m;
 
     /// <summary>消逝副的延宕回合数（升级 +1）。</summary>
     private const decimal DelayBase = 1m;

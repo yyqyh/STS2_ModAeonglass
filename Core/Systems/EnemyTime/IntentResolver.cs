@@ -559,6 +559,40 @@ internal static class IntentResolver
             creature);
     }
 
+    /// <summary>
+    /// <b>「精神错乱」</b>（NEW-2）：把这只怪的整手牌<b>洗乱</b>（顺序随机），然后重新解析。
+    /// </summary>
+    /// <remarks>
+    /// 随机流用怪物自己的 AI 流（与洗回、剥夺取随机同一套）⇒ 跑局内可复现、回档也被快照覆盖。
+    /// 洗的是**顺序**，不抽不弃：手牌数量、内容、三属性都不变 ⇒ 只是"它要打哪张"变得不可预测。
+    /// </remarks>
+    public static string Scramble(Creature creature)
+    {
+        var state = IntentDeck.Ensure(creature);
+        if (state.Hand.Count <= 1)
+        {
+            var few = $"精神错乱：{state.MonsterId} 手牌只有 {state.Hand.Count} 张 ⇒ 洗乱没有意义";
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} {few}");
+            return few;
+        }
+
+        if (creature.Monster?.RunRng.MonsterAi is not { } rng)
+        {
+            var noRng = $"精神错乱：拿不到 {state.MonsterId} 的随机流 ⇒ 不洗（保持原顺序）";
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Intent} {noRng}");
+            return noRng;
+        }
+
+        // Fisher-Yates（与"弃牌堆洗回"同一套写法）。
+        for (var i = state.Hand.Count - 1; i > 0; i--)
+        {
+            var j = rng.NextInt(i + 1);
+            (state.Hand[i], state.Hand[j]) = (state.Hand[j], state.Hand[i]);
+        }
+
+        return Report($"精神错乱：手牌洗乱 → [{string.Join(",", state.Hand.Select(card => card.MoveId))}]", creature);
+    }
+
     /// <summary>目标必须"在这只怪的手牌里 + 可以行动"；否则拒绝（不消耗、不动牌）。</summary>
     private static bool TryLocate(
         EnemyIntentState state, IntentCard target, string verb, out int index, bool allowWither = false)

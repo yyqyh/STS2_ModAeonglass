@@ -34,13 +34,84 @@ internal static class IntentResolver
         var settled = SettlePending(creature, state);
         var cleared = ClearHand(creature, state);
         var drawn = DrawHand(creature, state);
+        var delayed = ApplyHysteresis(creature, state);
         var decision = Decide(state);
         Apply(creature, state, decision);
 
         var text = $"{state.MonsterId}｜{settled}｜{cleared}｜{drawn}｜判定={decision.Kind}({decision.Reason})"
-                   + $"｜{state.Counts()}";
+                   + $"｜{delayed}｜{state.Counts()}";
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} {text}");
         return text;
+    }
+
+    /// <summary>
+    /// 「迟滞注入」（DLY-4 静域）：手牌刚抽好，问玩家身上实现了
+    /// <see cref="IIntentHysteresisSource" /> 的能力要不要钉住第一张意图。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 标记只挡"洗回"（见 <see cref="ReshuffleDiscardIntoDeck" />），不挡任何主动指定 —— 与玩家侧迟滞同口径。
+    /// </para>
+    /// <para>
+    /// 只标记 <see cref="IntentCard.Playable" /> 的牌：虚无是纯元数据（本来就不参与循环），
+    /// 被吃掉的意图也没人会打出。标记不到就不消费额度。
+    /// </para>
+    /// </remarks>
+    private static string ApplyHysteresis(Creature creature, EnemyIntentState state)
+    {
+        var sources = (MonsterAccess.Combat?.Players ?? [])
+            .SelectMany(player => player.Creature.Powers.OfType<IIntentHysteresisSource>())
+            .ToList();
+        if (sources.Count == 0)
+        {
+            return "迟滞：无来源";
+        }
+
+        var marked = 0;
+        foreach (var source in sources)
+        {
+            var pending = source.PendingIntentHysteresis;
+            if (pending <= 0)
+            {
+                continue;
+            }
+
+            var used = MarkFirstPlayable(state, pending);
+            if (used <= 0)
+            {
+                continue;
+            }
+
+            source.ConsumeIntentHysteresis(used);
+            marked += used;
+        }
+
+        return marked > 0
+            ? $"迟滞：钉住 {marked} 张意图（不参与洗回）"
+            : "迟滞：没有可标记的意图";
+    }
+
+    /// <summary>把手牌里最前面的 <paramref name="count" /> 张"可以行动的"意图打上迟滞，返回实际打了几张。</summary>
+    private static int MarkFirstPlayable(EnemyIntentState state, int count)
+    {
+        var marked = 0;
+        foreach (var card in state.Hand)
+        {
+            if (marked >= count)
+            {
+                break;
+            }
+
+            if (!card.Playable || card.Stuck)
+            {
+                continue;
+            }
+
+            card.Stuck = true;
+            marked++;
+        }
+
+        return marked;
     }
 
     /// <summary>结算上一回合：敌人回合真的开始过 ⇒ 我们设进去的那张已经被引擎执行了。</summary>
@@ -199,8 +270,32 @@ internal static class IntentResolver
     /// <summary>把弃牌堆整体洗回抽牌堆（用怪物的 AI 随机流；拿不到 RNG 就保持原顺序）。</summary>
     private static void ReshuffleDiscardIntoDeck(Creature creature, EnemyIntentState state)
     {
-        state.Deck.AddRange(state.Discard);
-        state.Discard.Clear();
+        // 迟滞（敌人侧）：带标记的意图不参与洗回，留在弃牌堆；
+        // 兜底：整堆都是迟滞时忽略标记（否则抽牌堆永远是空的 = 死锁）。
+        var stuck = state.Discard.Where(card => card.Stuck).ToList();
+        if (stuck.Count == state.Discard.Count && stuck.Count > 0)
+        {
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 迟滞兜底：要洗回的 {stuck.Count} 张全是迟滞 ⇒ 本次忽略");
+            stuck.Clear();
+        }
+
+        var movable = stuck.Count == 0
+            ? state.Discard.ToList()
+            : state.Discard.Where(card => !card.Stuck).ToList();
+
+        state.Deck.AddRange(movable);
+        foreach (var card in movable)
+        {
+            state.Discard.Remove(card);
+        }
+
+        if (stuck.Count > 0)
+        {
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 迟滞：{stuck.Count} 张意图不参与洗回（留在弃牌堆）");
+        }
+
         state.Reshuffles++;
 
         if (creature.Monster?.RunRng.MonsterAi is not { } rng)
@@ -410,6 +505,58 @@ internal static class IntentResolver
         state.Hand.RemoveAt(index);
         state.Discard.Add(target);
         return Report($"剥夺 {target.MoveId}：手牌第 {index} 张 → 弃牌堆（弃牌堆 {state.Discard.Count} 张）", creature);
+    }
+
+    /// <summary>
+    /// <b>「定序」</b>（INT-5）：把整手牌按玩家给的顺序重排（<b>全部</b>，含虚无 —— 它也要占位），
+    /// 然后立刻重新解析（重设 <c>NextMove</c>，让"将要打出的那张"跟着新顺序走）。
+    /// </summary>
+    /// <remarks>
+    /// 顺序必须与手牌**一一对应**（数量相同、元素都在手牌里）才生效；
+    /// 不满足就整条拒绝（宁可不变，也不要半边重排）。
+    /// </remarks>
+    public static string Reorder(Creature creature, IReadOnlyList<IntentCard> order)
+    {
+        var state = IntentDeck.Ensure(creature);
+        if (order.Count != state.Hand.Count || order.Any(card => !state.Hand.Contains(card)))
+        {
+            var reject = $"定序：顺序（{order.Count} 张）与手牌（{state.Hand.Count} 张）对不上 ⇒ 不生效";
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Intent} {reject}");
+            return reject;
+        }
+
+        var before = string.Join(",", state.Hand.Select(card => card.MoveId));
+        state.Hand.Clear();
+        state.Hand.AddRange(order);
+
+        return Report(
+            $"定序：[{before}] → [{string.Join(",", order.Select(card => card.MoveId))}]", creature);
+    }
+
+    /// <summary>
+    /// <b>「拆解」</b>（INT-4）：把<b>抽牌堆里</b>指定的一张挑出来放进它的弃牌堆。
+    /// </summary>
+    /// <remarks>
+    /// 只要求"这张还在抽牌堆里"（不强制必须是顶上第一张）—— 玩家的选择本来就来自"顶上前 3 张"的界面，
+    /// 但界面对着的同时，回合/洗牌都可能把这张挪走 ⇒ 挪走了就拒绝，不硬改。
+    /// </remarks>
+    public static string Dismantle(Creature creature, IntentCard target)
+    {
+        var state = IntentDeck.Ensure(creature);
+        if (!state.Deck.Contains(target))
+        {
+            var reject = $"拆解：{target.MoveId} 已经不在抽牌堆里 ⇒ 不生效";
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Intent} {reject}");
+            return reject;
+        }
+
+        state.Deck.Remove(target);
+        state.Discard.Add(target);
+
+        return Report(
+            $"拆解：抽牌堆 {target.MoveId} → 弃牌堆"
+            + $"（抽牌堆 {state.Deck.Count} 张，弃牌堆 {state.Discard.Count} 张）",
+            creature);
     }
 
     /// <summary>目标必须"在这只怪的手牌里 + 可以行动"；否则拒绝（不消耗、不动牌）。</summary>

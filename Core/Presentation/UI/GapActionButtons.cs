@@ -20,8 +20,9 @@ namespace STS2_Aeonglass.Core.Presentation.UI;
 /// <summary>M2 的战斗按键（<b>一个</b>按钮）：挂在<b>能量计数器正下方</b>，按当前可做的动作显示「坍缩」或「唤回」。</summary>
 /// <remarks>
 /// <para>
-/// <b>为什么是一个按钮</b>（用户 2026-10-13）：坍缩与唤回**必须交替**、而且共用"每回合 1 次"的额度
-/// ⇒ 任何时刻最多只有一个合法。所以用一个按钮、文案跟着合法动作走，比并排两个更贴机制。
+/// <b>为什么是一个按钮</b>（用户 2026-10-13 / 2026-10-14 修订）：坍缩与唤回**必须交替**
+/// ⇒ 任何时刻最多只有一个合法，所以用一个按钮、文案跟着合法动作走，比并排两个更贴机制。
+/// 「每回合 1 次激活」的额度已取消 ⇒ 现在按钮显示哪个动作由**间隙里有没有牌**决定（见 <see cref="GapActionRow" />）。
 /// </para>
 /// <para>
 /// <b>全部用原版资源</b>：控件是原版 <see cref="NButton" />（悬停 / 按下 / 禁用 / 点击音效都是原版那套）、
@@ -91,12 +92,17 @@ internal static class GapActionButtonsHost
             return;
         }
 
-        // ⚠️ 层级历史（别再来回改）：
-        //   2026-10-13 曾把按键塞进 EnergyCounterContainer 并排到能量球前面（"画在它下面"），
-        //   同时把能量计数器抬到 z=2 —— 结果两者都跑到了**暂停界面压暗层之上**、在暂停界面里
-        //   显得"高亮"。用户随即要求「能量计数器和按键恢复到原来高度」⇒ 全部还原：
-        //   按键回挂到战斗房间、z 回到 213；能量计数器的 z 一个也不碰。
-        foreach (var child in parent.GetChildren())
+        // ⚠️ 挂载点历史（别再来回改）：
+        //   ① 原来挂 `NCombatRoom`（房间）下 —— 不在战斗 UI 子树里，UI 隐藏它不跟着隐藏、
+        //      暂停界面的压暗也管不到它（会显得"高亮"）。
+        //   ② 中途曾塞进 `EnergyCounterContainer` 最前面 —— 成了 UI 里画得最早的东西，
+        //      点击被后面的牌堆按钮全吃掉（"点不了了"）。已废弃。
+        //   ③ **现在：挂 `NCombatUi` 下、并追加为它的最后一个子节点**（用户 2026-10-14 口径）：
+        //      同子树 ⇒ 生命周期与战斗 UI 完全一致（隐藏/压暗都跟着）；
+        //      最后一个 ⇒ 画在牌堆 / 手牌之上，点击不会被它们吃。
+        var host = parent is NCombatRoom { Ui: { } combatUi } ? combatUi : parent;
+
+        foreach (var child in host.GetChildren())
         {
             if (child is GapActionRow)
             {
@@ -111,7 +117,8 @@ internal static class GapActionButtonsHost
             ZIndex = 213,
         };
 
-        parent.AddChild(row);
+        host.AddChild(row);
+        host.MoveChild(row, -1);
     }
 }
 
@@ -135,6 +142,9 @@ internal sealed partial class GapActionRow : Control
 
     /// <summary>当前按键是否参与鼠标交互（暂停界面里要"看得见但不亮"）。</summary>
     private bool _interactionEnabled = true;
+
+    /// <summary>还没做过第一次状态刷新（挂上来的第一次是"落到正确常态"，不该播"动作切换"的演出）。</summary>
+    private bool _firstRefresh = true;
 
     public override void _Ready()
     {
@@ -247,23 +257,35 @@ internal sealed partial class GapActionRow : Control
     }
 
     /// <summary>
-    /// 一个按钮 ⇒ 每帧决定"现在显示哪个动作"。
+    /// 一个按钮 ⇒ 每帧决定"现在显示哪个动作、能不能按"。
     /// </summary>
     /// <remarks>
-    /// 两个都能做（理论上不会：交替 + 每回合 1 次）时按"交替该轮到谁"；两个都不能做时也按交替显示，但按钮灰掉。
+    /// <para>
+    /// <b>显示哪个动作：跟着「间隙」里有没有牌走</b>（用户 2026-10-14 口径）——
+    /// 有牌 ⇒ 「唤回」（把间隙里的牌换回手上）；没牌 ⇒ 「坍缩」（把手牌存进间隙）。
+    /// </para>
+    /// <para>
+    /// 旧实现是"两个都能做时按交替顺序猜该轮到谁"，而交替记录是**按战斗**记的、每场战斗重新开始
+    /// ⇒ 战斗一开始（间隙里可能还留着上一场存的牌）它会显示「坍缩」，与"间隙有牌"直接矛盾。
+    /// </para>
+    /// <para>
+    /// "必须交替 / 沙砾够不够"现在只决定它<b>能不能按</b>（灰掉），不再参与"显示哪个动作"。
+    /// </para>
     /// </remarks>
     private void RefreshState(Player player)
     {
-        var canCollapse = CanCollapse(player);
-        var canRecall = CanRecall(player);
-        var recall = canCollapse == canRecall ? NextIsRecall(player) : canRecall;
+        if (!TimeGap.IsReady)
+        {
+            _button.SetAction(recall: false, enabled: false);
+            return;
+        }
 
-        _button.SetAction(recall, canCollapse || canRecall);
+        var recall = TimeGap.CountOf(player) > 0;
+        var enabled = recall ? CanRecall(player) : CanCollapse(player);
+        // 第一次只落位、不演"切换"：刚挂上来就放一次玫红擦除会看着像"刚刚坍缩过"。
+        _button.SetAction(recall, enabled, playChange: !_firstRefresh);
+        _firstRefresh = false;
     }
-
-    /// <summary>交替语境下"接下来该谁"：上一次是坍缩 ⇒ 该唤回；否则该坍缩。</summary>
-    private static bool NextIsRecall(Player player)
-        => GapTurnLimit.LastAction(player) == GapTurnLimit.GapAction.Collapse;
 
     /// <summary>「坍缩」能不能做：**复用机制自己的预测**（两道闸 + 沙砾 + 手牌非空）。</summary>
     private static bool CanCollapse(Player player)
@@ -348,13 +370,16 @@ internal sealed partial class GapActionButton : NButton
     }
 
     /// <summary>切换"现在代表哪个动作 / 能不能按"（由 <see cref="GapActionRow" /> 每帧调）。</summary>
-    internal void SetAction(bool recall, bool enabled)
+    /// <param name="recall">true = 显示「唤回」，false = 显示「坍缩」。</param>
+    /// <param name="enabled">能不能按（灰色 = 不能）。</param>
+    /// <param name="playChange">动作真的换了时要不要演"变化"（首次落位传 false）。</param>
+    internal void SetAction(bool recall, bool enabled, bool playChange = true)
     {
         // 动作切换 = 月牙换常态：两个方向都演（进「唤回」= 上→下揭出玫红；回「坍缩」= 下→上退回原色）。
         // 只有"动作真的换了"才演 ⇒ 坍缩被拒（沙砾/名额不够）时不会误播。
         if (recall != _recall)
         {
-            _art.SetRose(recall, playChange: true);
+            _art.SetRose(recall, playChange);
         }
 
         _recall = recall;

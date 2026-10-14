@@ -192,6 +192,24 @@ internal static class Const
             /// <summary>M2「坍缩 / 唤回」战斗按键的月牙艺术场景（3 层 + 三段表现）。</summary>
             public const string CollapseButtonArtScene = Root + "/scenes/ui/gap/aeonglass_collapse_button.tscn";
 
+            /// <summary>
+            /// 「领域」战斗特效层场景 —— 挂在 <c>CombatSceneContainer</c> 的 <b>BgContainer 与 BackCombatVfxContainer 之间</b>。
+            /// </summary>
+            /// <remarks>
+            /// <para>
+            /// 落点说明（2026-10-14）：战斗房间的结构是
+            /// <c>CombatSceneContainer/{BgContainer, BackCombatVfxContainer, AllyContainer, EnemyContainer}</c>，
+            /// 绘制序 = 树序 ⇒ 插到 <b>index 1</b> 就是"背景之后、人物之前"。
+            /// </para>
+            /// <para>用户口径：<b>目前常启</b>（不做开关），贴图先给透明空槽，出图后同名覆盖。</para>
+            /// </remarks>
+            public const string DomainScene = Root + "/scenes/combat/aeonglass_domain.tscn";
+
+            /// <summary>
+            /// 「领域」层的贴图（<b>透明空槽</b>，2048×960 —— 与本体第三章 glory 背景同画布，出图后同名覆盖）。
+            /// </summary>
+            public const string DomainLayer = ImageDir + "domain/aeonglass_domain_layer.png";
+
             /// <summary>M2「坍缩 / 唤回」按键的 3 层月牙贴图（256×256，画布已对齐）。</summary>
             /// <remarks>
             /// <para>叠放顺序（自下而上）：<see cref="Rim" /> → inner → <see cref="Crack" />。</para>

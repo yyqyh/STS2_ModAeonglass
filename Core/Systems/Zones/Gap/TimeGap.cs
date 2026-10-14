@@ -38,7 +38,8 @@ public readonly record struct GapResult(bool Ok, string Message)
 /// </para>
 /// <para>
 /// <b>为什么"代价"堵不住无限循环</b>：花沙砾会等量生成空隙（M1 的不变式），倒置又能把空隙换回沙砾
-/// ⇒ 沙砾池可循环。所以硬闸只有两条：**副本一次性**（本类）与**每回合激活上限**（<see cref="GapTurnLimit" />）。
+    /// ⇒ 沙砾池可循环。所以硬闸只剩下 <b>「必须交替」（<see cref="GapTurnLimit" />）</b>
+    /// —— 每回合激活次数的上限**已按用户 2026-10-14 口径取消**（速率只由交替与代价限）。
 /// </para>
 /// </remarks>
 internal static class TimeGap
@@ -60,8 +61,13 @@ internal static class TimeGap
 
     // ============================ 参数（读设置）============================
 
-    /// <summary>间隙容量（定档 5）。</summary>
+    /// <summary>间隙容量（设置值 + 玩家的「间隙容量 +N」能力加值，见 <c>AeonglassGapCapacityPower</c>）。</summary>
     public static int Capacity => Math.Clamp(AeonglassSettingStore.Current.GapCapacity, 1, 10);
+
+    /// <summary>某个玩家**实际**能装多少（结构成长卡会放大它）。</summary>
+    /// <remarks>容量本身仍是"设置值"；这里额外把该玩家的容量加值算进来（GRW-2 深隙 / GRW-3 摆幅）。</remarks>
+    public static int CapacityOf(Player player)
+        => Capacity + Core.Content.Powers.AeonglassGapCapacityPower.BonusOf(player);
 
     /// <summary>副本是否一次性（定档 on）。</summary>
     public static bool OneShot => AeonglassSettingStore.Current.GapOneShot;
@@ -77,10 +83,6 @@ internal static class TimeGap
     /// <para>花沙砾会等量生成空隙（M1 的不变式）⇒ 这条代价同时也是"把沙砾压向空隙侧"的开关。</para>
     /// </remarks>
     public static int ActionCost => Math.Clamp(AeonglassSettingStore.Current.GapActionCost, 0, 6);
-
-    /// <summary>每回合激活次数上限（定档 1，硬闸）—— **坍缩与回归共用这一个额度**。</summary>
-    public static int ActivationsPerTurn =>
-        Math.Clamp(AeonglassSettingStore.Current.GapActivationsPerTurn, 1, 5);
 
     // ============================ 生命周期 ============================
 
@@ -149,9 +151,9 @@ internal static class TimeGap
             return [];
         }
 
-        // **预测必须与执行端一致**（2026-10-14 的两道闸 + 坍缩代价）：任一不满足就"什么都不该演"。
-        if (GapTurnLimit.UsedThisTurn(player) >= ActivationsPerTurn
-            || !GapTurnLimit.AllowsAlternation(player, GapTurnLimit.GapAction.Collapse)
+        // **预测必须与执行端一致**（2026-10-14：必须交替 + 坍缩代价）：任一不满足就"什么都不该演"。
+        // ⚠️ 每回合激活次数的上限已取消（用户口径）⇒ 这里不再有"本回合额度"这一条。
+        if (!GapTurnLimit.AllowsAlternation(player, GapTurnLimit.GapAction.Collapse)
             || ActionCost > SecondaryResourceCmd.Get(player, AeonglassSecondaryResources.SandId))
         {
             return [];
@@ -220,15 +222,8 @@ internal static class TimeGap
             return GapResult.Fail("手牌为空，没有可复制的牌");
         }
 
-        // —— 2026-10-14 规则层定档：两道闸 + 坍缩代价（不足则整次不动）——
-        var used = GapTurnLimit.UsedThisTurn(player);
-        if (used >= ActivationsPerTurn)
-        {
-            var blocked = $"坍缩被拒（本回合已激活 {used}/{ActivationsPerTurn}）";
-            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} {blocked}");
-            return GapResult.Fail(blocked);
-        }
-
+        // —— 前置检查：必须交替 + 沙砾够付（任一不满足则整次不动）——
+        //    每回合激活次数的上限已按用户 2026-10-14 口径取消。
         if (!GapTurnLimit.AllowsAlternation(player, GapTurnLimit.GapAction.Collapse))
         {
             var blocked = "坍缩被拒（坍缩与回归必须交替：先回归一次）";
@@ -298,11 +293,33 @@ internal static class TimeGap
 
         GapTurnLimit.Mark(player, GapTurnLimit.GapAction.Collapse);
 
+        // 坍缩通知（GRW 通道的收益线读它；例：升级档「深隙」= 坍缩时额外抽 1 张）。
+        await NotifyCollapseListeners(player, copied);
+
         var text = $"坍缩：手牌 {handBefore} 张 → 间隙 +{copied}（{CountOf(player)}/{Capacity}）"
                    + $" → 移出手牌 {copied}"
                    + (AeonglassSettingStore.Current.GapRefillDraw ? $" → 补抽 {drawn}/{drawCount}" : " → 不补抽");
         Const.Logger.Info($"[{Const.ModId}] [M2] {text}");
         return GapResult.Success(text);
+    }
+
+    /// <summary>把"刚坍缩完"转发给该玩家身上实现了 <see cref="IGapCollapseListener" /> 的能力。</summary>
+    /// <remarks>单个监听者抛异常只记日志，不影响坍缩本身。</remarks>
+    private static async Task NotifyCollapseListeners(Player player, int copies)
+    {
+        foreach (var listener in player.Creature.Powers.OfType<IGapCollapseListener>().ToList())
+        {
+            try
+            {
+                await listener.OnCollapsed(player, copies);
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Gap} 坍缩通知失败（{listener.GetType().Name}）："
+                    + $"{ex.GetType().Name}: {ex.Message}");
+            }
+        }
     }
 
     // ============================ ② 激活（用户口径）============================
@@ -322,9 +339,8 @@ internal static class TimeGap
             return [];
         }
 
-        // **与执行端同源**：两道闸（每回合额度 + 必须交替）任一不满足 ⇒ 这一次一定失败 ⇒ 什么都不该演。
-        if (GapTurnLimit.UsedThisTurn(player) >= ActivationsPerTurn
-            || !GapTurnLimit.AllowsAlternation(player, GapTurnLimit.GapAction.Recall))
+        // **与执行端同源**：必须交替（每回合额度已取消）不满足 ⇒ 这一次一定失败 ⇒ 什么都不该演。
+        if (!GapTurnLimit.AllowsAlternation(player, GapTurnLimit.GapAction.Recall))
         {
             return [];
         }
@@ -375,16 +391,9 @@ internal static class TimeGap
             return GapResult.Fail("M2 未启用（间隙牌堆没注册）");
         }
 
-        // —— 2026-10-14 规则层定档：回归与坍缩共用同一道速率闸 + 必须交替 ——
-        //    ⚠️ 这两道检查必须在**付代价 / 搬牌之前**：不满足就整次不动（不能出现"手牌弃了、副本没回来"）。
-        var used = GapTurnLimit.UsedThisTurn(player);
-        if (used >= ActivationsPerTurn)
-        {
-            var blocked = $"回归被拒（本回合已激活 {used}/{ActivationsPerTurn}）";
-            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} {blocked}");
-            return GapResult.Fail(blocked);
-        }
-
+        // —— 前置检查：必须交替 ——
+        //    ⚠️ 必须在**付代价 / 搬牌之前**：不满足就整次不动（不能出现"手牌弃了、副本没回来"）。
+        //    每回合激活次数的上限已按用户 2026-10-14 口径取消。
         if (!GapTurnLimit.AllowsAlternation(player, GapTurnLimit.GapAction.Recall))
         {
             var blocked = "回归被拒（坍缩与回归必须交替：先坍缩一次）";
@@ -412,10 +421,16 @@ internal static class TimeGap
             return GapResult.Fail(blocked);
         }
 
-        // ② 丢弃当前手牌（进弃牌堆）。
+        // ② 丢弃当前手牌（进弃牌堆）—— 除非本回合挂了 GAP-2「缓收」且间隙够多。
         var hand = combatPiles.Hand;
         var discarded = 0;
-        foreach (var card in hand.Cards.ToList())
+        var (keepHand, drawAfterRecall) = GapRecallGuard.Evaluate(player, copies.Count);
+        if (keepHand)
+        {
+            Const.Logger.Info($"[{Const.ModId}] [M2] 缓收生效：间隙 {copies.Count} 张 ⇒ 本次回归不丢手牌");
+        }
+
+        foreach (var card in keepHand ? [] : hand.Cards.ToList())
         {
             var result = await CardPileCmd.Add(card, PileType.Discard, CardPilePosition.Bottom, null, skipVisuals: false);
             if (result.success)
@@ -457,7 +472,8 @@ internal static class TimeGap
                 GapCopyRestore.ReapplyCosts(card);
 
                 // 虚无（Ethereal）：2026-10-14 定档**副本带虚无**（默认 on；设置页 · M2 仍可关）。
-                if (Ethereal)
+                // GAP-3「存真」：本回合挂上开关时跳过这一步（副本不带虚无）。
+                if (Ethereal && !GapEtherealGuard.Active(player))
                 {
                     card.AddKeyword(CardKeyword.Ethereal);
                 }
@@ -501,6 +517,13 @@ internal static class TimeGap
         }
 
         Core.Presentation.UI.CombatUiRefresh.RefreshAll(player);
+
+        // 缓收的升级档：回归完再抽几张。
+        if (keepHand && drawAfterRecall > 0)
+        {
+            var drawn = (await CardPileCmd.Draw(new BlockingPlayerChoiceContext(), drawAfterRecall, player)).Count();
+            Const.Logger.Info($"[{Const.ModId}] [M2] 缓收：回归后补抽 {drawn}/{drawAfterRecall}");
+        }
 
         // 存储搬空了 ⇒ 同步显示层（撤掉那些克隆）。
         await GapView.SyncAsync(player);

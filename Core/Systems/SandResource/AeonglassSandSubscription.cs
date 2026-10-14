@@ -70,6 +70,15 @@ internal sealed class AeonglassSandSubscription : ISecondaryResourceHookListener
             return;
         }
 
+        // 回合内计数：这一笔算"本回合消耗过沙砾"（卡面条件用，例：PH-3 双分的消逝副）。
+        SandTurnCounters.MarkSandSpent(context.Player, amount);
+
+        // 本场累计消耗（RW-1 反冲的消逝副读它）。
+        Systems.History.CombatHistory.RecordSandSpent(context.Player, amount);
+
+        // 消耗通知（SD-7 结壳这类"消耗沙砾触发"的能力读它）。
+        await NotifySpendListeners(context.Player, amount);
+
         var sandBefore = SecondaryResourceCmd.Get(context.Player, AeonglassSecondaryResources.SandId);
         var voidBefore = SecondaryResourceCmd.Get(context.Player, AeonglassSecondaryResources.VoidId);
 
@@ -146,4 +155,22 @@ internal sealed class AeonglassSandSubscription : ISecondaryResourceHookListener
 
     /// <summary>是不是我们角色的玩家（次级资源是模组级资源，谁都能持有，所以必须按角色过滤）。</summary>
     private static bool IsOurs(Player? player) => player?.Character is Aeonglass;
+
+    /// <summary>把"消耗了沙砾"转发给该玩家身上实现了 <see cref="IAeonglassSandSpendListener" /> 的能力。</summary>
+    /// <remarks>单个监听者抛异常只记日志，不影响付费本身。</remarks>
+    private static async Task NotifySpendListeners(Player player, int amount)
+    {
+        foreach (var listener in player.Creature.Powers.OfType<IAeonglassSandSpendListener>().ToList())
+        {
+            try
+            {
+                await listener.OnSandSpent(player, amount);
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] [M1] 消耗通知失败（{listener.GetType().Name}）：{ex.GetType().Name}: {ex.Message}");
+            }
+        }
+    }
 }

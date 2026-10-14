@@ -145,11 +145,6 @@ internal static class AeonglassModSettingsPage
             settings => settings?.GapActionCost ?? 2,
             (settings, value) => settings.GapActionCost = value);
 
-        var m2Activations = new ModSettingsValueBinding<AeonglassSetting, int>(
-            Const.ModId, AeonglassSettingStore.DataKey, SaveScope.Global,
-            settings => settings?.GapActivationsPerTurn ?? 1,
-            (settings, value) => settings.GapActivationsPerTurn = value);
-
         var m2RefillDraw = new ModSettingsValueBinding<AeonglassSetting, bool>(
             Const.ModId, AeonglassSettingStore.DataKey, SaveScope.Global,
             settings => settings is not null && settings.GapRefillDraw,
@@ -287,9 +282,9 @@ internal static class AeonglassModSettingsPage
                     debugUnlimited,
                     ModSettingsText.Literal(
                         "默认<b>开</b>（用户 2026-10-11 要求「测试解放每场额度，所有功能都不带限制」）。\n"
-                        + "打开后不再拦截：M2 每回合激活上限、M3 每场意图操纵上限、"
-                        + "M4 每场 1 次回溯、M6 每场切换上限与冷却。\n"
-                        + "⚠️ 「必须交替」（M2）**不受**本开关影响，永远生效。\n"
+                        + "打开后不再拦截：M3 每场意图操纵上限、M4 每场 1 次回溯、M6 每场切换上限与冷却。\n"
+                        + "⚠️ M2 的「每回合 1 次激活」上限**已取消**（2026-10-14 用户口径）⇒ 与本开关无关。\n"
+                        + "⚠️ M2 的「必须交替」**不受**本开关影响，永远生效。\n"
                         + "⚠️ <b>代价照旧收</b>，只是不限次数；这是测试开关，正式发布前应关掉。"))
                 .AddButton(
                     "debug_dump_placeholder",
@@ -399,7 +394,7 @@ internal static class AeonglassModSettingsPage
                     m2Enabled,
                     ModSettingsText.Literal(
                         "开启：在抽牌堆右侧注册「间隙」按钮（点开是原版牌堆界面，只读查看），并启用复制/换回。\n"
-                        + "定档口径：**坍缩 2 沙砾 · 回归免费 · 每回合 1 次激活（两者共用）· 必须交替**。\n"
+                        + "定档口径：**坍缩 2 沙砾 · 唤回 2 沙砾 · 每回合不限次数 · 但必须交替**（同一种不能连做两次）。\n"
                         + "关闭：不注册牌堆与存档槽，激活/换回直接拒绝，不留坏状态。\n"
                         + "⚠️ 改动需要重启游戏生效（牌堆与数据槽只在初始化时注册一次）。"))
                 .AddIntSlider(
@@ -434,18 +429,6 @@ internal static class AeonglassModSettingsPage
                         "定档 **2**：坍缩与唤回**各收这一笔**（一次动作固定收一笔，**不按张数乘**）。\n"
                         + "2026-10-13 用户口径「M2 统一 2 沙砾」—— 原先是「坍缩 2 / 唤回按张计费」。\n"
                         + "不足 ⇒ 整次动作被拒（不搬牌、不弃手牌）。付出去的沙砾会**等量生成空隙**（M1 的不变式）。"))
-                .AddIntSlider(
-                    "mechanism_m2_activations",
-                    ModSettingsText.Literal("每回合激活次数上限（坍缩 / 回归共用）"),
-                    m2Activations,
-                    1,
-                    3,
-                    1,
-                    value => $"{value} 次",
-                    ModSettingsText.Literal(
-                        "定档 **1**（2026-10-14 规则层：取代 Step 5 的「每场 N 次」）。\n"
-                        + "坍缩与回归**共用**这一个额度，并且两者**必须交替**（坍缩之后要先回归，反之亦然）。\n"
-                        + "为什么不能放开：花沙砾会等量生成空隙、倒置又能换回沙砾 ⇒ 单靠代价堵不住循环。"))
                 .AddToggle(
                     "mechanism_m2_refill_draw",
                     ModSettingsText.Literal("坍缩后补抽（旧口径）"),

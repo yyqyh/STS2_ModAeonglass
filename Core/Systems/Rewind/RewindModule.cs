@@ -67,6 +67,7 @@ internal static class RewindModule
         // ② 接缝 回溯 ↔ 搁浅 / 间隙 / 敌人时间（order 100 / 200 / 300）。
         facade.Extensions.Add(new StasisRewindExtension());
         facade.Extensions.Add(new GapRewindExtension());
+        facade.Extensions.Add(new DeferralRewindExtension());
 
         // ③ VFX 屏障补丁：12 个异步卡 VFX 目标，逐个手动装（一个改名不会带崩整组）。
         var harmony = new Harmony(Const.ModId + ".rewind");
@@ -199,6 +200,9 @@ internal static class RewindModule
             {
                 TaskHelper.RunSafely(SpendAllSandAsync(player));
             }
+
+            // 战斗历史：本场回溯次数 +1（RW 通道的卡读它）。
+            Systems.History.CombatHistory.RecordRewind(player);
         });
 
         return true;

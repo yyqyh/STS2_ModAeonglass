@@ -47,12 +47,19 @@ public partial class MonsterIntentBelt : Control
     /// </remarks>
     private static readonly Vector2 PileRowOffset = new(-100f, -50f);
 
+    /// <summary>
+    /// **「拆解」选牌面板的位置**：相对卡带原点的固定坐标（与 <see cref="PileRowOffset" /> 同一套口径）。
+    /// </summary>
+    /// <remarks>X = 往右（0 = 与第一张卡左边缘对齐）；Y = 往下（越小越靠上）。想挪面板就改这两个数。</remarks>
+    private static readonly Vector2 TopPickOffset = new(-100f, -170f);
+
     private Creature? _creature;
     private Control? _anchor;
     private HBoxContainer _row = null!;
     private HBoxContainer _pileRow = null!;
     private Control? _pilePopup;
     private bool? _popupIsDrawPile;
+    private Control? _picker;
     private readonly List<IntentCardView> _views = [];
     private string _signature = string.Empty;
     private float _timer;
@@ -118,9 +125,30 @@ public partial class MonsterIntentBelt : Control
         parent.AddChild(belt);
         // 让系统层能通知"进/出指向模式"（表现层注册，系统层不反向依赖）。
         MonsterIntentBeltPresent.TargetingChanged = SetTargeting;
+        // 同一个接缝的另一半：系统层要开"抽牌堆顶选牌"面板时，由这里把请求落到**对应那只怪**的卡带上。
+        MonsterIntentBeltPresent.TopPickRequested ??= FindAndBeginTopPick;
         belt.Build();
         belt.SyncPosition();
         return belt;
+    }
+
+    /// <summary>
+    /// 接缝实现：按节点名找到 <paramref name="creature" /> 的卡带，把选牌面板开在它身上。
+    /// </summary>
+    /// <remarks>找不到那只怪的卡带（怪死了 / 还没挂）就返回 false —— 卡那一侧会按"没选到"处理。</remarks>
+    private static bool FindAndBeginTopPick(
+        Creature creature,
+        IReadOnlyList<IntentCard> cards,
+        Func<IntentCard, string> onPick)
+    {
+        var anchor = MonsterAccess.NodeOf(creature)?.IntentContainer;
+        if (anchor?.GetParent() is not { } parent)
+        {
+            return false;
+        }
+
+        var belt = parent.GetNodeOrNull<MonsterIntentBelt>(NodeName(creature));
+        return belt is not null && belt.BeginTopPick(cards, onPick);
     }
 
     /// <summary>卡带节点名（按生物的 combat id 唯一）。</summary>
@@ -466,6 +494,103 @@ public partial class MonsterIntentBelt : Control
         label.AddThemeFontSizeOverride("font_size", size);
         label.AddThemeColorOverride("font_color", color);
         return label;
+    }
+
+    /// <summary>
+    /// <b>「拆解」用的选牌面板</b>（INT-4）：把这只怪<b>抽牌堆顶</b>的几张意图画成真卡横排，点一张回调一次并关闭。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 挂在卡带上的理由：卡带本来就在这只怪的意图区上方（坐标同源），怪死了会连带释放，不用另做生命周期。
+    /// </para>
+    /// <para>
+    /// 面板**不自己改牌堆**：点中的那张交给回调（卡 → <c>IntentResolver.Dismantle</c>），那边会再确认一次
+    /// "这张还在抽牌堆里"—— 面板开着的这段时间里，回合推进 / 洗牌都可能把它挪走。
+    /// </para>
+    /// </remarks>
+    /// <returns>面板是否真的打开了（拿不到玩家 / 没有可画的卡都返回 false）。</returns>
+    internal bool BeginTopPick(IReadOnlyList<IntentCard> cards, Func<IntentCard, string> onPick)
+    {
+        CloseTopPick();
+        if (_creature is null || PlayerOf() is not { } player || cards.Count == 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            var panel = new PanelContainer
+            {
+                Name = "AeonglassTopPick",
+                MouseFilter = MouseFilterEnum.Stop,
+                ZIndex = 210,
+                Modulate = new Color(1f, 1f, 1f, 0.97f),
+            };
+
+            var box = new VBoxContainer();
+            box.AddChild(MakePopupLabel($"拆解 · 抽牌堆顶 {cards.Count} 张（点一张丢进它的弃牌堆）", 11, Colors.White));
+
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", (int)SlotGap);
+
+            var shown = 0;
+            foreach (var card in cards)
+            {
+                var view = IntentCardView.Create(
+                    row, new Vector2(SlotWidth, SlotHeight),
+                    IntentCardBinder.InstanceFor(player, _creature, card));
+                if (view is null)
+                {
+                    continue;
+                }
+
+                view.Bind(card, _creature, card.IsVoid ? $"凋萎 {card.HitPointsOf()}" : null);
+                view.SetDim(!card.Playable);
+
+                var picked = card;
+                view.SetTargeting(() =>
+                {
+                    var text = onPick(picked);
+                    Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 拆解点击：{picked.Describe()} ⇒ {text}");
+                    CloseTopPick();
+                });
+
+                shown++;
+            }
+
+            if (shown == 0)
+            {
+                panel.QueueFreeSafely();
+                return false;
+            }
+
+            box.AddChild(row);
+            panel.AddChild(box);
+            AddChild(panel);
+            panel.Position = TopPickOffset;
+            _picker = panel;
+
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 拆解：打开抽牌堆顶选牌面板（{shown} 张，可点选）");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 拆解面板打开失败：{ex.GetType().Name}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>关掉「拆解」面板（没有就什么都不做）。</summary>
+    internal void CloseTopPick()
+    {
+        if (_picker is { } existing && IsInstanceValid(existing))
+        {
+            existing.QueueFree();
+        }
+
+        _picker = null;
     }
 
     /// <summary>把本体玩家牌堆按钮的外观子树拿来用（数量自己填）；任何一步失败都返回 null。</summary>

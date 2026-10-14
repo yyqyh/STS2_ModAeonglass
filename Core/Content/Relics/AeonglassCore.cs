@@ -1,5 +1,8 @@
 using MegaCrit.Sts2.Core.Entities.Relics;
 using MegaCrit.Sts2.Core.Entities.Players;
+using MegaCrit.Sts2.Core.Entities.Creatures;
+using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Saves.Runs;
 
@@ -12,6 +15,7 @@ using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Decks;
 using STS2_Aeonglass.Core.Systems.Cards;
+using STS2_Aeonglass.Core.Systems.History;
 using STS2_Aeonglass.Core.Systems.Rewind;
 
 namespace STS2_Aeonglass.Core.Content.Relics;
@@ -40,6 +44,38 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
 {
     /// <summary>初始遗物。</summary>
     public override RelicRarity Rarity => RelicRarity.Starter;
+
+    // ============================ 战斗历史打点（ANN / RW 通道的卡读它）============================
+    // 起始遗物是天然的战斗 hook 监听者（每个 run 都在场）⇒ 借它把"打出的牌 / 回合结束"喂给历史层，
+    // 不用为此再造一个隐形内容。
+
+    /// <summary>记下"谁打出了什么牌"（历史层用）。</summary>
+    public override Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        if (cardPlay.Card.Owner is { } player)
+        {
+            CombatHistory.RecordCardPlayed(player, cardPlay.Card);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>一方回合结束 ⇒ 该方"本回合读数"滚成"上回合"。</summary>
+    public override Task AfterSideTurnEnd(
+        PlayerChoiceContext choiceContext,
+        MegaCrit.Sts2.Core.Combat.CombatSide side,
+        IEnumerable<Creature> participants)
+    {
+        foreach (var creature in participants)
+        {
+            if (creature.Player is { } player)
+            {
+                CombatHistory.EndTurn(player);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
 
     // ============================ 「迟滞」的执行点（规则层 v1.1 新关键词）============================
     // 本体的洗牌（弃牌堆 → 抽牌堆）走 `Hook.ModifyShuffleOrder` → 逐个 hook 监听者调

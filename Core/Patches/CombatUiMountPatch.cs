@@ -50,5 +50,8 @@ internal static class CombatUiMountPatch
         GapActionButtonsHost.Attach(__instance);
         MonsterIntentBeltHost.Attach(__instance);
         GapPortals.Attach(__instance);
+
+        // 「领域」战斗特效层：插在背景与人物之间（CombatSceneContainer 第 1 位），目前常启。
+        DomainLayerHost.Attach(__instance);
     }
 }

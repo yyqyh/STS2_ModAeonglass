@@ -21,23 +21,63 @@ namespace STS2_Aeonglass.Core.Systems.Rewind;
 /// </remarks>
 internal static class RewindCombatLimit
 {
-    private static readonly Dictionary<Player, CombatState> UsedIn = [];
+    private static readonly Dictionary<Player, (CombatState Combat, int Count)> UsedIn = [];
+
+    /// <summary>本场额外允许多回溯几次（RW-4 双线给的额度）。</summary>
+    private static readonly Dictionary<Player, (CombatState Combat, int Extra)> ExtraIn = [];
 
     /// <summary>本场战斗是否已经用掉那一次。</summary>
     public static bool Used(Player player) =>
         !AeonglassSettingStore.DebugUnlimited
-        && UsedIn.TryGetValue(player, out var combat)
-        && ReferenceEquals(combat, CombatAccess.State);
+        && CombatAccess.State is { } state
+        && UsedIn.TryGetValue(player, out var used)
+        && ReferenceEquals(used.Combat, state)
+        && used.Count > Extra(player);
+
+    /// <summary>本场额外额度（RW-4 双线加；战斗一换自动归零）。</summary>
+    public static int Extra(Player player) =>
+        CombatAccess.State is { } state
+        && ExtraIn.TryGetValue(player, out var extra)
+        && ReferenceEquals(extra.Combat, state)
+            ? extra.Extra
+            : 0;
+
+    /// <summary>加一份本场额度。</summary>
+    public static void GrantExtra(Player player, int count)
+    {
+        if (CombatAccess.State is not { } state || count <= 0)
+        {
+            return;
+        }
+
+        ExtraIn[player] = (state, Extra(player) + count);
+        Const.Logger.Info($"[{Const.ModId}] [M4] 本场额外回溯额度 +{count}（现共 {Extra(player)} 次）");
+    }
 
     /// <summary>占掉本场的那一次（先占位，避免连点重复触发）。</summary>
     public static void Mark(Player player)
     {
         if (CombatAccess.State is { } state)
         {
-            UsedIn[player] = state;
+            var count = UsedIn.TryGetValue(player, out var used) && ReferenceEquals(used.Combat, state)
+                ? used.Count + 1
+                : 1;
+            UsedIn[player] = (state, count);
         }
     }
 
     /// <summary>退回占位（回档没成立时用，例如没有上一回合快照）。</summary>
-    public static void Unmark(Player player) => UsedIn.Remove(player);
+    public static void Unmark(Player player)
+    {
+        if (CombatAccess.State is { } state
+            && UsedIn.TryGetValue(player, out var used)
+            && ReferenceEquals(used.Combat, state)
+            && used.Count > 1)
+        {
+            UsedIn[player] = (state, used.Count - 1);
+            return;
+        }
+
+        UsedIn.Remove(player);
+    }
 }

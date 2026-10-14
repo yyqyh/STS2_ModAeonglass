@@ -137,6 +137,8 @@ internal static class EnemyTimeModule
         var text = action(target);
         // 用户口径（上级 2026-10-12 决策）：**取消每场次数上限** —— 正式路径不再拦次数。
         // `IntentManipulationLimit` 保留为"默认关闭的调试闸"（要拦时在调试面板里显式打开）。
+        // 战斗历史：记一次"操作了意图"（INT-6 高维观测读它）。
+        Systems.History.CombatHistory.RecordIntentManipulation(player);
         return $"{verb} → {text}";
     }
 

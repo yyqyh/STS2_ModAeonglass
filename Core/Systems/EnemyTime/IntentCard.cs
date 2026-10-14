@@ -54,6 +54,15 @@ internal sealed class IntentCard(string moveId, bool isVoid)
     /// <summary>副惩戒：本回合被虚无吃掉的意图位。</summary>
     internal bool Eaten { get; set; }
 
+    /// <summary>
+    /// <b>迟滞</b>（敌人侧）：这张意图<b>不参与洗牌</b> —— 洗回时留在弃牌堆（DLY-4 静域用）。
+    /// </summary>
+    /// <remarks>
+    /// 口径与玩家侧迟滞一致：只挡"随机洗回"，不挡任何主动指定（例：剥夺照样能点它）。
+    /// 战斗内状态（意图牌堆本身就是战斗级的）。
+    /// </remarks>
+    internal bool Stuck { get; set; }
+
     internal int TimesDrawn { get; set; }
 
     internal int TimesPlayed { get; set; }

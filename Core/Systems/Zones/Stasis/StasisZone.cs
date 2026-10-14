@@ -143,7 +143,29 @@ internal static class StasisZone
         Const.Logger.Info(
             $"[{Const.ModId}] [M7] 滞留 {master.Id.Entry} → 搁浅"
             + $"（X={x}，存 {x + 1}，所在牌堆={PileName(master.Pile?.Type)}）");
+
+        // 搁浅通知（STA 通道的收益线读它；例：压舱 = 每搁浅一张 +6 挡）。
+        await NotifyStrandListeners(player, master, x + 1);
+
         return true;
+    }
+
+    /// <summary>把"有牌被搁浅了"转发给该玩家身上实现了 <see cref="IAeonglassStrandListener" /> 的能力。</summary>
+    /// <remarks>单个监听者抛异常只记日志，不影响搁浅本身。</remarks>
+    private static async Task NotifyStrandListeners(Player player, CardModel master, int combatsLeft)
+    {
+        foreach (var listener in player.Creature.Powers.OfType<IAeonglassStrandListener>().ToList())
+        {
+            try
+            {
+                await listener.OnCardStranded(player, master, combatsLeft);
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] [M7] 搁浅通知失败（{listener.GetType().Name}）：{ex.GetType().Name}: {ex.Message}");
+            }
+        }
     }
 
     /// <summary>归队：从搁浅摘下 → 回到<b>当时的当前卡组</b>。</summary>

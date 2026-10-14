@@ -28,6 +28,15 @@ internal static class IntentTargeting
     private static string _verb = string.Empty;
     private static Func<Player, Creature, IntentCard, string>? _action;
 
+    /// <summary>
+    /// 「这次点完别退出指向模式」—— <b>多点选取</b>用（例：INT-5 定序要按顺序点完整手）。
+    /// </summary>
+    /// <remarks>
+    /// 由 <c>action</c> 自己决定要不要续：它在结算末尾调 <see cref="KeepAlive" />，
+    /// <see cref="TrySubmit" /> 看到标记就保留模式（否则照旧一次结算即退出）。
+    /// </remarks>
+    private static bool _keepAlive;
+
     /// <summary>正在等玩家点一张意图。</summary>
     public static bool IsActive => _action is not null;
 
@@ -40,11 +49,15 @@ internal static class IntentTargeting
         _player = player;
         _verb = verb;
         _action = action;
+        _keepAlive = false;
         MonsterIntentBeltPresent.SetTargeting(true);
 
         Const.Logger.Info(
             $"[{Const.ModId}] {Const.Prefix.Intent} 进入指向模式：{verb} —— 点卡带上的意图卡（可行动的那几张）");
     }
+
+    /// <summary>多点选取：本次结算完**不退出**，等下一次点击（由 <c>action</c> 在末尾调）。</summary>
+    public static void KeepAlive() => _keepAlive = true;
 
     /// <summary>退出指向模式（不动任何牌）。</summary>
     public static void Cancel(string why = "取消")
@@ -58,6 +71,7 @@ internal static class IntentTargeting
         _player = null;
         _action = null;
         _verb = string.Empty;
+        _keepAlive = false;
         MonsterIntentBeltPresent.SetTargeting(false);
     }
 
@@ -78,6 +92,13 @@ internal static class IntentTargeting
         {
             Const.Logger.Error(
                 $"[{Const.ModId}] {Const.Prefix.Intent} 指向结算抛异常（已忽略）：{ex.GetType().Name}: {ex.Message}");
+        }
+
+        // 多点选取：action 说了"还要继续"就留在模式里（下一次点击照旧走同一个 action）。
+        if (_keepAlive)
+        {
+            _keepAlive = false;
+            return true;
         }
 
         Cancel("已结算");

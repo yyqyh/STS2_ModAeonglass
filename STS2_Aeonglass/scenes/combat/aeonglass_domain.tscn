@@ -1,0 +1,109 @@
+[gd_scene load_steps=8 format=3 uid="uid://bq50gaj00tvag"]
+
+[ext_resource type="Script" uid="uid://c5dckym8t02" path="res://Core/Presentation/UI/DomainLayer.cs" id="1_domain"]
+[ext_resource type="Texture2D" uid="uid://csfg7l3xaxlxf" path="res://STS2_Aeonglass/images/combat/vantom_bg_bottom.png" id="2_looua"]
+
+[sub_resource type="Shader" id="Shader_domain_mask"]
+code = "shader_type canvas_item;
+
+// 「领域」层的圆形蒙版。
+//   圆心起点 = 背景图**右上角** (canvas_size.x, 0)；
+//   半径    = 到**左下角**的对角线 length(canvas_size)（整段动画里不变）；
+//   动画    = 圆心**水平向右**移（y 恒为 0）⇒ 圆的左边缘从左上角往右下扫过去；
+//   边缘    = 半径附近 ±feather_px 之间羽化。
+//
+// progress 与画面的关系：c.x = W * (1 + progress)
+//   想让“圆边正好掠过某点 T”：c.x = T.x + sqrt(r² − T.y²)、progress = (c.x − W) / W
+//   本场景两个档（W=2048, H=960, r≈2261.83）：
+//     · 过**下边中点**(1024,960)：c.x = 3072    ⇒ progress = 0.5
+//     · 过**上边中点**(1024,  0)：c.x ≈ 3285.83 ⇒ progress ≈ 0.6044
+//
+// **极性**：这里是“圆**内**透明、圆**外**可见” ⇒ progress 0（圆盖满整幅）时整层不可见，
+// 圆心右移 = 领域从左侧被揭出来。想换回“圆内可见”：把最后一行改成 `tex.a * cut`。
+uniform vec2 canvas_size = vec2(2048.0, 960.0);
+uniform float progress : hint_range(0.0, 1.0) = 0.0;
+uniform float feather_px : hint_range(1.0, 600.0) = 160.0;
+
+void fragment() {
+	vec2 p = UV * canvas_size;
+	vec2 center = vec2(canvas_size.x * (1.0 + progress), 0.0);
+	float radius = length(canvas_size);
+	float d = distance(p, center);
+	float cut = 1.0 - smoothstep(radius - feather_px, radius + feather_px, d);
+	vec4 tex = texture(TEXTURE, UV);
+	COLOR = vec4(tex.rgb, tex.a * (1.0 - cut));
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_domain_mask"]
+shader = SubResource("Shader_domain_mask")
+shader_parameter/canvas_size = Vector2(2048, 960)
+shader_parameter/progress = 0.0
+shader_parameter/feather_px = 160.0
+
+[sub_resource type="Animation" id="Animation_breathe"]
+resource_name = "breathe"
+length = 0.9
+loop_mode = 2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:MaskProgress")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.9),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.5, 0.6044]
+}
+
+[sub_resource type="Animation" id="Animation_wipe"]
+resource_name = "wipe"
+length = 0.8
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:MaskProgress")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.8),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 0.5]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_domain"]
+_data = {
+&"breathe": SubResource("Animation_breathe"),
+&"wipe": SubResource("Animation_wipe")
+}
+
+[node name="AeonglassDomain" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_domain")
+
+[node name="Layer" type="TextureRect" parent="."]
+material = SubResource("ShaderMaterial_domain_mask")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_looua")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_domain")
+}

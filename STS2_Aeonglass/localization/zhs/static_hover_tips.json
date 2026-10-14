@@ -7,16 +7,19 @@
   "STS2_AEONGLASS_CARDPILE_EMPTY_ZONE.description": "被滞留的牌停在这里，不参与战斗。\n每过一场战斗，它们的倒计时减 1；归零后回到当时的当前卡组。",
   "STS2_AEONGLASS_CARDPILE_EMPTY_ZONE.empty": "搁浅里没有牌。",
   "STS2_AEONGLASS_CARDPILE_TIME_GAP.title": "间隙（坍缩）",
-  "STS2_AEONGLASS_CARDPILE_TIME_GAP.description": "「坍缩」把整手牌复制到这里并让本体离场（本回合手牌变少）。\n「回归」把副本搬回手牌，每张要花沙砾；每场只能回归 1 次。",
+  "STS2_AEONGLASS_CARDPILE_TIME_GAP.description": "「坍缩」把整手牌复制到这里并让本体离场（本回合手牌变少）。\n「回归」把副本搬回手牌，每次花 2 点沙砾。",
   "STS2_AEONGLASS_CARDPILE_TIME_GAP.empty": "间隙里没有副本。",
   "STS2_AEONGLASS_CARDPILE_TIME_GAP_VIEW.title": "间隙",
-  "STS2_AEONGLASS_CARDPILE_TIME_GAP_VIEW.description": "「坍缩」把整手牌复制到这里并让本体离场；「回归」把副本搬回手牌（每张要沙砾，每场 1 次）。\n这里只是**投影**：真相存在另一处，跨战斗保留。",
+  "STS2_AEONGLASS_CARDPILE_TIME_GAP_VIEW.description": "「坍缩」把整手牌复制到这里并让本体离场；「回归」把副本搬回手牌（每次 2 点沙砾）。\n这里只是**投影**：真相存在另一处，跨战斗保留。",
   "STS2_AEONGLASS_CARDPILE_TIME_GAP_VIEW.empty": "间隙里没有副本。",
   "STS2_AEONGLASS_CARDPILE_DECK_B.title": "另一副牌组",
   "STS2_AEONGLASS_CARDPILE_DECK_B.description": "现在不在生效的那一副牌组。\n每场战斗胜利后自动轮换；也可以按调试键主动切换（战斗内切换会重铺本场牌堆）。\n点开只是预览，零副作用。",
   "STS2_AEONGLASS_CARDPILE_DECK_B.empty": "另一副牌组暂时是空的。",
   "STS2_AEONGLASS_GAP_COLLAPSE.title": "坍缩",
-  "STS2_AEONGLASS_GAP_COLLAPSE.description": "把整手牌置于[gold]时间裂隙[/gold]。\n花 2 点沙砾；每回合只能激活一次，且坍缩与唤回必须交替。",
+  "STS2_AEONGLASS_GAP_COLLAPSE.description": "把整手牌置于[gold]时间裂隙[/gold]。\n花 2 点沙砾；坍缩与唤回必须交替（同一种不能连做两次）。",
   "STS2_AEONGLASS_GAP_RECALL.title": "唤回",
-  "STS2_AEONGLASS_GAP_RECALL.description": "丢弃当前手牌，用[gold]时间裂隙[/gold]里的牌替换。\n花 2 点沙砾；每回合只能激活一次，且坍缩与唤回必须交替。"
+  "STS2_AEONGLASS_GAP_RECALL.description": "丢弃当前手牌，用[gold]时间裂隙[/gold]里的牌替换。\n花 2 点沙砾；坍缩与唤回必须交替（同一种不能连做两次）。",
+  "STS2_AEONGLASS_PROMPT_PUT_BACK_TOP": "选择要放到抽牌堆顶的牌"
+,
+  "STS2_AEONGLASS_PROMPT_POUR_TOP": "选择要取回并放到抽牌堆顶的牌"
 }

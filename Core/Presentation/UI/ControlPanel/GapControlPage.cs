@@ -20,7 +20,8 @@ namespace STS2_Aeonglass.Core.Presentation.UI.ControlPanel;
 /// 这个面板是它们现在的<b>临时</b>入口。
 /// </para>
 /// <para>
-/// 状态行里的「本回合激活 u/1 ｜ 上次动作」就是 M2 的两道速率闸（每回合 1 次 + 必须交替）的实时读数。
+/// 状态行里的「上次动作」就是 M2 唯一那道速率闸（必须交替）的实时读数 ——
+/// 「每回合 1 次激活」的上限已按用户 2026-10-14 口径取消。
 /// </para>
 /// </remarks>
 internal sealed partial class GapControlPage : ControlPage
@@ -61,8 +62,6 @@ internal sealed partial class GapControlPage : ControlPage
             Const.Logger.Info($"[{Const.ModId}] [M2] 进场：{TimeGap.Describe(player)}");
         }
 
-        var used = GapTurnLimit.UsedThisTurn(player);
-        var left = GapTurnLimit.RemainingThisTurn(player, TimeGap.ActivationsPerTurn);
         var last = GapTurnLimit.LastAction(player) switch
         {
             GapTurnLimit.GapAction.Collapse => "坍缩",
@@ -75,8 +74,7 @@ internal sealed partial class GapControlPage : ControlPage
 
         return $"间隙 {TimeGap.CountOf(player)}/{TimeGap.Capacity}"
                + $" ｜ 沙砾 {(sand < 0 ? "?" : sand.ToString())}"
-               + $" ｜ 本回合激活 {used}/{TimeGap.ActivationsPerTurn}（剩 {left}）"
-               + $" ｜ 上次动作：{last}"
+               + $" ｜ 上次动作：{last}（必须交替：同一种不能连做两次）"
                + (AeonglassSettingStore.DebugUnlimited ? " ｜ 调试：不限次" : string.Empty);
     }
 

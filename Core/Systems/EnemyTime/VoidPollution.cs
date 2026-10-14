@@ -115,6 +115,34 @@ internal static class VoidPollution
     }
 
     /// <summary>
+    /// 从<b>怪物弃牌堆</b>清掉最多 <paramref name="count" /> 张凋萎（WTH-3 净化用），返回实际清掉几张。
+    /// </summary>
+    /// <remarks>只动弃牌堆：手牌里的凋萎照旧要走"行动后结算"那条路（<see cref="PurgeFromHand" /> 是另一条）。</remarks>
+    public static int PurgeFromDiscard(Creature creature, int count)
+    {
+        if (count <= 0 || !IntentDeck.TryGet(creature, out var state))
+        {
+            return 0;
+        }
+
+        var purged = 0;
+        foreach (var card in state.Discard.Where(c => c.IsVoid).Take(count).ToList())
+        {
+            state.Discard.Remove(card);
+            state.VoidsSpent++;
+            purged++;
+        }
+
+        if (purged > 0)
+        {
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Wither} 净化：从弃牌堆清掉 {purged} 张凋萎｜{state.Counts()}");
+        }
+
+        return purged;
+    }
+
+    /// <summary>
     /// 虚无被<b>抽到</b>时的惩戒（异步游戏动作，走 TaskHelper 丢给主线程续体，不阻塞回合开始管线）。
     /// </summary>
     public static void ApplyPenalty(Creature creature, EnemyIntentState state, IntentCard voidCard, string cause) =>

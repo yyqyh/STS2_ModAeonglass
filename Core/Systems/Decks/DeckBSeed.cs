@@ -37,12 +37,15 @@ internal static class DeckBSeed
 
         Add<AeonglassStrike>(player, cards, 4);
         Add<AeonglassDefend>(player, cards, 4);
+        Add<AeonglassTide>(player, cards, 1);
+        // 堤岸（2026-10-14 落地）：延宕管线（Core/Systems/Deferral）已就位 ⇒ 起始牌组补齐到 10 张。
+        Add<AeonglassBank>(player, cards, 1);
 
         return cards;
     }
 
     /// <summary>一行摘要（日志用）。</summary>
-    public static string Describe() => "打击×4 防御×4（共 8 张）";
+    public static string Describe() => "打击×4 防御×4 潮汐×1 堤岸×1（共 10 张）";
 
     private static void Add<TCard>(Player player, List<CardModel> cards, int count)
         where TCard : CardModel

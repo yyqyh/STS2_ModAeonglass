@@ -1,5 +1,6 @@
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Players;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
 
 using STS2RitsuLib.Combat.SecondaryResources;
@@ -81,14 +82,47 @@ internal static class SandInvertCmd
         await SecondaryResourceCmd.Set(player, AeonglassSecondaryResources.SandId, gap);
         await SecondaryResourceCmd.Set(player, AeonglassSecondaryResources.VoidId, sand);
 
+        // 回合内计数（给"翻转联动"类卡读；不拦任何操作）。
+        SandTurnCounters.MarkInvert(player);
+
+        // 本场累计（ANN-3 积卷 / RW-1 反冲这类"本场统计"的卡读它）。
+        Systems.History.CombatHistory.RecordInvert(player);
+
+        // 翻转通知（能力牌用；例：INV-3 惯性 = 每翻转一次抽 1 张）。
+        await NotifyInvertListeners(player);
+
         var source = sourceCard is null ? "计数器" : sourceCard.Id.Entry;
         Const.Logger.Info(
-            $"[{Const.ModId}] [M1] 倒置（来自 {source}）：沙砾 {sand}→{gap}、空隙 {gap}→{sand}（付 {EnergyCost} 费）");
+            $"[{Const.ModId}] [M1] 倒置（来自 {source}）：沙砾 {sand}→{gap}、空隙 {gap}→{sand}（付 {EnergyCost} 费）"
+            + $"｜本回合第 {SandTurnCounters.InvertsThisTurn(player)} 次");
 
         // 交换后"沙砾"就是原来的空隙值 ⇒ 计数器该落到的档位 = gap。
         // 计数器拿它播 180° 翻转（沙先倒空、落定后抬到新值）；框架推上来的 update 不会打断它。
         SandCounterUi.Current?.NotifyInvertSucceeded(gap);
 
         return true;
+    }
+
+    /// <summary>
+    /// 把"发生了一次翻转"转发给该玩家身上实现了 <see cref="IAeonglassInvertListener" /> 的能力。
+    /// </summary>
+    /// <remarks>
+    /// 单个监听者抛异常只记日志、不打断翻转本身（翻转是单入口，通知是附带的收益线）。
+    /// </remarks>
+    private static async Task NotifyInvertListeners(Player player)
+    {
+        var inverts = SandTurnCounters.InvertsThisTurn(player);
+        foreach (var power in player.Creature.Powers.OfType<IAeonglassInvertListener>().ToList())
+        {
+            try
+            {
+                await power.OnSandInverted(new BlockingPlayerChoiceContext(), player, inverts);
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] [M1] 翻转通知失败（{power.GetType().Name}）：{ex.GetType().Name}: {ex.Message}");
+            }
+        }
     }
 }

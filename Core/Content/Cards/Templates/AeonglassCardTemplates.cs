@@ -42,11 +42,17 @@ public abstract class AeonglassAttackTemplate : ModCardTemplate
 
     protected override IEnumerable<DynamicVar> CanonicalVars => [new DamageVar(Damage, ValueProp.Move)];
 
+    /// <summary>
+    /// 这一次实际打多少伤害（默认 = 卡面基础值）。
+    /// </summary>
+    /// <remarks>给"相位条件改数值"这类卡覆写（例：PH-1 中天在平衡档改打 8）—— 覆写它就等于改了整条出牌流程。</remarks>
+    protected virtual decimal DamageThisPlay => DynamicVars.Damage.BaseValue;
+
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
 
-        await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
+        await DamageCmd.Attack(DamageThisPlay)
             .FromCard(this, cardPlay)
             .Targeting(cardPlay.Target)
             .WithHitFx("vfx/vfx_attack_blunt")
@@ -80,13 +86,18 @@ public abstract class AeonglassBlockTemplate : ModCardTemplate
     /// <summary>让"获得格挡"类判定认它（与 <c>AeonglassDefend</c> 一致）。</summary>
     public override bool GainsBlock => true;
 
-    protected override HashSet<CardTag> CanonicalTags => [];
+    /// <summary>BB 通道就是"格挡件" ⇒ 带本体自己的 <see cref="CardTag.Defend" />（"下一张防御牌"类效果认它）。</summary>
+    protected override HashSet<CardTag> CanonicalTags => [CardTag.Defend];
 
     protected override IEnumerable<DynamicVar> CanonicalVars => [new BlockVar(Block, ValueProp.Move)];
 
+    /// <summary>这一次实际拿多少格挡（默认 = 卡面基础值；给"相位条件改数值"的卡覆写）。</summary>
+    /// <remarks>"下一张防御牌 +N"这类加成不在这里加 —— 那走本体的格挡钩子（见 <c>AeonglassNextDefensePower</c>）。</remarks>
+    protected virtual decimal BlockThisPlay => DynamicVars.Block.BaseValue;
+
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
-        await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, cardPlay);
+        await CreatureCmd.GainBlock(Owner.Creature, BlockThisPlay, ValueProp.Move, cardPlay);
         await OnPlayExtra(choiceContext, cardPlay);
     }
 

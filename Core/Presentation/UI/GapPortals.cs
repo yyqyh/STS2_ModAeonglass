@@ -37,7 +37,7 @@ public partial class GapPortals : Control
     // ==================== 可调参数（改这里就行） ====================
 
     /// <summary>门与容器左右端之间的空隙（像素，正=更靠外）。</summary>
-    private const float SideMargin = 425f;
+    private const float SideMargin = 375f;
 
     /// <summary>门相对"容器竖直中心"的偏移（正=向下，负=向上）。</summary>
     private const float VerticalOffset = 0f;

@@ -460,6 +460,19 @@ internal sealed class AeonglassIntentCardView
     /// <summary>这张槽位当前绑的意图（卡带用它判断"要不要换模型"）。</summary>
     internal IntentCard? Identity => _identity;
 
+    /// <summary>
+    /// 某个画布坐标是否落在这张卡上。
+    /// </summary>
+    /// <remarks>
+    /// 给"瞄准期间自己命中测试"用 —— **不能只靠 <c>MouseEntered</c>**：本体这类卡的瞄准是
+    /// "按住拖到目标再松开"（<c>TargetMode.ReleaseMouseToTarget</c>），拖动期间鼠标被卡节点占住，
+    /// 我们的槽位收不到进入事件 ⇒ 瞄准管理器拿不到 <c>HoveredNode</c> ⇒ 一松手就取消。
+    /// </remarks>
+    internal bool ContainsPoint(Vector2 canvasPoint) =>
+        GodotObject.IsInstanceValid(_wrapper)
+        && _wrapper.Visible
+        && _wrapper.GetGlobalRect().HasPoint(canvasPoint);
+
     /// <summary>挂进（或挪回）卡带的槽位行 —— 复用同一个视图时按顺序调用它即可。</summary>
     internal void AttachTo(Node parent)
     {

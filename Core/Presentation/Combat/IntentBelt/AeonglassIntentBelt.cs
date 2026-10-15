@@ -50,6 +50,15 @@ public partial class AeonglassIntentBelt : Control
     private static readonly Vector2 PileRowOffset = new(-100f, -50f);
 
     /// <summary>
+    /// 卡带相对"意图行锚点"的**额外落点偏移**（用户 2026-10-15：整体再往左上挪一点、压在怪物意图之上）。
+    /// </summary>
+    /// <remarks>
+    /// X 负往左、Y 负往上；单位与 <c>Position</c> 同口径（锚点所在父节点的局部单位，受相机缩放影响）。
+    /// 只影响落点，不影响行宽与槽位大小 —— 想调位置只改这一行。
+    /// </remarks>
+    private static readonly Vector2 BeltOffset = new(-14f, -14f);
+
+    /// <summary>
     /// **「拆解」选牌面板的位置**：相对卡带原点的固定坐标（与 <see cref="PileRowOffset" /> 同一套口径）。
     /// </summary>
     /// <remarks>X = 往右（0 = 与第一张卡左边缘对齐）；Y = 往下（越小越靠上）。想挪面板就改这两个数。</remarks>
@@ -210,6 +219,9 @@ public partial class AeonglassIntentBelt : Control
         _timer += (float)delta;
         _numberTimer += (float)delta;
 
+        // 瞄准期间：自己按鼠标位置命中测试并上报给本体瞄准管理器（拖拽期间 MouseEntered 不来）。
+        UpdateTargetingHover();
+
         if (_numberTimer >= NumberRefreshInterval)
         {
             _numberTimer = 0f;
@@ -254,12 +266,25 @@ public partial class AeonglassIntentBelt : Control
         {
             // 行宽只在内容变化后算一次（容器最小尺寸查询要过子节点与字体度量，别每帧做）。
             var width = _row.GetCombinedMinimumSize().X;
-            _rowWidth = width > 0f ? width : SlotWidth;
-            _rowWidthDirty = false;
+            if (width > 0f)
+            {
+                _rowWidth = width;
+                _rowWidthDirty = false;
+            }
+            else if (_row.GetChildCount() == 0)
+            {
+                // 行里真的没东西（卡带隐藏中）：没有可量的，也就不必再试。
+                _rowWidth = SlotWidth;
+                _rowWidthDirty = false;
+            }
+
+            // ⚠️ 有子节点但量出 0 = 容器还没排版好 ⇒ **保留 dirty**，下一帧再量。
+            //    旧写法在这里直接落 SlotWidth（36）并清掉 dirty ⇒ 行宽被永久锁成 36 ⇒
+            //    卡带整体右移半个行宽（实测"整体位置不对"）。
         }
 
-        var x = _anchor.Position.X + (_anchor.Size.X - _rowWidth) * 0.5f;
-        var y = _anchor.Position.Y - SlotHeight - RowGap;
+        var x = _anchor.Position.X + (_anchor.Size.X - _rowWidth) * 0.5f + BeltOffset.X;
+        var y = _anchor.Position.Y - SlotHeight - RowGap + BeltOffset.Y;
         Position = new Vector2(x, y);
     }
 
@@ -321,6 +346,55 @@ public partial class AeonglassIntentBelt : Control
         }
 
         UpdateRow(hasState ? state : null);
+    }
+
+    /// <summary>本卡带上一次上报给瞄准管理器的悬停节点（null = 现在没压在我们的卡上）。</summary>
+    private Node? _reportedHover;
+
+    /// <summary>
+    /// 瞄准期间把"鼠标压在哪张意图卡上"上报给 <c>NTargetManager</c>。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>为什么必须轮询鼠标位置</b>：本体这类卡的瞄准是"按住拖到目标再松开"
+    /// （<c>TargetMode.ReleaseMouseToTarget</c>），拖动期间鼠标被被拖的卡节点占住 ⇒ 我们的槽位收不到
+    /// <c>MouseEntered</c>，管理器永远拿不到 <c>HoveredNode</c>，一松手就取消
+    /// （全历史 log 证据："点中意图卡" 0 次、"没有指向到任何意图（已取消）" 6 次）。
+    /// </para>
+    /// <para>
+    /// 代价：瞄准期间每帧 ≤5 次矩形命中测试 + 一条信号；不在瞄准时第一行就返回。
+    /// </para>
+    /// </remarks>
+    private void UpdateTargetingHover()
+    {
+        if (MegaCrit.Sts2.Core.Nodes.Combat.NTargetManager.Instance is not { IsInSelection: true } manager)
+        {
+            _reportedHover = null;
+            return;
+        }
+
+        var mouse = GetViewport().GetMousePosition();
+        Node? hit = null;
+        foreach (var view in _views)
+        {
+            if (view.Card is { } node && view.ContainsPoint(mouse))
+            {
+                hit = node;
+                break;
+            }
+        }
+
+        if (hit is not null)
+        {
+            // 每帧重报：管理器那边可能被别的事件清掉 HoveredNode，重报一次最稳（代价只是一条信号）。
+            manager.OnNodeHovered(hit);
+        }
+        else if (_reportedHover is { } previous)
+        {
+            manager.OnNodeUnhovered(previous);
+        }
+
+        _reportedHover = hit;
     }
 
 }

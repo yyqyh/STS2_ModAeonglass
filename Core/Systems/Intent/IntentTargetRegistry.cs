@@ -61,6 +61,31 @@ internal static class IntentTargetRegistry
         }
     }
 
+    /// <summary>
+    /// 撤销**一个节点**的登记（卡带刷新槽位时用）。
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ 刷新时**不要**用 <see cref="Clear" />：本登记表是**全局的**（所有怪的卡带共用一个），
+    /// 每条卡带一刷新就整表清空 ⇒ 别的怪的卡会被当成"不是意图节点"，多点战斗里指向直接失效
+    /// （实测：3 只史莱姆的场里点谁的意图都"没有指向到任何意图"）。
+    /// 只撤自己那几个节点即可；顺手把自己占用的 hovered 记位清掉。
+    /// </remarks>
+    public static void Unregister(Node? node)
+    {
+        if (node is null)
+        {
+            return;
+        }
+
+        Nodes.Remove(node);
+        Owners.Remove(node);
+
+        if (ReferenceEquals(_hovered, node))
+        {
+            _hovered = null;
+        }
+    }
+
     /// <summary>卡带重建 / 销毁时清掉（节点已被释放的那些顺手一起清）。</summary>
     public static void Clear()
     {

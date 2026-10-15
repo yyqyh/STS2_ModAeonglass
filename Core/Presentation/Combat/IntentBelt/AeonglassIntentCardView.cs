@@ -225,7 +225,10 @@ internal sealed class AeonglassIntentCardView
         }
 
         _card.Scale = _baseScale * factor;
-        _card.Position = (_slotSize - _baseSize * factor) * 0.5f;
+        // ⚠️ 位置**不乘 factor**：卡的轴心（<c>PivotOffset</c>）设在卡面中心 ⇒ 缩放是"绕中心变大"，
+        //    视觉中心恒在 <c>position + baseSize/2</c>。若这里再按 factor 反算一次，放大时卡会往左上漂
+        //    （实测就是"悬停后位置不对"）。
+        _card.Position = (_slotSize - _baseSize) * 0.5f;
     }
 
     // ==================== 悬停：金色背光 + 放大 + 抬起 + 轻微倾斜 ====================
@@ -395,7 +398,8 @@ internal sealed class AeonglassIntentCardView
 
         var factor = CurrentFactor();
         var targetScale = _baseScale * factor;
-        var targetPosition = (_slotSize - _baseSize * factor) * 0.5f + new Vector2(0f, _hovered ? -HoverLift : 0f);
+        // 同样：轴心在中心 ⇒ 位置只按"未缩放大小"居中，抬起是额外的一点点位移。
+        var targetPosition = ((_slotSize - _baseSize) * 0.5f) + new Vector2(0f, _hovered ? -HoverLift : 0f);
         var targetRotation = Mathf.DegToRad(CurrentTiltDeg());
         var seconds = _hovered ? HoverInSeconds : HoverOutSeconds;
 

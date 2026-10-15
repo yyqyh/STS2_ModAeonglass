@@ -340,7 +340,7 @@ public partial class AeonglassIntentBelt : Control
             }
 
             _views.Clear();
-            IntentTargetRegistry.Clear();
+            UnregisterOwnNodes();
             ClearPileRow();
             Visible = false;
             _rowWidthDirty = true;
@@ -357,7 +357,7 @@ public partial class AeonglassIntentBelt : Control
 
         _lastShown = true;
         Visible = true;
-        IntentTargetRegistry.Clear();
+        UnregisterOwnNodes();
         var openKind = _popupIsDrawPile;
         ClearPileRow();
 
@@ -418,6 +418,7 @@ public partial class AeonglassIntentBelt : Control
             if (view.Card is { } node)
             {
                 IntentTargetRegistry.Register(node, card, _creature!);
+                _registeredNodes.Add(node);
             }
 
             if (TargetingActive && card.Playable)
@@ -516,6 +517,23 @@ public partial class AeonglassIntentBelt : Control
         _pilePopup?.QueueFree();
         _pilePopup = null;
         _popupIsDrawPile = null;
+    }
+
+    /// <summary>
+    /// 撤掉本卡带之前登记过的节点（**不动**别人怪的登记）。
+    /// </summary>
+    /// <remarks>
+    /// 登记表是全局的；原来的做法是每条卡带刷新时整表 <c>Clear()</c>，多点战斗里会把别的怪的卡
+    /// 一起清掉（指向失效）。现在只撤自己这几个。
+    /// </remarks>
+    private void UnregisterOwnNodes()
+    {
+        foreach (var node in _registeredNodes)
+        {
+            IntentTargetRegistry.Unregister(node);
+        }
+
+        _registeredNodes.Clear();
     }
 
     /// <summary>

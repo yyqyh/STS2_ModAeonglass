@@ -67,6 +67,9 @@ public partial class AeonglassIntentBelt : Control
     private float _timer;
     private float _numberTimer;
 
+    /// <summary>本卡带登记进 <c>IntentTargetRegistry</c> 的节点（刷新时只撤自己这几个，别清整表）。</summary>
+    private readonly List<Node> _registeredNodes = [];
+
     // ==================== 刷新判定：Revision + 廉价指纹（零字符串、零分配）====================
     //
     // 旧版每 0.2 s 拼一遍"牌堆 + 手牌 + 判定原文"的字符串签名，一变就整条重建。
@@ -161,6 +164,9 @@ public partial class AeonglassIntentBelt : Control
         MouseFilter = MouseFilterEnum.Ignore;
         SetProcess(true);
     }
+
+    /// <summary>卡带销毁（怪死 / 换房间）时把自己登记过的意图节点撤掉，别在全局登记表里留悬挂节点。</summary>
+    public override void _ExitTree() => UnregisterOwnNodes();
 
     private void Build()
     {

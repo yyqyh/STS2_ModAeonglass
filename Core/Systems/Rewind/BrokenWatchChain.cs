@@ -98,6 +98,13 @@ internal static class BrokenWatchChain
     /// <summary>现在就接（①②两条路用它）。</summary>
     public static void ChainNow(Player player, string why)
     {
+        // 角色门（2026-10-15）：不是永世沙漏的玩家在这里<b>静默</b>返回 —— 别人的局里
+        // 连"跳过原因"那行日志都不该出现（实测：静默猎手局会留下 1 行 `事件链跳过…不是沙漏角色`）。
+        if (player.Character is not Aeonglass)
+        {
+            return;
+        }
+
         if (!CanChain(player, out var blocker))
         {
             Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Rewind} 事件链跳过（{why}）：{blocker}");

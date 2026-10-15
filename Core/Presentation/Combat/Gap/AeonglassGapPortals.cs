@@ -18,7 +18,9 @@ namespace STS2_Aeonglass.Core.Presentation.Combat.Gap;
 /// ① 职责：按容器位置摆门、播放开门/关门与粒子过场。
 /// ② 调用时机：战斗房间挂载时建；<b>只有动画期间显示</b>。
 /// ③ 依赖：间隙额外手牌容器（<c>NodeSearch</c> 找 <c>NModExtraHand</c>）+ 传送门场景（<c>Const.Paths</c>）。
-/// ④ ⚠️ 容器找不到 ⇒ 整段演出跳过（机制照常）；门的坐标是相对容器的，改容器落点要重新对表。
+/// ④ ⚠️ 容器找不到 ⇒ 整段演出跳过（机制照常）。坐标：本节点在<b>场景空间</b>（挂 <c>%CombatVfxContainer</c>）、
+/// 额外手牌容器在<b>屏幕空间</b> ⇒ <c>SyncPosition</c> 每轮把自己按 <c>1/相机缩放</c> 抵消并把容器全局坐标换算到局部，
+/// 内部一律按"屏幕像素"算；改容器落点不用重新对表。
 /// </remarks>
 
 public partial class AeonglassGapPortals : Control
@@ -46,6 +48,15 @@ public partial class AeonglassGapPortals : Control
     /// 想看常驻效果就把这个改成 <c>true</c>。
     /// </remarks>
     private const bool AlwaysVisible = false;
+
+    /// <summary>
+    /// 是否抵消父级（场景空间）的相机缩放。
+    /// </summary>
+    /// <remarks>
+    /// <c>true</c>（默认）= 门的**屏幕尺寸与偏移量维持出图时的设计值**，只有层级/震动随场景（用户 2026-10-15 口径）；
+    /// 想让门跟着世界一起缩放（受伤/镜头缩放时一起变小）就改成 <c>false</c>。
+    /// </remarks>
+    private const bool CompensateCameraScale = true;
 
     /// <summary>"没张开"时门缩到多小（只在 <see cref="AlwaysVisible" /> 为 false 时用）。</summary>
     private const float HiddenScale = 0.55f;
@@ -97,16 +108,26 @@ public partial class AeonglassGapPortals : Control
             return;
         }
 
-        if (room is not MegaCrit.Sts2.Core.Nodes.Rooms.NCombatRoom combatRoom
-            || combatRoom.Ui is not { } ui)
+        if (room is not MegaCrit.Sts2.Core.Nodes.Rooms.NCombatRoom combatRoom)
         {
             return;
         }
 
-        ui.AddChild(new AeonglassGapPortals
+        // 2026-10-15 用户口径：挂到**战斗特效容器**（`%CombatVfxContainer`）—— 门属于"世界"而不是 UI：
+        // 会被人物节点遮住、跟着屏幕震动一起晃。⚠️ 那个容器在 `%CombatSceneContainer` 里，
+        // **继承相机缩放** ⇒ 本节点每次定位都把自己的 Scale 抵消成 1/缩放，并把额外手牌容器的全局坐标
+        // 换算到本节点局部（内部一切仍是"屏幕像素"口径）。取不到容器就退回挂 UI（旧行为，能跑）。
+        var vfx = combatRoom.CombatVfxContainer;
+        if (vfx is null || !GodotObject.IsInstanceValid(vfx) || combatRoom.Ui is null)
+        {
+            combatRoom.Ui?.AddChild(new AeonglassGapPortals { Name = nameof(AeonglassGapPortals) });
+            return;
+        }
+
+        vfx.AddChild(new AeonglassGapPortals
         {
             Name = nameof(AeonglassGapPortals),
-            ZIndex = -2, // 压在额外手牌容器（-1）之后，避免门盖住卡面
+            ZIndex = -1, // 落在本体战斗特效之下、人物（其父级兄弟）之下
         });
     }
 
@@ -264,7 +285,15 @@ public partial class AeonglassGapPortals : Control
         return min.X > 0f && min.Y > 0f ? min : portal.Size;
     }
 
-    /// <summary>把自己定位到容器左右两端（与容器同级 ⇒ 同一坐标空间）。</summary>
+    /// <summary>
+    /// 把自己定位到额外手牌容器的左右两端。
+    /// </summary>
+    /// <remarks>
+    /// 坐标空间：本节点挂在 <c>%CombatVfxContainer</c>（场景空间，继承相机缩放）里，而额外手牌容器在
+    /// <c>NCombatUi</c>（屏幕空间）。所以这里 ① 先把自己的 <c>Scale</c> 抵消成 <c>1/缩放</c>（内部口径还原成屏幕像素，
+    /// 门的大小/描边/偏移量维持出图时的设计值），② 再把容器的全局坐标换算到本节点局部。
+    /// 想让门"随世界缩放"就把 <see cref="CompensateCameraScale" /> 关掉。
+    /// </remarks>
     private void SyncPosition()
     {
         if (_container is null || !IsInstanceValid(_container)
@@ -273,15 +302,28 @@ public partial class AeonglassGapPortals : Control
             return;
         }
 
-        var design = DesignSizeOf(_left);
-        var centerY = _container.Position.Y + (_container.Size.Y - design.Y) * 0.5f + VerticalOffset;
+        // ① 抵消父级（场景空间）的缩放：内部单位 = 屏幕像素。
+        var parentScale = ResolveParentScale();
+        Scale = CompensateCameraScale && parentScale > 0.001f
+            ? Vector2.One / parentScale
+            : Vector2.One;
 
-        _left.Position = new Vector2(_container.Position.X - design.X - SideMargin, centerY);
+        // ② 容器的全局矩形 → 本节点局部坐标（此时 1 局部单位 = 1 屏幕像素）。
+        // `Control.GlobalPosition` 与 `GetGlobalTransform()` 同属"画布空间"（不含视口变换）⇒ 求逆即得本节点局部坐标。
+        var handTopLeft = GetGlobalTransform().AffineInverse() * _container.GlobalPosition;
+        var design = DesignSizeOf(_left);
+        var centerY = handTopLeft.Y + (_container.Size.Y - design.Y) * 0.5f + VerticalOffset;
+
+        _left.Position = new Vector2(handTopLeft.X - design.X - SideMargin, centerY);
         if (_right is not null && IsInstanceValid(_right))
         {
-            _right.Position = new Vector2(_container.Position.X + _container.Size.X + SideMargin, centerY);
+            _right.Position = new Vector2(handTopLeft.X + _container.Size.X + SideMargin, centerY);
         }
     }
+
+    /// <summary>父级链累计缩放（场景空间的相机缩放）；拿不到按 1 算。</summary>
+    private float ResolveParentScale() =>
+        GetParent() is CanvasItem parent ? parent.GetGlobalTransform().Scale.X : 1f;
 
     // ==================== 给表现层（AeonglassGapSequence）用的门 API ====================
 

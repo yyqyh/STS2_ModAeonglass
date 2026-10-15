@@ -28,13 +28,20 @@ internal static class AeonglassIntentBeltHost
             return;
         }
 
+        // 2026-10-15 用户口径：调度器**挂到敌侧容器**（`%EnemyContainer`）—— 语义归位（它就是"给敌侧挂卡带的人"）。
+        // ⚠️ `%EnemyContainer` 会被本体重设 Scale（= 相机缩放）与 Position，所以**别把它的子节点当屏幕空间用**：
+        // 卡带本体并不挂在这下面，而是挂在每只怪的 `NCreature/IntentContainer` 同级（自己做了缩放补偿）。
+        // 找不到敌侧容器就退回原来的父节点（房间根）——调度器不画东西，挂哪儿都一样跑。
+        var enemyContainer = parent.GetNodeOrNull<Control>("%EnemyContainer");
+        var host = enemyContainer is not null && GodotObject.IsInstanceValid(enemyContainer) ? enemyContainer : parent;
+
         var manager = new AeonglassIntentBeltManager
         {
             Name = AeonglassIntentBeltManager.NodeName,
             UniqueNameInOwner = true,
-            ZIndex = 215,
+            ZIndex = 0,
         };
 
-        parent.AddChild(manager);
+        host.AddChild(manager);
     }
 }

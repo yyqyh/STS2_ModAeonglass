@@ -17,3 +17,9 @@ obj/
 # 如果你也想忽略它，把下面这行取消注释，并执行：
 #   git rm --cached local.props
 # local.props
+
+# ---- Godot 编辑器热重载留下的临时副本 ----
+# 形如 addons/spine_godot_extension/windows/~libspine_godot...dll~RFxxxx.TMP，
+# 每个约 1.8MB，是编辑器替换原生 DLL 时的残留，不要进库。
+**/~*.TMP
+**/*.TMP

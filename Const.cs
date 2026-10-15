@@ -131,6 +131,19 @@ internal static class Const
 
         public const string LocalizationRoot = Root + "/localization";
 
+        /// <summary>
+        /// <b>本体</b>资源的路径（不是我们自己的美术）。同样只在这里出现一次。
+        /// </summary>
+        /// <remarks>
+        /// 本体路径只能写在 C# 里（mod 的 Godot 工程里没有这些文件，写进 <c>.tscn</c> 编辑器加载不出来）；
+        /// 集中在这里是为了让"代码里不再出现 <c>res://</c> 字面量"这条口径真正成立。
+        /// </remarks>
+        public static class BaseGame
+        {
+            /// <summary>本体按钮主题字体（时空裂隙按键的文案与那块底板同套）。</summary>
+            public const string ButtonThemeFont = "res://themes/kreon_bold_glyph_space_two.tres";
+        }
+
         /// <summary>角色：战斗外观场景 + 骨架数据。</summary>
         public static class Character
         {

@@ -26,8 +26,8 @@ namespace STS2_Aeonglass.Core.Presentation.Combat.Gap;
 
 internal sealed partial class AeonglassGapActionButton : NButton
 {
-    /// <summary>原版字体（与那块底板同套）。</summary>
-    private const string FontPath = "res://themes/kreon_bold_glyph_space_two.tres";
+    /// <summary>原版字体（与那块底板同套）；路径统一放在 <see cref="Const.Paths.BaseGame.ButtonThemeFont" />。</summary>
+    private const string FontPath = Const.Paths.BaseGame.ButtonThemeFont;
 
     private static readonly Color TextColor = new(0.992157f, 0.956863f, 0.890196f);
     private static readonly Color OutlineColor = new(0.121569f, 0.25098f, 0.270588f);

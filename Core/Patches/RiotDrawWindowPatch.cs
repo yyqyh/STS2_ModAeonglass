@@ -29,17 +29,43 @@ namespace STS2_Aeonglass.Core.Patches;
 /// 挂的是 4 参数重载（<c>Draw(PlayerChoiceContext, decimal, Player, bool)</c>）：本体所有抽牌
 /// （含 2 参数重载、<c>DrawWithoutBlockingOnOtherPlayers</c>、回合开始的固定抽牌）都收敛到它。
 /// </para>
+/// <para>
+/// ⚠️ <b>范围与兜底（2026-10-15 补）</b>：抽牌是<b>全角色</b>的热路径 ⇒ 两个 Prefix 先按
+/// <c>RiotSwap.HasPair</c> 短路（乱流没在场就不进冻结逻辑），Postfix 的 Task 包装失败时
+/// <b>保持本体原来那个 Task</b>，异常只记日志、绝不穿进本体的抽牌流程。
+/// </para>
 /// </remarks>
 [HarmonyPatch(typeof(CardPileCmd), nameof(CardPileCmd.Draw),
     new[] { typeof(PlayerChoiceContext), typeof(decimal), typeof(Player), typeof(bool) })]
 internal static class RiotDrawWindowPatch
 {
     [HarmonyPrefix]
-    private static void Prefix(Player player) => RiotDrawWindow.EnterDraw(player);
+    private static void Prefix(Player player)
+    {
+        if (RiotSwap.HasPair(player.PlayerCombatState))
+        {
+            RiotDrawWindow.EnterDraw(player);
+        }
+    }
 
     [HarmonyPostfix]
     private static void Postfix(Player player, ref Task<IEnumerable<CardModel>> __result)
-        => __result = RiotDrawWindow.TrackDraw(player, __result);
+    {
+        if (!RiotSwap.HasPair(player.PlayerCombatState))
+        {
+            return;
+        }
+
+        try
+        {
+            __result = RiotDrawWindow.TrackDraw(player, __result);
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Riot} 抽取窗口包装失败（保持本体原 Task）：{ex.GetType().Name}: {ex.Message}");
+        }
+    }
 }
 
 /// <summary>
@@ -54,9 +80,30 @@ internal static class RiotDrawWindowPatch
 internal static class RiotAutoPlayWindowPatch
 {
     [HarmonyPrefix]
-    private static void Prefix(Player player) => RiotDrawWindow.EnterDraw(player);
+    private static void Prefix(Player player)
+    {
+        if (RiotSwap.HasPair(player.PlayerCombatState))
+        {
+            RiotDrawWindow.EnterDraw(player);
+        }
+    }
 
     [HarmonyPostfix]
     private static void Postfix(Player player, ref Task __result)
-        => __result = RiotDrawWindow.TrackDraw(player, __result);
+    {
+        if (!RiotSwap.HasPair(player.PlayerCombatState))
+        {
+            return;
+        }
+
+        try
+        {
+            __result = RiotDrawWindow.TrackDraw(player, __result);
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Riot} 自动打出窗口包装失败（保持本体原 Task）：{ex.GetType().Name}: {ex.Message}");
+        }
+    }
 }

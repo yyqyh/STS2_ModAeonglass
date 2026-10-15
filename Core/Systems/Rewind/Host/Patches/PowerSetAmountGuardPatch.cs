@@ -23,12 +23,22 @@ internal static class PowerSetAmountGuardPatch
     [HarmonyPrefix]
     private static bool Prefix(PowerModel __instance, int amount)
     {
-        if (!RestoreGuard.IsRestoring)
+        try
         {
+            if (!RestoreGuard.IsRestoring)
+            {
+                return true;
+            }
+
+            Reflect.Set(__instance, Coordinates.PowerModel.Amount, Math.Clamp(amount, -999999999, 999999999));
+            return false;
+        }
+        catch (Exception ex)
+        {
+            // 兜底：反射失败时放行本体行为（宁可恢复期多几次通知，也不要打断本体的能力数值设置）。
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Rewind} 恢复期拦 SetAmount 失败（放行本体）：{ex.GetType().Name}: {ex.Message}");
             return true;
         }
-
-        Reflect.Set(__instance, Coordinates.PowerModel.Amount, Math.Clamp(amount, -999999999, 999999999));
-        return false;
     }
 }

@@ -47,15 +47,24 @@ internal static class IntentTargetingPatches
         [HarmonyPostfix]
         private static void Postfix(CardModel __instance, Creature? target, ref bool __result)
         {
-            if (__result || target is not null || !IsOurActionCard(__instance))
+            try
             {
-                return;
-            }
+                if (__result || target is not null || !IsOurActionCard(__instance))
+                {
+                    return;
+                }
 
-            // 只有"非生物目标"这一种情形才由我们兜底放行，其余照本体结果。
-            if (__instance.TargetType == TargetType.TargetedNoCreature)
+                // 只有"非生物目标"这一种情形才由我们兜底放行，其余照本体结果。
+                if (__instance.TargetType == TargetType.TargetedNoCreature)
+                {
+                    __result = true;
+                }
+            }
+            catch (Exception ex)
             {
-                __result = true;
+                // 兜底：异常时保持本体判定（不改 __result）。
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Intent} IsValidTarget 兜底失败（保持本体判定）：{ex.GetType().Name}: {ex.Message}");
             }
         }
     }
@@ -67,17 +76,26 @@ internal static class IntentTargetingPatches
         [HarmonyPostfix]
         private static void Postfix(Node node, ref bool __result)
         {
-            // ① 禁止指向敌人：这次瞄准是我们那三张卡起的 ⇒ 生物节点一律不放行（只能点意图卡）。
-            if (__result && IntentTargetRegistry.AimingOurCard && node is NCreature)
+            try
             {
-                __result = false;
-                return;
-            }
+                // ① 禁止指向敌人：这次瞄准是我们那三张卡起的 ⇒ 生物节点一律不放行（只能点意图卡）。
+                if (__result && IntentTargetRegistry.AimingOurCard && node is NCreature)
+                {
+                    __result = false;
+                    return;
+                }
 
-            if (!__result && IntentTargetRegistry.IsIntentNode(node))
+                if (!__result && IntentTargetRegistry.IsIntentNode(node))
+                {
+                    __result = true;
+                    Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 瞄准：放行意图卡节点 ✔");
+                }
+            }
+            catch (Exception ex)
             {
-                __result = true;
-                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 瞄准：放行意图卡节点 ✔");
+                // 兜底：异常时保持本体判定（不改 __result）。
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Intent} 目标节点放行判定失败（保持本体判定）：{ex.GetType().Name}: {ex.Message}");
             }
         }
     }
@@ -89,10 +107,18 @@ internal static class IntentTargetingPatches
         [HarmonyPostfix]
         private static void Postfix(Node node)
         {
-            IntentTargetRegistry.NoteHovered(node);
-            if (IntentTargetRegistry.IsIntentNode(node))
+            try
             {
-                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 瞄准：悬停到意图卡节点 ✔");
+                IntentTargetRegistry.NoteHovered(node);
+                if (IntentTargetRegistry.IsIntentNode(node))
+                {
+                    Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 瞄准：悬停到意图卡节点 ✔");
+                }
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Intent} 悬停记录失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
             }
         }
     }
@@ -104,13 +130,31 @@ internal static class IntentTargetingPatches
         [HarmonyPostfix]
         private static void Postfix(bool cancel)
         {
-            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 瞄准结束（cancel={cancel}）");
-            if (!cancel)
-            {
-                IntentTargetRegistry.CommitHovered();
-            }
+            // 日志只在"这次瞄准至少和意图卡有关"时写 —— 别的角色/别的卡瞄准完不成我们的日志。
+            var ours = IntentTargetRegistry.AimingOurCard || IntentTargetRegistry.HasPending;
 
-            IntentTargetRegistry.AimingOurCard = false;
+            try
+            {
+                if (ours)
+                {
+                    Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 瞄准结束（cancel={cancel}）");
+                }
+
+                if (!cancel)
+                {
+                    IntentTargetRegistry.CommitHovered();
+                }
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Intent} 瞄准结束处理失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
+            }
+            finally
+            {
+                // 无论成败都要复位：留着 true 会让"下一次瞄准"被误判成我们的。
+                IntentTargetRegistry.AimingOurCard = false;
+            }
         }
     }
 
@@ -138,14 +182,14 @@ internal static class IntentTargetingPatches
             }
         }
     }
-}
+
     /// <summary>
     /// ④ 把"被点中的意图卡节点"换成它所属怪的 <c>NCreature</c>（并把这张意图卡记进侧表）。
     /// </summary>
     /// <remarks>
     /// 本体 <c>SingleCreatureTargeting</c> 收到非生物/非玩家节点会抛异常；换成怪节点后它照常走通，
     /// 而卡牌结算用的是侧表里的意图卡（不读 <c>cardPlay.Target</c>）✔。
-    /// 用 postfix 包一层返回的 Task（不改本体那段逻辑）。
+    /// 用 postfix 包一层返回的 Task（不改本体那段逻辑）；包装或替换失败时都<b>保持本体原节点</b>。
     /// </remarks>
     [HarmonyPatch(typeof(NTargetManager), nameof(NTargetManager.SelectionFinished))]
     internal static class SelectionFinishedPatch
@@ -153,20 +197,47 @@ internal static class IntentTargetingPatches
         [HarmonyPostfix]
         private static void Postfix(ref Task<Node?> __result)
         {
+            // 范围门：这一场没有登记任何意图卡节点 ⇒ 连包装都不做（本体拿到的还是原 Task）。
+            if (!IntentTargetRegistry.HasNodes)
+            {
+                return;
+            }
+
             var original = __result;
-            __result = SubstituteAsync(original);
+
+            try
+            {
+                __result = SubstituteAsync(original);
+            }
+            catch (Exception ex)
+            {
+                // 兜底：保持本体原 Task。
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Intent} 目标替换包装失败（保持本体原结果）：{ex.GetType().Name}: {ex.Message}");
+            }
         }
 
         private static async Task<Node?> SubstituteAsync(Task<Node?> original)
         {
             var node = await original;
-            var swapped = IntentTargetRegistry.SubstituteNode(node);
-            if (!ReferenceEquals(swapped, node))
-            {
-                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 瞄准：点中意图卡 → 目标换成该怪节点 ✔");
-            }
 
-            return swapped;
+            try
+            {
+                var swapped = IntentTargetRegistry.SubstituteNode(node);
+                if (!ReferenceEquals(swapped, node))
+                {
+                    Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 瞄准：点中意图卡 → 目标换成该怪节点 ✔");
+                }
+
+                return swapped;
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Intent} 目标替换失败（保持本体原节点）：{ex.GetType().Name}: {ex.Message}");
+                return node;
+            }
         }
     }
+}
 

@@ -10,6 +10,7 @@ using STS2RitsuLib;
 
 using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Content.Cards.Curse;
+using STS2_Aeonglass.Core.Systems.Bootstrap;
 
 namespace STS2_Aeonglass.Core.Systems.Riot;
 
@@ -30,6 +31,13 @@ internal static class RiotPileWatch
     {
         RitsuLibFramework.SubscribeLifecycle<CombatStartingEvent>(evt =>
         {
+            // 角色门（2026-10-15）：别人的局里不缓存、不盯堆、不报状态
+            //（实测漏过：静默猎手局的每场战斗都会刷我们的 [乱流] 行）。
+            if (!CharacterGate.IsActive)
+            {
+                return;
+            }
+
             foreach (var player in evt.CombatState?.Players ?? [])
             {
                 if (player.PlayerCombatState is not { } state)
@@ -56,7 +64,7 @@ internal static class RiotPileWatch
         // 每回合核对一次（也兜住"乱流是中途用控制台塞进去的"这种没经过 CardAdded 的情况）。
         RitsuLibFramework.SubscribeLifecycle<SideTurnStartedEvent>(evt =>
         {
-            if (evt.Side != CombatSide.Player)
+            if (evt.Side != CombatSide.Player || !CharacterGate.IsActive)
             {
                 return;
             }

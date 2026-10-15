@@ -20,13 +20,17 @@ namespace STS2_Aeonglass.Core.Patches;
 /// 只挡<see cref="OperationBarrier.IsBusy">屏障</see>为真的那几帧 —— 屏障只有我们自己的演出会进，
 /// 所以原版 / 其他 mod 的角色行为完全不变（<c>IsBusy</c> 恒为 false，Prefix 直接放行）。
 /// </para>
+/// <para>
+/// ⚠️ 门写在<b>每个 Prefix 的第一句</b>（2026-10-15 收口）：读 <see cref="OperationBarrier.IsBusy" /> 为假就立刻放行，
+/// 连日志分支都不进 —— 原版 / 其他 mod 的角色在这条补丁上是零成本零副作用。
+/// </para>
 /// </remarks>
 internal static class OperationBarrierPatch
 {
-    /// <summary>是不是该把这次"结束回合"按掉（并把原因写进日志）。</summary>
-    private static bool ShouldBlock()
+    /// <summary>屏障开着就把这次"结束回合"按掉（并把原因写进日志）。<paramref name="busy"/> 由调用方先读一次。</summary>
+    private static bool ShouldBlock(bool busy)
     {
-        if (!OperationBarrier.IsBusy)
+        if (!busy)
         {
             return false;
         }
@@ -41,7 +45,7 @@ internal static class OperationBarrierPatch
     internal static class OnPress
     {
         [HarmonyPrefix]
-        private static bool Prefix() => !ShouldBlock();
+        private static bool Prefix() => !ShouldBlock(OperationBarrier.IsBusy);
     }
 
     /// <summary>真正执行"我准备好了"那条路（长按释放 / 快捷键也走这里）。</summary>
@@ -49,6 +53,6 @@ internal static class OperationBarrierPatch
     internal static class ReleaseLogic
     {
         [HarmonyPrefix]
-        private static bool Prefix() => !ShouldBlock();
+        private static bool Prefix() => !ShouldBlock(OperationBarrier.IsBusy);
     }
 }

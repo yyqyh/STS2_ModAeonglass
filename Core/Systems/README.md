@@ -28,6 +28,22 @@
 - 巨类按 **存储 / 规则 / 流程** 三轴拆成独立类；拆完"存储"那一半持有共享状态，另两半通过它访问。
 - 日志前缀用机制名：`[沙砾]`/`[间隙]`/`[意图]`/`[回溯]`/`[凋萎]`/`[双卡组]`/`[搁浅]`。
 
+## 运行时段（2026-10-15 起，机制订阅同样适用）
+
+**注册可以常驻，动作必须过门。** 机制在 `Main` 里注册（订阅 / 牌堆 / 补丁）时还不知道玩家选了谁，
+所以注册一律照做；但**每一条生命周期回调与每一次动作**都要在入口先问一句：
+
+- 角色门 `CharacterGate.IsActive`（本地玩家是不是永世沙漏）——**按玩家粒度**的场合用
+  `player.Character is not Aeonglass`（如播种、按玩家结算）。
+- 机制开关（`DeckModule.Enabled` / `IntentRules.MasterEnabled` / `RiotSwap.Enabled` / `RestoreGuard.IsRestoring`…）。
+- 状态门（`OperationBarrier.IsBusy`、`RiotSwap.HasPair`、`IntentDeck.IsManaged`、`DeckTwins.TwinOf`…）。
+
+已验证过的反面案例（别再犯）：静默猎手局里，双卡组照常播种 10 张我们的牌、间隙镜像照常同步、
+乱流照常盯堆并每回合报状态、回溯引擎照常每回合拍快照、结束序列照常打日志 —— 共 37 行我们的日志
+出现在别人的局里。现在这些入口都带上了角色门。
+
+补丁侧的对应纪律见 [`Core/Patches/README.md`](../Patches/README.md)。
+
 ## 注释骨架（每个文件顶部，含包裹行 ≤16 行）
 
 ```

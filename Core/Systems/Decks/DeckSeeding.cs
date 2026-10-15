@@ -8,6 +8,7 @@ using MegaCrit.Sts2.Core.Models;
 using STS2RitsuLib.CardPiles;
 
 using STS2_Aeonglass.Core.Config;
+using STS2_Aeonglass.Core.Content.Characters;
 
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
@@ -29,6 +30,13 @@ internal static class DeckSeeding
     public static void EnsureInitialized(Player player)
     {
         if (!DeckModule.Enabled || !DeckPiles.IsReady || DeckState.DecksInitialized(player))
+        {
+            return;
+        }
+
+        // 角色门（2026-10-15）：不是永世沙漏的玩家一步都不跑 —— 不播种、不配对、不写状态。
+        // ⚠️ 实测漏过：静默猎手局里照常播种 10 张我们的牌并刷了一整屏日志（别人的局里我们的机制不该动）。
+        if (player.Character is not Aeonglass)
         {
             return;
         }

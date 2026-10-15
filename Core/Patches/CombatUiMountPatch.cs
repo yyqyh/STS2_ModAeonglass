@@ -37,6 +37,11 @@ namespace STS2_Aeonglass.Core.Patches;
 /// 原版 / 其他 mod 的角色连节点都不会多出一个。
 /// （各 Host 只判断"开关"，不判断"是不是我们的角色"——那是这里的职责。）
 /// </para>
+/// <para>
+/// ⚠️ <b>异常兜底（2026-10-15 补）</b>：这里在<b>本体的战斗房初始化</b>里跑 ⇒ 任何一个 <c>Attach</c>
+/// 抛异常都会顺着本体 <c>_Ready</c> 往外冒。所以每个挂载各自 try/catch：<b>挂不上的那个只记日志，
+/// 既不影响其余挂载，也不污染本体流程</b>（Host 内部不重复兜底）。
+/// </para>
 /// </remarks>
 [HarmonyPatch(typeof(NCombatRoom), nameof(NCombatRoom._Ready))]
 internal static class CombatUiMountPatch
@@ -49,12 +54,26 @@ internal static class CombatUiMountPatch
             return;
         }
 
-        ControlPanelHost.Attach(__instance);
-        AeonglassGapActionRowHost.Attach(__instance);
-        AeonglassIntentBeltHost.Attach(__instance);
-        AeonglassGapPortals.Attach(__instance);
+        TryAttach("统一控制面板", () => ControlPanelHost.Attach(__instance));
+        TryAttach("坍缩 / 唤回按键", () => AeonglassGapActionRowHost.Attach(__instance));
+        TryAttach("意图卡带", () => AeonglassIntentBeltHost.Attach(__instance));
+        TryAttach("间隙传送门", () => AeonglassGapPortals.Attach(__instance));
 
         // 「领域」战斗特效层：插在背景与人物之间（CombatSceneContainer 第 1 位），目前常启。
-        AeonglassDomainLayerHost.Attach(__instance);
+        TryAttach("领域特效层", () => AeonglassDomainLayerHost.Attach(__instance));
+    }
+
+    /// <summary>挂一个；失败只记日志 —— 一个挂不上不影响其余，也绝不把异常带进本体 <c>_Ready</c>。</summary>
+    private static void TryAttach(string what, Action attach)
+    {
+        try
+        {
+            attach();
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Host} 战斗 UI 挂载失败（{what}，其余照常）：{ex.GetType().Name}: {ex.Message}");
+        }
     }
 }

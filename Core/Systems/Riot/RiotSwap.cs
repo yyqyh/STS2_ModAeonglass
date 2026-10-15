@@ -100,6 +100,23 @@ internal static partial class RiotSwap
         return Enabled && RiotInDiscard(state);
     }
 
+    /// <summary>
+    /// 这个战斗态是否已在我们的乱流台账里。
+    /// </summary>
+    /// <remarks>
+    /// 给补丁做**快速短路**用：乱流没在场的局（含别的角色 / 原版）在这里就返回 false，
+    /// 后面的反射核对与日志一次都不做 ⇒ 热路径上只剩一次弱表查询。
+    /// </remarks>
+    internal static bool HasPair(PlayerCombatState? state)
+    {
+        if (state is null)
+        {
+            return false;
+        }
+
+        return Piles.TryGetValue(state, out _);
+    }
+
     // ============================ 收口 ============================
 
     /// <summary>

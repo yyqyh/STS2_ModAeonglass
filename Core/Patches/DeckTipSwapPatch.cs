@@ -48,6 +48,10 @@ namespace STS2_Aeonglass.Core.Patches;
 /// （<c>static_hover_tips</c> 的 <c>STS2_AEONGLASS_DECKTIP_*</c>），改文案不用动代码。
 /// 不碰本体的 <c>DECK.*</c> 全局键，所以别的角色一点不受影响。
 /// </para>
+/// <para>
+/// ⚠️ <b>异常兜底（2026-10-15 补）</b>：这是<b>全局悬浮提示</b>的入口（全角色、全时刻都在走）⇒
+/// 整流包 try/catch，异常时 <c>hoverTips</c> 保持本体原值、只记日志。
+/// </para>
 /// </remarks>
 [HarmonyPatch(
     typeof(NHoverTipSet),
@@ -64,42 +68,51 @@ internal static class DeckTipSwapPatch
     [HarmonyPrefix]
     private static void Prefix(Control __0, ref IEnumerable<IHoverTip> __1)
     {
-        // 只作用于沙漏；别的角色/别的 mod 一律原样放行。
-        if (!CharacterGate.IsActive || !DeckModule.Enabled)
+        try
         {
-            return;
-        }
+            // 只作用于沙漏；别的角色/别的 mod 一律原样放行。
+            if (!CharacterGate.IsActive || !DeckModule.Enabled)
+            {
+                return;
+            }
 
-        if (PlayerOfDeckButtons() is not { } player)
+            if (PlayerOfDeckButtons() is not { } player)
+            {
+                return;
+            }
+
+            var activeIndex = ActiveDeckProvider.ActiveIndexOf(player);
+
+            // 先判断"这是不是我们那两颗按钮之一"；顺带兜底刷一次图标
+            //（图标主要在切换成功时刷，这里只是防止 RitsuLib / 本体在别处把它覆盖回去）。
+            var isVanillaDeck = __0 is NTopBarDeckButton;
+            var isModDeckB = __0 is NModCardPileButton { Definition: { } def }
+                             && DeckPiles.DeckBPileType is { } expected
+                             && def.PileType == expected;
+
+            if (!isVanillaDeck && !isModDeckB)
+            {
+                return;
+            }
+
+            DeckButtonIcons.Refresh(player);
+
+            // 赋值放在最后一句：中途出问题 ⇒ hoverTips 还是本体原值，不留半成品。
+            if (isVanillaDeck)
+            {
+                // 本体「卡组」按钮：里面永远是**生效中**那副。
+                __1 = [BuildTip(deckIndex: activeIndex, isActive: true)];
+                return;
+            }
+
+            // 副卡组按钮：里面是**不在生效**那副。
+            __1 = [BuildTip(deckIndex: 1 - activeIndex, isActive: false)];
+        }
+        catch (Exception ex)
         {
-            return;
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Decks} 卡组按钮提示改写失败（原样放行）：{ex.GetType().Name}: {ex.Message}");
         }
-
-        var activeIndex = ActiveDeckProvider.ActiveIndexOf(player);
-
-        // 先判断"这是不是我们那两颗按钮之一"；顺带兜底刷一次图标
-        //（图标主要在切换成功时刷，这里只是防止 RitsuLib / 本体在别处把它覆盖回去）。
-        var isVanillaDeck = __0 is NTopBarDeckButton;
-        var isModDeckB = __0 is NModCardPileButton { Definition: { } def }
-                         && DeckPiles.DeckBPileType is { } expected
-                         && def.PileType == expected;
-
-        if (!isVanillaDeck && !isModDeckB)
-        {
-            return;
-        }
-
-        DeckButtonIcons.Refresh(player);
-
-        if (isVanillaDeck)
-        {
-            // 本体「卡组」按钮：里面永远是**生效中**那副。
-            __1 = [BuildTip(deckIndex: activeIndex, isActive: true)];
-            return;
-        }
-
-        // 副卡组按钮：里面是**不在生效**那副。
-        __1 = [BuildTip(deckIndex: 1 - activeIndex, isActive: false)];
     }
 
     /// <summary>按"哪一副 + 是否生效"取我们的文案造一条提示。</summary>

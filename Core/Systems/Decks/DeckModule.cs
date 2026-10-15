@@ -62,7 +62,8 @@ internal static class DeckModule
         {
             try
             {
-                if (!Enabled)
+                // 角色门（2026-10-15）：别人的局里不播种、也不写"跑局开始"这行日志。
+                if (!Enabled || !Systems.Bootstrap.CharacterGate.IsActive)
                 {
                     return;
                 }
@@ -85,7 +86,7 @@ internal static class DeckModule
         {
             try
             {
-                if (!Enabled)
+                if (!Enabled || !Systems.Bootstrap.CharacterGate.IsActive)
                 {
                     return;
                 }

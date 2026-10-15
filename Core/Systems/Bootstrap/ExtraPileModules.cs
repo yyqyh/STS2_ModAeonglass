@@ -131,6 +131,12 @@ internal static class ExtraPileModules
         {
             try
             {
+                // 角色门（2026-10-15）：别人的局里连镜像同步都不做（实测漏过：静默猎手局也刷这行日志）。
+                if (!CharacterGate.IsActive)
+                {
+                    return;
+                }
+
                 var players = MegaCrit.Sts2.Core.Combat.CombatManager.Instance
                     .DebugOnlyGetState()?.Players ?? [];
                 foreach (var player in players)

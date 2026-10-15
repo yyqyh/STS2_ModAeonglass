@@ -33,6 +33,24 @@ internal static class IntentTargetRegistry
     /// </remarks>
     public static bool AimingOurCard { get; set; }
 
+    /// <summary>
+    /// 现在有没有"悬停中 / 已确认待取"的意图卡。
+    /// </summary>
+    /// <remarks>
+    /// 瞄准结束那条补丁用它决定"要不要写日志" —— 别的角色、别的卡瞄准时这里为 false，
+    /// 于是我们的日志不会漏到别人的局里。
+    /// </remarks>
+    public static bool HasPending => _hovered is not null || _pending is not null;
+
+    /// <summary>
+    /// 现在有没有登记在册的意图卡节点（= 这一场里我们的卡带确实在跑）。
+    /// </summary>
+    /// <remarks>
+    /// 给"瞄准结束"这条补丁做范围门用：没有登记（原版 / 其他 mod / 我们的卡带没开）时
+    /// 连返回值包装都不做 ⇒ 本体拿到的还是原来那个 Task。
+    /// </remarks>
+    public static bool HasNodes => Nodes.Count > 0;
+
     /// <summary>卡带建卡时登记：这个节点是哪张意图卡。</summary>
     public static void Register(Node node, IntentCard card, Creature owner)
     {

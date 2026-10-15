@@ -29,7 +29,8 @@ public sealed class StasisRunHook : HookedSingletonModel
 
     public override async Task AfterCombatEnd(CombatRoom room)
     {
-        if (!ExtraPileModules.StasisEnabled)
+        // 角色门（2026-10-15）：别人的局里不递减、不归队（回退口径那条日志也不会出现）。
+        if (!ExtraPileModules.StasisEnabled || !CharacterGate.IsActive)
         {
             return;
         }

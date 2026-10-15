@@ -31,6 +31,12 @@ public sealed class EndOfCombatSequencer : HookedSingletonModel
 
     public override async Task AfterCombatVictory(CombatRoom room)
     {
+        // 角色门（2026-10-15）：别人的局里不做这一步，也不写"结束序列"那行日志。
+        if (!CharacterGate.IsActive)
+        {
+            return;
+        }
+
         if (CurrentRunState is not { } runState)
         {
             return;

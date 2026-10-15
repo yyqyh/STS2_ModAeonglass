@@ -32,8 +32,23 @@ public static class RewindBootstrapper
 
         var facade = RewindFacade.Instance;
 
-        RitsuLibFramework.SubscribeLifecycle<CombatStartingEvent>(_ => facade.OnCombatStarted());
-        RitsuLibFramework.SubscribeLifecycle<CombatEndedEvent>(_ => facade.OnCombatEnded());
+        // 角色门（2026-10-15）：别人的局里连"战斗开始/结束"的抓拍与收尾都不做
+        //（实测漏过：静默猎手局里引擎照样每回合拍快照、日志里留了 combat started / ended）。
+        RitsuLibFramework.SubscribeLifecycle<CombatStartingEvent>(_ =>
+        {
+            if (CharacterGate.IsActive)
+            {
+                facade.OnCombatStarted();
+            }
+        });
+
+        RitsuLibFramework.SubscribeLifecycle<CombatEndedEvent>(_ =>
+        {
+            if (CharacterGate.IsActive)
+            {
+                facade.OnCombatEnded();
+            }
+        });
 
         // 回合打点：玩家侧回合开始（此时开局管线已完成、相位为 Play）。
         CombatManager.Instance.TurnStarted += state =>

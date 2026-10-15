@@ -2,10 +2,13 @@ using HarmonyLib;
 
 using MegaCrit.Sts2.Core.Nodes.Rooms;
 
-using STS2_Aeonglass.Core.Presentation.UI;
-using STS2_Aeonglass.Core.Presentation.UI.ControlPanel;
+using STS2_Aeonglass.Core.Presentation.Combat;
+using STS2_Aeonglass.Core.Presentation.Combat.Gap;
+using STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
+using STS2_Aeonglass.Core.Presentation.ControlPanel;
 using STS2_Aeonglass.Core.Systems;
 
+using STS2_Aeonglass.Core.Systems.Bootstrap;
 namespace STS2_Aeonglass.Core.Patches;
 
 /// <summary>
@@ -16,7 +19,7 @@ namespace STS2_Aeonglass.Core.Patches;
 /// <b>补丁纪律</b>（2026-10-11 定的结构约定）：
 /// ① <b>通用补丁</b>（跨机制、只做挂载/接线）统一放 <c>Core/Patches/</c> —— 本文件就是；
 /// ② <b>只服务某个机制的补丁</b>跟机制走，放 <c>Core/Systems/&lt;模块&gt;/Patches/</c>
-/// （例如 M3 接管 <c>RollMove</c> 的那个补丁）。
+/// （例如 意图 接管 <c>RollMove</c> 的那个补丁）。
 /// </para>
 /// <para>
 /// 本补丁不关心任何机制逻辑：它只调各处的 <c>Host.Attach</c>，
@@ -24,7 +27,7 @@ namespace STS2_Aeonglass.Core.Patches;
 /// 意图卡带看 <c>IntentIntentBelt</c>）—— 所以"关掉"时这个补丁什么也不做。
 /// </para>
 /// <para>
-/// <b>2026-10-13 收口</b>：M1 / M2 / M3+M5 / M4 / M6 各自的按键面板 + 外观调试面板（6 个 Host）
+/// <b>2026-10-13 收口</b>：沙砾 / 时空裂隙 / 意图与凋萎 / 回溯 / 双卡组 各自的按键面板 + 外观调试面板（6 个 Host）
 /// 已经并成一个 <see cref="ControlPanelHost" />；战斗内现在只挂"统一控制面板 + 意图卡带 + 传送门"三样。
 /// </para>
 /// <para>
@@ -47,11 +50,11 @@ internal static class CombatUiMountPatch
         }
 
         ControlPanelHost.Attach(__instance);
-        GapActionButtonsHost.Attach(__instance);
-        MonsterIntentBeltHost.Attach(__instance);
-        GapPortals.Attach(__instance);
+        AeonglassGapActionRowHost.Attach(__instance);
+        AeonglassIntentBeltHost.Attach(__instance);
+        AeonglassGapPortals.Attach(__instance);
 
         // 「领域」战斗特效层：插在背景与人物之间（CombatSceneContainer 第 1 位），目前常启。
-        DomainLayerHost.Attach(__instance);
+        AeonglassDomainLayerHost.Attach(__instance);
     }
 }

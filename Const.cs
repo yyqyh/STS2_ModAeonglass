@@ -56,43 +56,43 @@ internal static class Const
     /// </summary>
     /// <remarks>
     /// 日志行本身已经带 <c>[STS2_Aeonglass]</c> 前缀（<see cref="Logger" />），这里再叠一层机制标签，
-    /// 于是 <c>grep '\[M4\]' godot.log</c> 就能拿到回溯整条链路。
+    /// 于是 <c>grep '\[回溯\]' godot.log</c> 就能拿到回溯整条链路。
     /// </remarks>
     public static class Prefix
     {
-        public const string Sand = "[M1]";
+        public const string Sand = "[沙砾]";
 
-        public const string Gap = "[M2]";
+        public const string Gap = "[间隙]";
 
-        public const string Intent = "[M3]";
+        public const string Intent = "[意图]";
 
-        public const string Rewind = "[M4]";
+        public const string Rewind = "[回溯]";
 
-        public const string Wither = "[M5]";
+        public const string Wither = "[凋萎]";
 
-        public const string Decks = "[M6]";
+        public const string Decks = "[双卡组]";
 
-        public const string Stasis = "[M7]";
+        public const string Stasis = "[搁浅]";
 
         /// <summary>引擎 / 宿主级消息（对应 Lab B 的 <c>[LabB]</c>）。</summary>
         public const string Host = "[HOST]";
     }
 
-    /// <summary>M4「回溯」引擎的常量（移植自 <c>STS2_AeonglassLabB</c>）。</summary>
+    /// <summary>回溯引擎的常量（移植自 <c>STS2_AeonglassLabB</c>）。</summary>
     public static class Rewind
     {
         /// <summary>
         /// mod 自己声明并使用的 <c>RunRngSet</c> 附加流 ID 名单。
         /// </summary>
         /// <remarks>
-        /// RitsuLib 的 <c>ModRunRngRegistry</c> 没有"枚举所有流"的公开 API，所以 M4 的快照按这份名单收。
-        /// 本 mod 目前<b>没有</b>用到自己的随机流（M1/M2/M7 都不用 RNG）⇒ 留空数组；
+        /// RitsuLib 的 <c>ModRunRngRegistry</c> 没有"枚举所有流"的公开 API，所以 回溯的快照按这份名单收。
+        /// 本 mod 目前<b>没有</b>用到自己的随机流（时之沙/时空裂隙/搁浅 都不用 RNG）⇒ 留空数组；
         /// 将来任何机制引入 <c>GetModRunRng(..., stream)</c> 时，把流 ID 加进来即可被回档覆盖。
         /// </remarks>
         public static readonly string[] ModRngStreams = [];
     }
 
-    /// <summary>M3「操作时间」/ M5「凋萎」用到的本体状态 Id（移植自 <c>STS2_AeonglassLabC</c>）。</summary>
+    /// <summary>操作时间/ 凋萎用到的本体状态 Id（移植自 <c>STS2_AeonglassLabC</c>）。</summary>
     public static class Intent
     {
         /// <summary>原生晕眩状态的 Id（本体用字符串比较判 <c>Creature.IsStunned</c>，不能改名）。</summary>
@@ -182,14 +182,14 @@ internal static class Const
             /// <summary>跑局地图上的角色标记（49×64）。</summary>
             public const string MapMarker = Root + "/images/packed/map/icons/map_marker_aeonglass.png";
 
-            /// <summary>M1 沙砾：战斗计数器场景。</summary>
+            /// <summary>时之沙 沙砾：战斗计数器场景。</summary>
             public const string SandCounterScene = Root + "/scenes/ui/secondary_resource/aeonglass_sand_counter.tscn";
 
-            /// <summary>M1 沙砾：计数器里那套 5 层沙漏艺术（运行时注入到框架的图标槽上）。</summary>
+            /// <summary>时之沙 沙砾：计数器里那套 5 层沙漏艺术（运行时注入到框架的图标槽上）。</summary>
             public const string SandCounterArtScene =
                 Root + "/scenes/ui/secondary_resource/aeonglass_sand_counter_art.tscn";
 
-            /// <summary>M2「坍缩 / 唤回」战斗按键的月牙艺术场景（3 层 + 三段表现）。</summary>
+            /// <summary>时空裂隙「坍缩 / 唤回」战斗按键的月牙艺术场景（3 层 + 三段表现）。</summary>
             public const string CollapseButtonArtScene = Root + "/scenes/ui/gap/aeonglass_collapse_button.tscn";
 
             /// <summary>
@@ -208,9 +208,9 @@ internal static class Const
             /// <summary>
             /// 「领域」层的贴图（<b>透明空槽</b>，2048×960 —— 与本体第三章 glory 背景同画布，出图后同名覆盖）。
             /// </summary>
-            public const string DomainLayer = ImageDir + "domain/aeonglass_domain_layer.png";
+            public const string AeonglassDomainLayer = ImageDir + "domain/aeonglass_domain_layer.png";
 
-            /// <summary>M2「坍缩 / 唤回」按键的 3 层月牙贴图（256×256，画布已对齐）。</summary>
+            /// <summary>时空裂隙「坍缩 / 唤回」按键的 3 层月牙贴图（256×256，画布已对齐）。</summary>
             /// <remarks>
             /// <para>叠放顺序（自下而上）：<see cref="Rim" /> → inner → <see cref="Crack" />。</para>
             /// <para>
@@ -236,11 +236,11 @@ internal static class Const
                 public const string Crack = Dir + "collapse_crack_256.png";
             }
 
-            /// <summary>M1 沙砾：卡面费用显示场景。</summary>
+            /// <summary>时之沙 沙砾：卡面费用显示场景。</summary>
             public const string SandCardCostScene = Root + "/scenes/ui/secondary_resource/aeonglass_sand_card_cost.tscn";
 
             /// <summary>
-            /// M1 沙砾计数器艺术的 5 层贴图（17 张 256×256，画布已对齐 —— 按同一个矩形铺满即可，不要逐张调位置）。
+            /// 时之沙 沙砾计数器艺术的 5 层贴图（17 张 256×256，画布已对齐 —— 按同一个矩形铺满即可，不要逐张调位置）。
             /// </summary>
             /// <remarks>
             /// <para>
@@ -279,7 +279,7 @@ internal static class Const
             }
 
             /// <summary>
-            /// M2 表现层：间隙「传送门」场景（左右各一道，<c>GapPortals.cs</c> 实例化两份）。
+            /// 时空裂隙 表现层：间隙「传送门」场景（左右各一道，<c>AeonglassGapPortals.cs</c> 实例化两份）。
             /// </summary>
             /// <remarks>
             /// <b>门的视觉全在这个场景里</b>（贴图 / 染色 / 透明度 / 呼吸动画）——
@@ -328,7 +328,7 @@ internal static class Const
             }
         }
 
-        /// <summary>M2 表现层用的特效贴图（② 特效阶段搬进来的，出正式美术后同名覆盖）。</summary>
+        /// <summary>时空裂隙 表现层用的特效贴图（② 特效阶段搬进来的，出正式美术后同名覆盖）。</summary>
         public static class Vfx
         {
             private const string Dir = Root + "/images/vfx/aeonglass/";
@@ -406,7 +406,7 @@ internal static class Const
             public const string BrokenWatchPortrait = Dir + "aeonglass_broken_watch_event.png";
         }
 
-        /// <summary>次级资源（M1 时之沙）的图标：全是空槽，出图后同名覆盖。</summary>
+        /// <summary>次级资源（时之沙）的图标：全是空槽，出图后同名覆盖。</summary>
         public static class SecondaryResource
         {
             private const string Dir = Root + "/images/ui/resources/";
@@ -427,16 +427,16 @@ internal static class Const
         /// <summary>牌堆（模组牌区）的模组内 ID 词根；完整 ID 由框架拼成 <c>{MOD}_CARDPILE_{STEM}</c>。</summary>
         public static class CardPiles
         {
-            /// <summary>M7 搁浅牌堆。</summary>
+            /// <summary>搁浅 搁浅牌堆。</summary>
             public const string EmptyZoneStem = "empty_zone";
 
-            /// <summary>M2 间隙牌堆。</summary>
+            /// <summary>时空裂隙牌堆。</summary>
             public const string TimeGapStem = "time_gap";
 
-            /// <summary>M2 间隙的**显示**牌堆（额外手牌容器；存储仍在 <see cref="TimeGapStem" />）。</summary>
+            /// <summary>时空裂隙的**显示**牌堆（额外手牌容器；存储仍在 <see cref="TimeGapStem" />）。</summary>
             public const string TimeGapViewStem = "time_gap_view";
 
-            /// <summary>M6 第二副牌组（"非生效那一副"的常驻牌堆）。</summary>
+            /// <summary>双卡组 第二副牌组（"非生效那一副"的常驻牌堆）。</summary>
             public const string DeckBStem = "deck_b";
         }
     }

@@ -1,0 +1,73 @@
+using MegaCrit.Sts2.Core.Entities.Creatures;
+using MegaCrit.Sts2.Core.Entities.Players;
+
+namespace STS2_Aeonglass.Core.Systems.Intent;
+
+/// <summary>
+/// 「指向意图」的动作卡共用执行口：把玩家在卡带上点中的那张意图交给动作结算。
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>位置说明</b>：v1 时期这段逻辑挂在 <c>Core/Content/Cards/Basic/IntentActionCard.cs</c>
+/// （当时它只服务三张测试卡）。v2 里它成了「提前 / 威吓」等正式动作卡的共用件 ⇒ 按分层放回
+/// <b>系统层</b>（意图的指向链路：<see cref="IntentTargeting" /> + <c>IntentTargetRegistry</c> +
+/// <c>Core/Patches/IntentTargetingPatches.cs</c>），卡片不再承担公用逻辑。
+/// </para>
+/// <para>
+/// <b>链路</b>：卡声明 <c>TargetType.TargetedNoCreature</c> + <see cref="IIntentTargetCard" /> ⇒
+/// 补丁放行"指向意图卡" ⇒ 玩家点卡带上的意图 ⇒ 侧表记下选择 ⇒ 卡打出时在这里取回来并结算。
+/// </para>
+/// </remarks>
+internal static class IntentActionCard
+{
+    /// <summary>**当前形态：原版卡牌指向** —— 玩家点的那张意图卡由侧表带回。</summary>
+    public static Task ApplyPointed(Player player, string verb, Func<Player, Creature, IntentCard, string> action)
+    {
+        try
+        {
+            if (MonsterAccess.LivingEnemies.FirstOrDefault() is not { } target)
+            {
+                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 卡牌「{verb}」：场上没有活着的怪（什么都不做）");
+                return Task.CompletedTask;
+            }
+
+            if (IntentTargetRegistry.TakePending() is not { } chosen)
+            {
+                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 卡牌「{verb}」：这次没有指向到任何意图（已取消）");
+                return Task.CompletedTask;
+            }
+
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 卡牌「{verb}」（原版指向）→ {action(player, target, chosen)}");
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Error(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 卡牌「{verb}」抛异常（已忽略）：{ex.GetType().Name}: {ex.Message}");
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>直连兜底：不弹界面、不接点击，直接对第一只活着的怪执行非指向版动词。</summary>
+    public static Task ApplyDirect(Player player, string verb, Func<Player, Creature, string> action)
+    {
+        try
+        {
+            if (MonsterAccess.LivingEnemies.FirstOrDefault() is not { } target)
+            {
+                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 卡牌「{verb}」：场上没有活着的怪（什么都不做）");
+                return Task.CompletedTask;
+            }
+
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 卡牌「{verb}」（直连）→ {action(player, target)}");
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Error(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 卡牌「{verb}」抛异常（已忽略）：{ex.GetType().Name}: {ex.Message}");
+        }
+
+        return Task.CompletedTask;
+    }
+}

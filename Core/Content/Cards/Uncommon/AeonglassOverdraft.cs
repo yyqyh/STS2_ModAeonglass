@@ -12,10 +12,14 @@ using STS2_Aeonglass.Core.Content.Powers;
 namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 
 /// <summary>
-/// <b>透支</b>（CardETR2，v2 二次更新）：<b>0 费</b> · 本回合获得 2 点能量；下回合少 <b>1</b> 点能量
-/// （升级：本回合 +3，下回合仍只少 1）。
+/// <b>透支</b>（CardETR2，v2 + delta 20261015）· <b>0 费 · Uncommon · 技能</b> —— 本回合获得 2 点能量；下回合少 <b>1</b> 点能量（升级：+3，下回合仍只少 1）。
 /// </summary>
-/// <remarks>用户 2026-10-14 二次改动：费用 1 → 0；挂账 2 → 1（升级档净值因此变成 +2）。</remarks>
+/// <remarks>
+/// ① 效果：本回合 +2 能量（升级 +3）；"下回合少 1"挂成账单（<c>AeonglassEnergyDebtPower</c>）。
+/// ② 差分：无差分。
+/// ③ 依赖：跨回合能量修正（<c>AeonglassEnergyDebtPower</c>）。
+/// ④ ⚠️ 2026-10-14 费用 1 → 0；2026-10-15 delta 挂账 2 → 1 ⇒ <b>净值 +1（升级 +2）</b>；0 费送 2 能量属"0 费大效果"，强度要盯。
+/// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassOverdraft() : ModCardTemplate(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
 {

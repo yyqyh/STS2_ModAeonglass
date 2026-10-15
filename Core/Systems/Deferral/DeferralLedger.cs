@@ -15,7 +15,7 @@ namespace STS2_Aeonglass.Core.Systems.Deferral;
 /// ① 延宕 X = 本回合你受到的伤害在 X 回合后结算（<b>不是分摊</b>）；
 /// ② 它是延后不是免伤 —— 但<b>在它落地前结束战斗就不用还</b>（规则 3b：战斗一换，欠账作废；这条是故意的强度来源）；
 /// ③ 结算形式是<b>普通伤害</b>（可被格挡）⇒ 到期那笔能用当时的格挡吃下来（所以结算点放在玩家回合结束）；
-/// ④ 不可叠加：同一回合的多次延宕只算一笔；已被延宕的伤害不会被再次延宕（<c>_settling</c> 闸）。
+/// ④ 不可叠加：同一回合的多次延宕只算一笔；已被延宕的伤害不会被再次延宕（<c>Settling</c> 闸）。
 /// </para>
 /// <para>
 /// <b>窗口怎么算</b>：打出的"那一回合"= 本体的 <c>TurnNumber</c>；它在<b>切到玩家回合</b>时自增，
@@ -24,7 +24,7 @@ namespace STS2_Aeonglass.Core.Systems.Deferral;
 /// </para>
 /// <para>
 /// <b>不订阅战斗结束事件</b>：每条欠账都记着它属于哪一场战斗（<c>CombatState</c> 实例引用），
-/// 战斗一换就永远不会被兑付 —— 与 M1 / M2 / M4 的"记引用、环境一换自动失效"同口径。
+/// 战斗一换就永远不会被兑付 —— 与 时之沙 / 时空裂隙 / 回溯的"记引用、环境一换自动失效"同口径。
 /// </para>
 /// </remarks>
 internal static class DeferralLedger
@@ -41,13 +41,13 @@ internal static class DeferralLedger
     /// <summary>每个玩家的延宕<b>实例列表</b>（每次获得都追加一条，而不是覆盖一个全局变量）。</summary>
     private static readonly Dictionary<Player, List<ArmInstance>> Arms = [];
 
-    private static readonly Dictionary<Player, List<Debt>> Debts = [];
+    internal static readonly Dictionary<Player, List<Debt>> Debts = [];
 
     /// <summary>正在兑付自己发出的欠账 ⇒ 这笔不能再被延宕（规则 5b）。</summary>
-    private static bool _settling;
+    internal static bool Settling;
 
     /// <summary>本回合的延宕窗口是否打开（只有窗口内、且不在兑付中的伤害才被延宕）。</summary>
-    public static bool IsIntercepting(Player player) => !_settling && OpenArmOf(player) is not null;
+    public static bool IsIntercepting(Player player) => !Settling && OpenArmOf(player) is not null;
 
     /// <summary>本回合还有开着的窗口吗（寿命判定用；"不可叠加"指的是同一笔伤害不会被二次延宕）。</summary>
     public static bool IsArmedThisTurn(Player player) => OpenArmOf(player) is not null;
@@ -136,53 +136,6 @@ internal static class DeferralLedger
     /// <summary>还有没结清的欠账吗（决定"延宕"能力要不要继续留在场上）。</summary>
     public static bool HasOpenDebt(Player player) => PendingOf(player) > 0m;
 
-    /// <summary>
-    /// 玩家回合结束：兑付<b>到期</b>的欠账（一次性、走普通伤害 ⇒ 可被格挡）。
-    /// </summary>
-    /// <returns>这一下结算了多少（0 = 没有到期的）。</returns>
-    public static async Task<decimal> PayDueAsync(PlayerChoiceContext choiceContext, Player player)
-    {
-        if (Combat is not { } combat || !Debts.TryGetValue(player, out var debts) || debts.Count == 0)
-        {
-            return 0m;
-        }
-
-        // 战斗换了 ⇒ 旧账作废（规则 3b：不结算）。
-        debts.RemoveAll(debt => !ReferenceEquals(debt.Combat, combat));
-
-        var turn = TurnOf(player);
-        var due = debts.Where(debt => debt.DueTurn <= turn).ToList();
-        if (due.Count == 0)
-        {
-            return 0m;
-        }
-
-        var total = due.Sum(debt => debt.Amount);
-        var sources = string.Join(" + ", due.Select(debt => debt.Source));
-        foreach (var debt in due)
-        {
-            debts.Remove(debt);
-        }
-
-        Const.Logger.Info($"[{Const.ModId}] 延宕：到期结算 {total} 点（{sources}）⇒ 走普通伤害，可被格挡");
-
-        _settling = true;
-        try
-        {
-            await CreatureCmd.Damage(choiceContext, player.Creature, total, ValueProp.Move, null, null);
-        }
-        catch (Exception ex)
-        {
-            Const.Logger.Error($"[{Const.ModId}] 延宕：结算失败（{ex.GetType().Name}: {ex.Message}）");
-        }
-        finally
-        {
-            _settling = false;
-        }
-
-        return total;
-    }
-
     /// <summary>一行状态（调试面板 / 日志）。</summary>
     public static string Describe(Player player)
     {
@@ -199,7 +152,7 @@ internal static class DeferralLedger
         return $"延宕：{instances}｜未结清 {PendingOf(player)}";
     }
 
-    // ============================ 快照（M4 回溯：延宕是玩家侧状态，规则 6 要求一并回退）============================
+    // ============================ 快照（回溯：延宕是玩家侧状态，规则 6 要求一并回退）============================
 
     /// <summary>拍快照：每个玩家的（欠账、窗口）。</summary>
     public static Dictionary<ulong, (List<(int DueTurn, decimal Amount, string Source)> Debts, List<(int ArmedTurn, int DueTurn, int Turns)> Arms)> Snapshot()
@@ -258,12 +211,12 @@ internal static class DeferralLedger
     {
         Arms.Clear();
         Debts.Clear();
-        _settling = false;
+        Settling = false;
     }
 
-    private static CombatState? Combat => CombatManager.Instance.DebugOnlyGetState();
+    internal static CombatState? Combat => CombatManager.Instance.DebugOnlyGetState();
 
     private static IReadOnlyList<Player> Players() => Combat?.Players ?? [];
 
-    private static int TurnOf(Player player) => player.PlayerCombatState?.TurnNumber ?? -1;
+    internal static int TurnOf(Player player) => player.PlayerCombatState?.TurnNumber ?? -1;
 }

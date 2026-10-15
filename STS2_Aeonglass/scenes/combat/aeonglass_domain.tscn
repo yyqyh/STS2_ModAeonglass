@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://bq50gaj00tvag"]
 
-[ext_resource type="Script" uid="uid://c5dckym8t02" path="res://Core/Presentation/UI/DomainLayer.cs" id="1_domain"]
+[ext_resource type="Script" uid="uid://c5dckym8t02" path="res://Core/Presentation/Combat/AeonglassDomainLayer.cs" id="1_domain"]
 [ext_resource type="Texture2D" uid="uid://csfg7l3xaxlxf" path="res://STS2_Aeonglass/images/combat/vantom_bg_bottom.png" id="2_looua"]
 
 [sub_resource type="Shader" id="Shader_domain_mask"]

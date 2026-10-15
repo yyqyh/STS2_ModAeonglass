@@ -11,17 +11,14 @@ using STS2_Aeonglass.Core.Content.Characters;
 
 namespace STS2_Aeonglass.Core.Content.Cards.Basic;
 
-/// <summary>打击 —— 基础 · 1 费 · 攻击 · 造成 6 点伤害。</summary>
+/// <summary>
+/// <b>打击</b>（起始基础牌 ×4）· <b>1 费 · Basic · 攻击</b> · <c>CardTag.Strike</c> —— 造成 6 点伤害（升级 9）。
+/// </summary>
 /// <remarks>
-/// <para>
-/// <b>① 的占位基础牌</b>：没有它，「进战斗能站住 + 攻击动画能播」这两条验收就没法完成 ——
-/// 本体 <c>AttackCommand.FromCard</c> 会把 trigger 固定成 <c>"Attack"</c>，
-/// 状态机再把它映射到沙漏的 <c>attack_heavy</c>。
-/// </para>
-/// <para>
-/// 卡面走 RitsuLib 的内嵌占位图（<c>ModCardTemplate.AssetProfile</c> 默认 <c>CardAssetProfile.Empty</c>
-/// → <c>RitsuLibEmbeddedPngAssets.CardArtPlaceholder</c>），① 不要求美术。
-/// </para>
+/// ① 效果：一次普通攻击；升级 +3 伤。
+/// ② 差分：无差分（两副共用，起始各 4 张）。
+/// ③ 依赖：起始牌组注册（<c>[RegisterCharacterStarterCard(..., 4)]</c>）；本体 <c>DamageCmd.Attack</c> 的 trigger 固定为 <c>"Attack"</c>，由沙漏的状态机映射到 <c>attack_heavy</c> 动画。
+/// ④ ⚠️ 卡面走 RitsuLib 的内嵌占位图（<c>CardAssetProfile.Empty</c> ⇒ <c>CardArtPlaceholder</c>），不要求美术；数值按 v2 施工。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 [RegisterCharacterStarterCard(typeof(Aeonglass), 4)]

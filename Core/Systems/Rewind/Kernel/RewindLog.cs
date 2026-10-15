@@ -1,18 +1,5 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
-/// <summary>引擎日志抽象：内核不认识游戏的 Logger，由宿主注入。</summary>
-public interface IRewindLog
-{
-    void Info(string message);
-
-    void Warn(string message);
-
-    void Error(string message);
-
-    /// <summary>最近若干条（旧 → 新），供面板显示。</summary>
-    IReadOnlyList<string> Tail { get; }
-}
-
 /// <summary>默认实现：内存环（供面板读）+ 转发给宿主 sink。</summary>
 public sealed class RewindLog(int capacity = 200, Action<string>? sink = null) : IRewindLog
 {

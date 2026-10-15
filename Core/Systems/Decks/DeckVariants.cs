@@ -54,9 +54,9 @@ public interface IDeckVariantCard
 /// <summary>差分的执行口：判定副 → 取块 → 跑块。</summary>
 public static class DeckVariants
 {
-    /// <summary>这张卡此刻属于哪一副（判定单点在 <see cref="DoubleDeckService.DeckIndexOf" />）。</summary>
+    /// <summary>这张卡此刻属于哪一副（判定单点在 <see cref="DeckPiles.DeckIndexOf" />）。</summary>
     public static DeckSide SideOf(Player player, CardModel card)
-        => (DeckSide)DoubleDeckService.DeckIndexOf(card, player);
+        => (DeckSide)DeckPiles.DeckIndexOf(card, player);
 
     /// <summary>取这张卡在当前副下的差分块（不是差分牌就返回空）。</summary>
     public static IReadOnlyList<DeckEffectBlock> BlocksOf(DeckEffectContext context)

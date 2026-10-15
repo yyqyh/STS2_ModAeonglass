@@ -12,7 +12,7 @@ namespace STS2_Aeonglass.Core.Systems.Cards;
 /// <remarks>
 /// <para>
 /// 为什么需要它：净化要清的是"场上所有人"的凋萎 / 状态牌 —— 怪侧走
-/// <c>VoidPollution</c>（意图堆不是 <c>CardModel</c>），<b>玩家侧</b>才是真正的卡模型堆（手牌 / 抽 / 弃 / 消耗），
+/// <c>WitherPool</c>（意图堆不是 <c>CardModel</c>），<b>玩家侧</b>才是真正的卡模型堆（手牌 / 抽 / 弃 / 消耗），
 /// 这一份负责后者。
 /// </para>
 /// <para>消耗走本体的 <c>CardCmd.Exhaust</c>（进消耗堆、不再参与循环），表现与本体一致。</para>

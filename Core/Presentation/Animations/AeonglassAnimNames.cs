@@ -1,24 +1,12 @@
 namespace STS2_Aeonglass.Core.Presentation.Animations;
-
-/// <summary>
-/// 永世沙漏骨架里的**动画名 / 状态机 trigger 名**，集中在这里，避免各处的裸字符串拼错。
-/// </summary>
+/// <summary>永世沙漏骨架的<b>动画名 / 状态机 trigger 名</b>常量表（避免各处裸字符串拼错）。</summary>
 /// <remarks>
-/// <para>
-/// 骨架 <c>STS2_Aeonglass/images/character/spine/aeonglass.skel</c>（原版 Act 3 boss「永世沙漏」，
-/// 直接从 <c>orign/animations/monsters/aeonglass/</c> 搬来，未做任何转换）。
-/// </para>
-/// <para>
-/// <b>这套骨架只有 6 个身体动画</b>：<c>idle_loop</c> / <c>wither</c> / <c>attack_heavy</c> /
-/// <c>attack_double</c> / <c>hurt</c> / <c>die</c>。玩家角色需要的 <c>attack</c> / <c>cast</c> /
-/// <c>low_health_loop</c> / <c>relaxed_loop</c> <b>不存在</b>，在角色类的状态机里做降级映射
-/// （见 <c>Aeonglass.SetupCustomCreatureAnimator</c> 与计划文档 §2.2.2 的「待填充清单」）。
-/// </para>
-/// <para>
-/// <b>轨道 1</b>（<c>_track1/rings_*</c>）是"外环旋转"的叠加动画，与轨道 0 上的身体动画并行播放 ——
-/// 由 <c>AeonglassCreatureVisuals._Ready</c> 播起来。
-/// </para>
+/// ① 职责：动画名与 trigger 名的唯一常量表。
+/// ② 调用时机：角色状态机把"攻击/受击/施法"等事件映射到骨架动画时读。
+/// ③ 依赖：<c>aeonglass.skel</c> 里真实存在的动画名（美术导出时定）。
+/// ④ ⚠️ 名字与骨架不一致 ⇒ 动画<b>静默不播</b>（不抛错）；改名必须与美术同步。
 /// </remarks>
+
 public static class AeonglassAnimNames
 {
     // ================== 轨道 0：身体动画（骨架里真实存在的名字）==================

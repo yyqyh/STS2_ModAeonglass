@@ -13,9 +13,14 @@ using STS2_Aeonglass.Core.Systems.History;
 namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 
 /// <summary>
-/// <b>年轮</b>（CardANN1，v2）：0 费 · 获得 2 点格挡 × 上回合你打出的牌数（<b>无上限</b>；升级 3 点/张）。
+/// <b>年轮</b>（CardANN1，v2）· <b>0 费 · Uncommon · 技能</b> —— 获得 2 点格挡 × 上回合你打出的牌数（升级 3 点/张）；<b>无上限</b>。
 /// </summary>
-/// <remarks>读的是**上回合**（<see cref="CombatHistory.CardsPlayedLastTurn" />）—— 年轮＝读已发生的回合。</remarks>
+/// <remarks>
+/// ① 效果：格挡 = 上回合出牌数 × 每张点数；升级把每张 2 → 3。
+/// ② 差分：无差分。
+/// ③ 依赖：<c>CombatHistory.CardsPlayedLastTurn</c>（读已发生的回合）。
+/// ④ ⚠️ v2 去掉上限 ⇒ 想加 cap 必须回来加；0 费 + 无上限属"0 费大效果"，强度要盯。
+/// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassTreeRing() : ModCardTemplate(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
 {

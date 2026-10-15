@@ -15,19 +15,26 @@ using STS2_Aeonglass.Core.Content.Relics;
 
 namespace STS2_Aeonglass.Core.Content.Characters;
 
-/// <summary>角色：<b>永世沙漏（Aeonglass）</b> —— 原版 Act 3 boss 转可玩角色。</summary>
+/// <summary>
+/// 角色：<b>永世沙漏（Aeonglass）</b> —— 原版 Act 3 boss 转可玩角色；机制 时之沙–搁浅 已全部落地。
+/// </summary>
 /// <remarks>
-/// <para>
-/// <b>第 ① 步只做「人物模型」</b>：把 boss 的战斗 Spine 接成玩家外观、跑通选人 → 进战斗 → 四态动画，
-/// 外加最小可玩壳（两张占位基础牌）与调试面板。<b>不实现任何机制</b>（M1–M7 一行都没有）。
-/// </para>
-/// <para>
-/// <b>战斗外观</b>：直接用原版 boss 的骨架（<c>aeonglass.skel</c>）+ 我们自己的状态机映射，
-/// 场景见 <see cref="Const.Paths.Character.CombatVisualsScene" />。
-/// 其余字段（能量计数器 / 商店 / 火堆 / 音效 / 多人手势）全部由 <see cref="PlaceholderCharacterId" />
-/// 补齐 —— 占用清单见 <c>Core/Framework/Diagnostics/PlaceholderAssetRegistry.cs</c>。
-/// </para>
-/// <para><b>数值全部是占位</b>（见计划文档附录 D），定档在阶段 ④。</para>
+/// ① 角色定位：时间维度的资源型角色 —— 「沙砾 / 空隙」相位、敌人意图手牌的操作、回溯、凋萎四条线织在一起。
+///    起始数值（HP 70 / 金币 99）仍是占位，定档在阶段 ④。
+/// ② 起始牌组与双卡组翻转：起始 10 张 = 打击×4 + 防御×4 + 潮汐×1 + 堤岸×1（后两张是"差分基础牌"，两副共用、按当前副走不同档）；
+///    第二副（消逝副）由 <c>DeckBSeed</c> 播种，并与 A 副同名基础牌配成孪生（<c>DeckTwins</c>）；
+///    翻转入口 = 初始遗物「永恒沙漏」的右键（<c>DeckSwitchService.ManualSwitchAsync</c>）。
+/// ③ 次级资源（时之沙）：<c>沙砾 / 空隙</c>两个池（容量 6、初始 3/3），恒等式 <c>沙砾 + 空隙 = 6</c>；
+///    支付沙砾会产生等量空隙（<c>SandGapInvariant</c>）；相位三档 = 沙砾 ≥4 / =3 / ≤2（<c>SandPhases</c>）。
+/// ④ 差分与孪生：同一张牌按"此刻在哪一副"走不同效果与文案（<c>IDeckVariantCard</c> / <c>DeckVariants</c>，
+///    判定单点在 <c>DeckPiles.DeckIndexOf</c>）；两副同名基础牌是"孪生镜像"（升级等级互相跟随）。
+/// ⑤ 卡池与外观：卡池 <see cref="AeonglassCardPool" />（能量色 / 卡框 / 图标路径见该文件）、衍生卡在 <c>AeonglassTokenCardPool</c>；
+///    战斗外观沿用 boss 骨架（<c>aeonglass.skel</c> + 自己的状态机映射），未填的美术字段由 <c>PlaceholderCharacterId</c> 补齐
+///    （占用清单见 <c>PlaceholderAssetRegistry</c>；音效必须留空，否则日志报 error）。
+/// </remarks>
+/// <remarks>
+/// ⚠️ 阅读提示：本文件里成员级的「① 占位 / 定档在 ④」指的是**项目阶段编号**（阶段一 = 人物模型、阶段四 = 卡池），
+/// 与上面 ①~⑤ 的注释骨架无关。
 /// </remarks>
 [RegisterCharacter]
 public sealed class Aeonglass : ModCharacterTemplate<AeonglassCardPool, AeonglassRelicPool, AeonglassPotionPool>

@@ -1,6 +1,6 @@
 [gd_scene load_steps=61 format=3]
 
-[ext_resource type="Script" path="res://Core/Presentation/Visuals/AeonglassCreatureVisuals.cs" id="1_t8ojf"]
+[ext_resource type="Script" path="res://Core/Presentation/Character/AeonglassCreatureVisuals.cs" id="1_t8ojf"]
 [ext_resource type="SpineSkeletonDataResource" path="res://STS2_Aeonglass/scenes/combat/spine/aeonglass_data.tres" id="2_s2a1s"]
 [ext_resource type="Shader" path="res://STS2_Aeonglass/shaders/scrolling_smoke.tres" id="3_nfh5h"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_liquid_mask.png" id="4_pd1cd"]
@@ -12,7 +12,7 @@
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/vfx/tiny_spark_particle.png" id="9_820em"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_ray.png" id="10_3x3y4"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_whither_particle.png" id="11_pl23w"]
-[ext_resource type="Script" path="res://Core/Presentation/Visuals/AeonglassVfx.cs" id="11_qkbxh"]
+[ext_resource type="Script" path="res://Core/Presentation/Character/AeonglassVfx.cs" id="11_qkbxh"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/vfx/miasma_cloud.png" id="15_ie8ct"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/vfx/square_speck.png" id="16_vjkkv"]
 

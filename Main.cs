@@ -14,6 +14,7 @@ using STS2_Aeonglass.Core.Content.Relics;
 using STS2_Aeonglass.Core.Framework.Diagnostics;
 using STS2_Aeonglass.Core.Systems;
 
+using STS2_Aeonglass.Core.Systems.Bootstrap;
 namespace STS2_Aeonglass;
 
 /// <summary>STS2_Aeonglass 入口。</summary>
@@ -40,7 +41,7 @@ public static class Main
         RitsuLibFramework.EnsureGodotScriptsRegistered(assembly, RitsuLibFramework.CreateLogger(Const.ModId));
         ModTypeDiscoveryHub.RegisterModAssembly(Const.ModId, assembly);
 
-        // 卡牌「来源副」记录（M2 间隙副本用）：走 RitsuLib 的 SavedAttachedState，
+        // 卡牌「来源副」记录（时空裂隙副本用）：走 RitsuLib 的 SavedAttachedState，
         // **必须在"存档属性名冻结"之前注册**（本体的序列化缓存是进跑局时才建的）⇒ 放在最前面。
         try
         {
@@ -85,13 +86,13 @@ public static class Main
         // 机制接入：Main 不认识任何机制细节，只按开关逐条注册（见 MechanismBootstrap 的纪律）。
         MechanismBootstrap.RegisterAll();
 
-        // M5 凋萎：注册 mod 关键词「凋萎」（必须在内容冻结之前 ⇒ 就放这儿）。
+        // 凋萎：注册 mod 关键词「凋萎」（必须在内容冻结之前 ⇒ 就放这儿）。
         Core.Content.Keywords.WitherKeyword.Register();
 
         // 迟滞：注册 mod 关键词「迟滞」（同上，必须在内容冻结之前）。
         Core.Content.Keywords.HysteresisKeyword.Register();
 
-        // 搁浅（M7）：注册 mod 关键词「搁浅」（同上）。
+        // 搁浅（搁浅）：注册 mod 关键词「搁浅」（同上）。
         Core.Content.Keywords.StasisKeyword.Register();
         Core.Content.Keywords.EternalKeyword.Register();
 

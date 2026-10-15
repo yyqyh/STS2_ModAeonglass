@@ -9,7 +9,7 @@ namespace STS2_Aeonglass.Core.Systems.Decks;
 /// <para>
 /// <b>需求</b>：两副共用同一批基础牌 ⇒ 敲牌 / 商店删牌 / "升级全部攻击牌" / 附魔 / 变换 / 复制，
 /// 任一路径改了其中一份，另一份必须跟着变。而且**不能是同一个对象** ——
-/// 本体的差分判定（<see cref="DoubleDeckService.DeckIndexOf" />）看的是 <c>DeckVersion</c> 指向的母本躺在哪一副，
+/// 本体的差分判定（<see cref="DeckPiles.DeckIndexOf" />）看的是 <c>DeckVersion</c> 指向的母本躺在哪一副，
 /// 同一个对象会让判定直接失效。
 /// </para>
 /// <para>
@@ -262,5 +262,5 @@ internal static class DeckTwins
 
     /// <summary>这个牌堆是不是"牌组"那一层（生效副 = <c>player.Deck</c>，另一副 = 模组牌堆）。</summary>
     private static bool IsDeckPile(CardPile pile, Player player)
-        => pile.Type == PileType.Deck || ReferenceEquals(pile, DoubleDeckService.InactivePileOf(player));
+        => pile.Type == PileType.Deck || ReferenceEquals(pile, DeckPiles.InactivePileOf(player));
 }

@@ -23,25 +23,20 @@ using STS2_Aeonglass.Core.Systems.Rewind;
 namespace STS2_Aeonglass.Core.Content.Relics;
 
 /// <summary>
-/// 初始遗物：<b>永恒沙漏</b> —— 装有时之沙、同时服务[永时]/[消逝]两副卡组，<b>右键切换卡组</b>。
+/// 初始遗物：<b>永恒沙漏</b>（Starter）—— 双卡组的右键入口（永时 ⇄ 消逝）；同时兼"战斗历史打点器"。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>它也是"选人界面必须存在的那件遗物"</b>：本体选人界面里那句写死的
-/// <c>RelicModel relicModel = characterModel.StartingRelics[0];</c>
-/// （见 <c>MegaCrit.Sts2.Core.Nodes.Screens.CharacterSelect.NCharacterSelectScreen.SelectCharacter</c>）——
-/// <b>角色必须有至少一件初始遗物，否则点它会抛 <c>ArgumentOutOfRangeException</c>，
-/// 选人失败、游戏沿用上一个角色开局</b>（2026-10-11 实测踩到：表现为"选了沙漏，进去却是铁甲战士"）。
-/// </para>
-/// <para>
-/// <b>2026-10-14 用户定档</b>：它是<b>双卡组的右键入口</b>（永时 ⇄ 消逝），
-/// 而"回溯"的右键入口搬到事件遗物「破碎的怀表」（<see cref="AeonglassBrokenWatch" />）。
-/// 沙砾本身是 run 级资源（M1 次级资源），这里的"沙漏装有时之沙"是它的叙事归属。
-/// </para>
-/// <para>
-/// <b>美术</b>：指向 <c>images/relics/aeonglass_core.png</c>（刻意做成透明的空槽图）——
-/// 顶栏与选人界面上它现在是"看不见的"，出图后同名覆盖即可。
-/// </para>
+/// ① 定位：角色唯一的起始遗物。本体选人界面写死读 <c>characterModel.StartingRelics[0]</c> ⇒ <b>角色必须至少有这一件</b>
+///    （没有就抛 <c>ArgumentOutOfRangeException</c>，表现为"选了沙漏、进去却是铁甲战士"，2026-10-11 实测）；
+///    沙砾（时之沙 次级资源）的叙事归属也挂在这件遗物上。
+/// ② 触发时机：右键 = 切换卡组；每张牌打出后 / 每方回合结束 = 喂历史层；洗牌时 = 调整洗牌顺序；
+///    额外角标 = 显示本局回溯次数（<c>IRelicExtraIconAmountLabelSpecsProvider</c>）。
+/// ③ 存档字段（都在这件遗物上、随存档走）：<c>ActiveDeckIndex</c>（当前生效副 0=A / 1=B）、
+///    <c>DecksInitialized</c>（非生效副只播种一次）、<c>CombatsSinceManualSwitch</c>（主动切换冷却）、
+///    <c>RewindsThisRun</c>（本局回溯次数 —— 「因果」读它）、<c>BrokenWatchPending</c>（怀表事件待办）。
+/// ④ 联动与口径：双卡组 = <c>DeckPiles</c> / <c>DeckModule</c>（双卡组）；历史层 = <c>CombatHistory</c> / <c>RunHistory</c>；
+///    回溯 = <c>RewindModule</c>；美术指向空槽图 <c>images/relics/aeonglass_core.png</c>（出图后同名覆盖）。
+///    2026-10-14 用户定档：回溯的右键入口已搬到「破碎的怀表」，本遗物只留"切卡组"。
 /// </remarks>
 [RegisterRelic(typeof(AeonglassRelicPool))]
 public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, IRelicExtraIconAmountLabelSpecsProvider
@@ -129,7 +124,7 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
         IconOutlinePath: Const.Paths.Relic.Core,
         BigIconPath: Const.Paths.Relic.Core);
 
-    // ============================ M6 双卡组的右键入口（2026-10-14 用户定档）============================
+    // ============================ 双卡组的右键入口（2026-10-14 用户定档）============================
     // 走 RitsuLib 的右键遗物体系（`IModRightClickableRelic`）—— 它把右键打包成**同步动作**，
     // 所以将来支持多人时这条入口天然安全（不像"本地直调"那样会只在本机换状态）。
     // 回溯的右键入口已搬到事件遗物「破碎的怀表」（AeonglassBrokenWatch）。
@@ -138,14 +133,14 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
     public bool CanHandleRightClickLocal(ModRightClickContext context) =>
         context.Model is AeonglassCore && context.Player.Character is Aeonglass;
 
-    /// <summary>同步判定：本角色 + M6 就绪（更细的闸门交给 <see cref="DoubleDeckService.ManualSwitchAsync" /> 回话）。</summary>
+    /// <summary>同步判定：本角色 + 双卡组 就绪（更细的闸门交给 <see cref="DeckSwitchService.ManualSwitchAsync" /> 回话）。</summary>
     public bool CanExecuteRightClick(ModRightClickExecutionContext context) =>
-        context.Player.Character is Aeonglass && DecksModule.Enabled && DoubleDeckService.IsReady;
+        context.Player.Character is Aeonglass && DeckModule.Enabled && DeckPiles.IsReady;
 
     /// <summary>右键 = <b>切换卡组</b>（永时 ⇄ 消逝）。</summary>
     /// <remarks>
     /// <para>
-    /// 走的还是 M6 自己那条**主动切换**入口（<see cref="DoubleDeckService.ManualSwitchAsync" />）⇒
+    /// 走的还是 双卡组 自己那条**主动切换**入口（<see cref="DeckSwitchService.ManualSwitchAsync" />）⇒
     /// 代价、每场上限、冷却这些闸门全都照旧生效，这里只负责"把右键接上去"。
     /// </para>
     /// <para>
@@ -166,7 +161,7 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
         try
         {
             await Cmd.Wait(SwitchDelay, ignoreCombatEnd: true);
-            var outcome = await DoubleDeckService.ManualSwitchAsync(player, null);
+            var outcome = await DeckSwitchService.ManualSwitchAsync(player, null);
             Const.Logger.Info(
                 $"[{Const.ModId}] {Const.Prefix.Decks} 永恒沙漏右键切换：{(outcome.Ok ? "成功" : "被拒")}｜{outcome.Message}");
         }
@@ -210,12 +205,12 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
         ];
     }
 
-    // ============================ M6 双卡组的状态载体 ============================
+    // ============================ 双卡组的状态载体 ============================
     // 为什么挂在遗物上：本体的"局内可存字段"只认 [SavedProperty]，而角色模型（CharacterModel）不在
     // 钩子分发里、也不随局内数据走（堕化拉撒路的实测结论）。遗物是这局真正持有的对象，最合适。
-    // 注意：这里只放**状态**，入口在 Core/Systems/Decks/（M6 的机制代码），遗物本身不写机制逻辑。
+    // 注意：这里只放**状态**，入口在 Core/Systems/Decks/（双卡组的机制代码），遗物本身不写机制逻辑。
 
-    /// <summary>M6：当前生效的卡组（0 = A，1 = B）。</summary>
+    /// <summary>双卡组：当前生效的卡组（0 = A，1 = B）。</summary>
     /// <remarks>
     /// "生效中的那副"永远真实地躺在 <c>player.Deck</c> 里；另一副存在 <c>deck_b</c> 这个
     /// <c>RunPersistent</c> 牌堆里（活实例常驻）。这个索引只回答"哪一副现在生效"。
@@ -223,19 +218,19 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
     [SavedProperty]
     public int ActiveDeckIndex { get; set; }
 
-    /// <summary>M6：非生效那一副是否已经初始化过（只播种一次）。</summary>
+    /// <summary>双卡组：非生效那一副是否已经初始化过（只播种一次）。</summary>
     [SavedProperty]
     public bool DecksInitialized { get; set; }
 
-    /// <summary>M6：距上次"主动切换"已经过了几场战斗（主动切换的冷却用）。</summary>
+    /// <summary>双卡组：距上次"主动切换"已经过了几场战斗（主动切换的冷却用）。</summary>
     [SavedProperty]
     public int CombatsSinceManualSwitch { get; set; }
 
     /// <summary>
-    /// M4：<b>本局（跨战斗）累计回溯次数</b> —— 「因果」的加成读它。
+    /// 回溯：<b>本局（跨战斗）累计回溯次数</b> —— 「因果」的加成读它。
     /// </summary>
     /// <remarks>
-    /// 和 M6 那几个状态同一个理由放在遗物上：本体的"局内可存字段"只认 <c>[SavedProperty]</c>，
+    /// 和 双卡组 那几个状态同一个理由放在遗物上：本体的"局内可存字段"只认 <c>[SavedProperty]</c>，
     /// 而遗物是这局真正持有、随存档走的对象 ⇒ 跨战斗、跨读档都在。
     /// <b>只存状态</b>：写入点在 <c>RunHistory</c>（机制层），遗物自己不写机制逻辑。
     /// </remarks>
@@ -243,7 +238,7 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
     public int RewindsThisRun { get; set; }
 
     /// <summary>
-    /// 「破碎的怀表」那件事**还没办完**（M4 的事件链用；随存档走）。
+    /// 「破碎的怀表」那件事**还没办完**（回溯的事件链用；随存档走）。
     /// </summary>
     /// <remarks>
     /// <para>

@@ -6,13 +6,13 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
-using STS2_Aeonglass.Core.Systems.SandResource;
+using STS2_Aeonglass.Core.Systems.Sand;
 
 namespace STS2_Aeonglass.Core.Content.Powers;
 
 /// <summary><b>惯性</b>（INV-3 挂的能力）：每当你翻转沙漏：抽 <c>Amount</c> 张牌（**每回合 1 次**）。</summary>
 [RegisterPower]
-public sealed class AeonglassInertiaPower : ModPowerTemplate, IAeonglassInvertListener
+public sealed class AeonglassInertiaPower : ModPowerTemplate, ISandInvertListener
 {
     public override PowerType Type => PowerType.Buff;
 

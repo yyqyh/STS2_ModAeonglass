@@ -5,13 +5,14 @@ using MegaCrit.Sts2.Core.Entities.Players;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
-using STS2_Aeonglass.Core.Systems.Zones;
+using STS2_Aeonglass.Core.Systems.Bootstrap;
 
+using STS2_Aeonglass.Core.Systems.Gap;
 namespace STS2_Aeonglass.Core.Content.Powers;
 
 /// <summary>「间隙容量 +N」（GRW-2 深隙 / GRW-3 摆幅 的结构成长）。</summary>
 /// <remarks>
-/// <b>读取方式</b>：<c>TimeGap.Capacity</c> 会去该玩家的能力里找这个 Power 求和 ⇒
+/// <b>读取方式</b>：<c>GapStore.Capacity</c> 会去该玩家的能力里找这个 Power 求和 ⇒
 /// 不需要"加/减"记账，能力在场就生效、离场（战斗结束 / 被移除）就自动失效。
 /// </remarks>
 [RegisterPower]

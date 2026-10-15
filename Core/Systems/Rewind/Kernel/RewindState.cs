@@ -1,13 +1,5 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
-public enum RewindPhase
-{
-    Idle,
-    Locked,
-    Restoring,
-    Failed,
-}
-
 /// <summary>引擎状态机。面板只读它，不写它。</summary>
 public sealed class RewindState
 {

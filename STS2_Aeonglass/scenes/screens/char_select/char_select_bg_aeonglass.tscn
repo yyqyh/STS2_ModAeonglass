@@ -1,7 +1,7 @@
 [gd_scene load_steps=13 format=3 uid="uid://r2e41xra12dx"]
 
 [ext_resource type="Texture2D" uid="uid://iwcm8s5ce8wp" path="res://STS2_Aeonglass/images/ui/aeonglass_select_background.png" id="1_bg"]
-[ext_resource type="Script" uid="uid://cndorrxewmv6w" path="res://Core/Presentation/Visuals/AeonglassSelectBgVisuals.cs" id="2_script"]
+[ext_resource type="Script" uid="uid://cndorrxewmv6w" path="res://Core/Presentation/Character/AeonglassSelectBgVisuals.cs" id="2_script"]
 [ext_resource type="Shader" uid="uid://bppboxgg87im7" path="res://STS2_Aeonglass/shaders/scrolling_smoke.tres" id="3_fog_shader"]
 [ext_resource type="Texture2D" uid="uid://dvsxjn0o6mlvr" path="res://STS2_Aeonglass/images/vfx/aeonglass/aeonglass_scrolling_smoke.png" id="4_smoke_tex"]
 [ext_resource type="SpineSkeletonDataResource" uid="uid://dkm1bksuxw32m" path="res://STS2_Aeonglass/scenes/combat/spine/aeonglass_data.tres" id="5_spine_data"]

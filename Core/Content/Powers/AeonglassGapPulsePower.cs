@@ -7,8 +7,9 @@ using MegaCrit.Sts2.Core.ValueProps;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
-using STS2_Aeonglass.Core.Systems.Zones;
+using STS2_Aeonglass.Core.Systems.Bootstrap;
 
+using STS2_Aeonglass.Core.Systems.Gap;
 namespace STS2_Aeonglass.Core.Content.Powers;
 
 /// <summary>「蓄隙」（GAP-5 挂的能力）：每回合开始时，若间隙里 ≥3 张牌：获得 <c>Amount</c> 点格挡。</summary>
@@ -29,7 +30,7 @@ public sealed class AeonglassGapPulsePower : ModPowerTemplate
             return;
         }
 
-        var gap = TimeGap.CountOf(player);
+        var gap = GapStore.CountOf(player);
         if (gap < GapThreshold)
         {
             return;

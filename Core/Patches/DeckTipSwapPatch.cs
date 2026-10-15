@@ -16,19 +16,20 @@ using MegaCrit.Sts2.Core.Runs;
 using STS2RitsuLib.CardPiles;
 using STS2RitsuLib.CardPiles.Nodes;
 
-using STS2_Aeonglass.Core.Presentation.UI;
+using STS2_Aeonglass.Core.Presentation.Combat;
 using STS2_Aeonglass.Core.Systems;
 using STS2_Aeonglass.Core.Systems.Decks;
 using STS2_Aeonglass.Core.Systems.Persistence;
 
+using STS2_Aeonglass.Core.Systems.Bootstrap;
 namespace STS2_Aeonglass.Core.Patches;
 
 /// <summary>
-/// 顶栏两颗「牌组」按钮的<b>悬浮提示互换</b>（M6 双卡组）。
+/// 顶栏两颗「牌组」按钮的<b>悬浮提示互换</b>（双卡组）。
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>要解决的问题</b>：M6 是"内容互换"语义 —— 生效中的那副永远真实躺在 <c>player.Deck</c> 里，
+/// <b>要解决的问题</b>：双卡组 是"内容互换"语义 —— 生效中的那副永远真实躺在 <c>player.Deck</c> 里，
 /// 所以顶栏<b>本体「卡组」按钮里装的可能是任意一副</b>，而副卡组按钮里装的是另一副。
 /// 两颗按钮的默认提示一个是本体的 <c>DECK.*</c>、一个是我们注册牌堆时的固定文案 ⇒
 /// 切换之后两张提示就"名不副实"了。
@@ -64,7 +65,7 @@ internal static class DeckTipSwapPatch
     private static void Prefix(Control __0, ref IEnumerable<IHoverTip> __1)
     {
         // 只作用于沙漏；别的角色/别的 mod 一律原样放行。
-        if (!CharacterGate.IsActive || !DecksModule.Enabled)
+        if (!CharacterGate.IsActive || !DeckModule.Enabled)
         {
             return;
         }
@@ -80,7 +81,7 @@ internal static class DeckTipSwapPatch
         //（图标主要在切换成功时刷，这里只是防止 RitsuLib / 本体在别处把它覆盖回去）。
         var isVanillaDeck = __0 is NTopBarDeckButton;
         var isModDeckB = __0 is NModCardPileButton { Definition: { } def }
-                         && DoubleDeckService.DeckBPileType is { } expected
+                         && DeckPiles.DeckBPileType is { } expected
                          && def.PileType == expected;
 
         if (!isVanillaDeck && !isModDeckB)
@@ -104,7 +105,7 @@ internal static class DeckTipSwapPatch
     /// <summary>按"哪一副 + 是否生效"取我们的文案造一条提示。</summary>
     private static HoverTip BuildTip(int deckIndex, bool isActive)
     {
-        // deckIndex：0 = 原卡组（A），1 = 副卡组（B）；与 DoubleDeckService.NameOf 同口径。
+        // deckIndex：0 = 原卡组（A），1 = 副卡组（B）；与 DeckPiles.NameOf 同口径。
         var stem = deckIndex == 1 ? SecondaryStem : PrimaryStem;
         var stateKey = isActive ? ".active" : ".inactive";
 

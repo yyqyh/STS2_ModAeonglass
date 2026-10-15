@@ -8,7 +8,7 @@ using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Nodes.Combat;
 
 using STS2_Aeonglass.Core.Content.Cards.Basic;
-using STS2_Aeonglass.Core.Systems.EnemyTime;
+using STS2_Aeonglass.Core.Systems.Intent;
 
 namespace STS2_Aeonglass.Core.Patches;
 

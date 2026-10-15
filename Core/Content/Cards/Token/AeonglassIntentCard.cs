@@ -9,19 +9,13 @@ using STS2_Aeonglass.Core.Content.Characters;
 namespace STS2_Aeonglass.Core.Content.Cards.Token;
 
 /// <summary>
-/// **通用"意图卡"外壳模型**（用户 2026-10-12 定稿的方案 B 简化版）。
+/// <b>意图卡外壳</b>（token · 意图 载体）· <b>0 费 · 技能 · token 池</b> —— 给「怪物意图卡带」用的<b>通用</b>卡模型：无效果、永不可被玩家打出。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 怪物意图卡带要"真实卡牌样式"，而 <c>NCard.Create</c> 必须给一张卡模型 —— 于是注册**这么一张**当外壳，
-/// 所有意图共用它；逐张的差异全部在视图层覆盖（见 <c>IntentCardView</c>）：
-/// <b>卡图</b> = 意图自己的图，<b>卡面文字</b> = 只剩动态伤害数字，名字/描述/费用/类型全部隐藏。
-/// </para>
-/// <para>
-/// 它挂在**专属 token 池**（<see cref="AeonglassTokenCardPool" />）里，不进角色卡池 ⇒
-/// 不会被奖励 / 商店 / 随机生成抽到；也不进起始卡组。
-/// </para>
-/// <para>0 费、无效果：它永远不可被玩家打出（视图层也不给它交互）。</para>
+/// ① 效果：没有效果 —— 它只是 <c>NCard.Create</c> 需要的"一张真卡模型"；逐张差异全部在视图层覆盖（卡图 = 该意图自己的图，卡面只剩动态伤害数字，名字/描述/费用/类型全隐藏）。
+/// ② 差分：无差分。
+/// ③ 依赖：意图 敌人时间（<c>IntentCard</c> / <c>AeonglassIntentCardView</c>）；挂 <c>AeonglassTokenCardPool</c>（不进角色池 ⇒ 不会被奖励 / 商店 / 随机生成抽到）。
+/// ④ ⚠️ 能"一个注册类撑起每张意图一张真卡"的前提是本体的 <c>CardModel.Title / PortraitPath</c> 是 virtual；本体若改这两个成员的可见性，这里会塌。
 /// </remarks>
 [RegisterCard(typeof(AeonglassTokenCardPool))]
 public sealed class AeonglassIntentCard : ModCardTemplate

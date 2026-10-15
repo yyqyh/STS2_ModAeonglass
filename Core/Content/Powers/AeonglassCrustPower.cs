@@ -8,13 +8,13 @@ using MegaCrit.Sts2.Core.ValueProps;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
-using STS2_Aeonglass.Core.Systems.SandResource;
+using STS2_Aeonglass.Core.Systems.Sand;
 
 namespace STS2_Aeonglass.Core.Content.Powers;
 
 /// <summary><b>结壳</b>（SD-7 挂的能力）：每当你消耗至少 1 点沙砾：获得 <c>Amount</c> 点格挡（**每回合 1 次**）。</summary>
 [RegisterPower]
-public sealed class AeonglassCrustPower : ModPowerTemplate, IAeonglassSandSpendListener
+public sealed class AeonglassCrustPower : ModPowerTemplate, ISandSpendListener
 {
     public override PowerType Type => PowerType.Buff;
 

@@ -1,14 +1,14 @@
 [gd_scene load_steps=12 format=3]
 
-[ext_resource type="Script" path="res://Core/Presentation/UI/EnergyCounters/AeonglassEnergyCounter.cs" id="1_counter_script"]
+[ext_resource type="Script" path="res://Core/Presentation/Combat/EnergyCounter/AeonglassEnergyCounter.cs" id="1_counter_script"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/energy/aeonglass_orb_layer_1.png" id="2_layer1"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/energy/aeonglass_orb_layer_2.png" id="3_layer2"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/energy/aeonglass_orb_layer_3.png" id="4_layer3"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/energy/aeonglass_orb_layer_4.png" id="5_layer4"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/energy/aeonglass_orb_layer_5.png" id="6_layer5"]
 [ext_resource type="FontFile" path="res://STS2_Aeonglass/fonts/kreon_bold.ttf" id="7_font"]
-[ext_resource type="Script" path="res://Core/Presentation/UI/EnergyCounters/AeonglassCounterLabel.cs" id="8_label_script"]
-[ext_resource type="Script" path="res://Core/Presentation/UI/EnergyCounters/AeonglassEnergyVfxParticles.cs" id="9_vfx_script"]
+[ext_resource type="Script" path="res://Core/Presentation/Combat/EnergyCounter/AeonglassCounterLabel.cs" id="8_label_script"]
+[ext_resource type="Script" path="res://Core/Presentation/Combat/EnergyCounter/AeonglassEnergyVfxParticles.cs" id="9_vfx_script"]
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_stub"]
 particle_flag_disable_z = true

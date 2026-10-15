@@ -9,17 +9,17 @@ using STS2_Aeonglass.Core.Content.Characters;
 namespace STS2_Aeonglass.Core.Content.Cards.Token;
 
 /// <summary>
-/// **凋萎**（M5）：塞进**怪物手牌**的不可打出卡；怪物回合结束后，若它还在手牌里 ⇒ 你损失 X 点生命，随后它被消耗。
+/// <b>凋萎</b>（凋萎 载体 · token）· <b>0 费 · Status · 不可打出</b> —— 塞进怪物手牌：怪物回合结束后若它还在手牌 ⇒ 你损失 X 点生命，随后它被消耗。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 用户 2026-10-12 定稿：① 只给怪物意图（没有玩家侧凋萎）；② 可以被「剥夺」点名；③ 抽/弃牌堆都要显示它的数量；
-/// ④ **可强化、且可多次强化**（基础 3 点，每级 +1 ⇒ 3/4/5/6）；⑤ 掉血**不回档**；⑥ 不再有"虚无"这张卡，
-/// 一律叫**凋萎**；⑦ 要有自己的关键词/说明；⑧ 要是**真卡实例**（不是纯元数据）。
-/// </para>
-/// <para>
-/// 本体属性 = <c>Unplayable</c>（不可打出）+ 我们自己的数值；挂在 token 池，不进角色卡池、不进起始卡组。
-/// </para>
+/// ① 效果：它自己不做结算 —— 结算在 凋萎的敌人时间管线里（怪物行动后读 <c>HitPoints</c> 掉血，然后消耗）。
+/// ② 差分：无差分。
+/// ③ 依赖：意图 敌人时间（<c>IntentCard</c> / <c>IntentTurnFlow</c>）+ 凋萎（<c>WitherPool</c>）；
+///    可<b>多次强化</b>：0 → 3 级 ⇒ 掉血 3 / 4 / 5 / 6（<c>MaxUpgradeLevel = 3</c>；「荒漠化」就是按这条升级）。
+/// ④ ⚠️ 用户 2026-10-12 定稿八条：只给怪物意图、可被「剥夺」点名、抽/弃牌堆都要显示数量、掉血<b>不回档</b>、
+///    统一叫"凋萎"（不再有"虚无"这张卡）、要有自己的关键词、必须是<b>真卡实例</b>（非纯元数据）；
+///    2026-10-15 起<b>玩家侧凋萎</b>也开了（「玉石俱焚」往自己弃牌堆塞同一张卡，见该卡注释）。
+///    本体属性 = <c>Unplayable</c> + <c>CardType.Status</c>（v2：卡框按状态牌画，「净化」升级档的"所有状态牌"也认它）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassTokenCardPool))]
 public sealed class AeonglassWitherCard : ModCardTemplate

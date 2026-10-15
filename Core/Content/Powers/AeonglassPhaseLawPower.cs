@@ -9,7 +9,7 @@ using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
 using STS2_Aeonglass.Core.Systems.Decks;
-using STS2_Aeonglass.Core.Systems.SandResource;
+using STS2_Aeonglass.Core.Systems.Sand;
 
 namespace STS2_Aeonglass.Core.Content.Powers;
 

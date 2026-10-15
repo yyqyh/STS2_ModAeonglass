@@ -2,7 +2,7 @@ using HarmonyLib;
 
 using MegaCrit.Sts2.Core.Models;
 
-using STS2_Aeonglass.Core.Systems.Rewind.Binding;
+using STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 using STS2_Aeonglass.Core.Systems.Rewind.Policy;
 
 namespace STS2_Aeonglass.Core.Systems.Rewind.Host.Patches;
@@ -15,7 +15,7 @@ namespace STS2_Aeonglass.Core.Systems.Rewind.Host.Patches;
 /// （<c>PowerIncreased</c> / <c>PowerDecreased</c> 的唯一事件源头，<c>CombatStateTracker</c> 与联机节点都订阅）。
 ///
 /// 这里在恢复期直接把 <c>_amount</c> 写掉并返回 false，一次覆盖两条路径；恢复结束由
-/// <c>UiRefresh</c> 统一刷一次数字与通知。
+/// <c>RewindUiRefresh</c> 统一刷一次数字与通知。
 /// </summary>
 [HarmonyPatch(typeof(PowerModel), nameof(PowerModel.SetAmount))]
 internal static class PowerSetAmountGuardPatch

@@ -5,20 +5,19 @@ using STS2RitsuLib.Scaffolding.Content;
 
 namespace STS2_Aeonglass.Core.Content.Characters;
 
-/// <summary>永世沙漏的卡池。</summary>
+/// <summary>
+/// 角色卡池：<b>永世沙漏</b>专属池（<see cref="AeonglassCardPool" />）+ 本文件下半部分的 <b>token 池</b>（衍生卡）。
+/// </summary>
 /// <remarks>
-/// <para>
-/// <see cref="TypeListCardPoolModel" /> <b>不需要手写列表</b>：本 mod 的卡各自用
-/// <c>[RegisterCard(typeof(AeonglassCardPool))]</c> 注解注册进来，RitsuLib 启动时收进这个池子。
-/// </para>
-/// <para><b>第 ① 步内容为空</b>（只有两张占位基础牌，由注解注入）。正式的卡池在阶段 ④。</para>
-/// <para>
-/// 能量图标已换成沙漏自己的（见 <see cref="Const.Paths.Ui.Energy.Icon" />）：
-/// <see cref="Const.EnergyColorName" /> 是自定义名字，本体图集里没有对应的
-/// <c>energy_aeonglass.tres</c>，真正接住解析的是 RitsuLib 的两个补丁 ——
-/// 池上的 <c>BigEnergyIconPath</c> / <c>TextEnergyIconPath</c>。
-/// <b>四个池必须同时填这两个路径，漏一个该池的图标就没了</b>。
-/// </para>
+/// ① 定位：角色专属池（<c>IsColorless = false</c>）—— 奖励 / 商店 / 随机生成都从这里抽；token 池另开一个，专放"不给玩家拿的"衍生卡。
+/// ② 内容来源：<b>不需要手写卡表</b> —— 每张卡自己带 <c>[RegisterCard(typeof(AeonglassCardPool))]</c>，
+///    RitsuLib 启动时收进池子；token 卡用 <c>[RegisterCard(typeof(AeonglassTokenCardPool))]</c>。
+/// ③ 能量图标：四个池必须**同时**填 <c>BigEnergyIconPath</c> 与 <c>TextEnergyIconPath</c>（漏一个该池的图标就没了）——
+///    能量色名 <c>Const.EnergyColorName</c> 是自定义名，本体图集里没有对应 .tres，真正接住解析的是 RitsuLib 的两个补丁。
+/// ④ token 池为什么单独开：<b>避免衍生卡被奖励 / 商店 / 随机生成抽到</b>；且必须挂 <c>[RegisterSharedCardPool]</c> ——
+///    不挂就不进 <c>ModelDb.AllCardPools</c>，而本体 <c>CardModel.Pool</c> 是"在所有池里找含这张卡的池，找不到直接抛
+///    <c>InvalidProgramException: Card … is not in any card pool!</c>"（2026-10-13 卡带视图全灭就是这个）。
+/// ⑤ 改动纪律：换卡框 / 能量色 / 图标路径只动本文件；加卡不要动这里（用注解）。
 /// </remarks>
 public sealed class AeonglassCardPool : TypeListCardPoolModel
 {

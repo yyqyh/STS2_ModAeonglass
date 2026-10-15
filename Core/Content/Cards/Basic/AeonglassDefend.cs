@@ -11,8 +11,15 @@ using STS2_Aeonglass.Core.Content.Characters;
 
 namespace STS2_Aeonglass.Core.Content.Cards.Basic;
 
-/// <summary>防御 —— 基础 · 1 费 · 技能 · 获得 5 点格挡。</summary>
-/// <remarks>① 的占位基础牌（与「打击」一起构成 8 张起始卡组）。</remarks>
+/// <summary>
+/// <b>防御</b>（起始基础牌 ×4）· <b>1 费 · Basic · 技能</b> · <c>CardTag.Defend</c> —— 获得 5 点格挡（升级 8）。
+/// </summary>
+/// <remarks>
+/// ① 效果：一次普通格挡；升级 +3 挡。
+/// ② 差分：无差分（两副共用，起始各 4 张）。
+/// ③ 依赖：起始牌组注册（×4）；<c>CardTag.Defend</c> 让"你的下一张防御牌 +N"（「防护」）认它。
+/// ④ ⚠️ 卡面走 RitsuLib 的内嵌占位图，不要求美术；数值按 v2 施工。
+/// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 [RegisterCharacterStarterCard(typeof(Aeonglass), 4)]
 public sealed class AeonglassDefend()

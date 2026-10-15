@@ -1,0 +1,8 @@
+{
+  "STS2_AEONGLASS_EVENT_AEONGLASS_BROKEN_WATCH_EVENT.title": "不知名的街道",
+  "STS2_AEONGLASS_EVENT_AEONGLASS_BROKEN_WATCH_EVENT.pages.INITIAL.description": "未知的时间,未知的地点.\n指引你来的,是强烈的因果.\n而在此地只有一个银白色的物件闪着微光.",
+  
+  "STS2_AEONGLASS_EVENT_AEONGLASS_BROKEN_WATCH_EVENT.pages.INITIAL.options.TAKE.title": "拾起它",
+  "STS2_AEONGLASS_EVENT_AEONGLASS_BROKEN_WATCH_EVENT.pages.INITIAL.options.TAKE.description": "获得[gold]破碎的怀表[/gold]。",
+  "STS2_AEONGLASS_EVENT_AEONGLASS_BROKEN_WATCH_EVENT.pages.DONE.description": "怀表化作沙砾的一部分,你似乎可以听到某种悲鸣"
+}

@@ -10,25 +10,19 @@ using STS2RitsuLib.Scaffolding.Content;
 using STS2_Aeonglass.Core.Content.Cards.Token;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Cards;
-using STS2_Aeonglass.Core.Systems.EnemyTime;
+using STS2_Aeonglass.Core.Systems.Intent;
 
+using STS2_Aeonglass.Core.Systems.Wither;
 namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 
 /// <summary>
-/// <b>净化</b>（CardWTH3，v2 · <b>重写</b>）：1 费攻击牌 ·
-/// 消耗<b>场上所有凋萎</b>，对<b>所有敌人</b>造成「凋萎数量 × 6」的伤害；
-/// 升级：消耗范围扩到所有<b>状态牌</b>。
+/// <b>净化</b>（CardWTH3，v2 · 重写）· <b>1 费 · Rare · 攻击（全体）</b> —— 消耗场上所有[凋萎]，对所有敌人造成「凋萎数量 × 6」的伤害；升级：消耗范围扩到所有<b>状态牌</b>。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>数量按"消耗前"结算</b>（用户 2026-10-14 定）：伤害用的是"数完之后的那个数"，
-/// 升级档多清的那些状态牌不进这个数。
-/// </para>
-/// <para>
-/// <b>"场上"包括玩家</b>：怪侧的凋萎在意图堆里（走 <c>VoidPollution</c>），
-/// 玩家侧若也有（将来的机制塞进来的）走 <see cref="StatusSweeper" />；两边都算进数量、也都被清掉。
-/// </para>
-/// <para>凋萎现在是 <c>CardType.Status</c>（v2 设定）⇒ 升级档那句"所有状态牌"天然把它包括进去。</para>
+/// ① 效果：先数（消耗前）→ 再清（怪侧三个意图堆 + 玩家侧战斗牌堆）→ 再打全体伤害；升级档多清"所有状态牌"。
+/// ② 差分：无差分。
+/// ③ 依赖：凋萎（<c>WitherPool.WithersTotal</c>）+ 玩家侧清扫（<c>StatusSweeper</c>）。
+/// ④ ⚠️ "数量按消耗前结算"（用户 2026-10-14 定）：升级档多清的那些状态牌<b>不进</b>这个数；"场上"<b>包含玩家侧</b>。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassPurify() : ModCardTemplate(1, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies)
@@ -43,12 +37,12 @@ public sealed class AeonglassPurify() : ModCardTemplate(1, CardType.Attack, Card
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         // ① 数"消耗前"的凋萎：怪侧（三个意图堆）+ 玩家侧（战斗牌堆）。
-        var monsterWithers = MonsterAccess.LivingEnemies.Sum(VoidPollution.WithersTotal);
+        var monsterWithers = MonsterAccess.LivingEnemies.Sum(WitherPool.WithersTotal);
         var playerWithers = StatusSweeper.Count(Owner, card => card is AeonglassWitherCard);
         var count = monsterWithers + playerWithers;
 
         // ② 消耗：怪侧全部凋萎 + 玩家侧全部凋萎（升级档再吃掉所有状态牌）。
-        var purged = MonsterAccess.LivingEnemies.Sum(VoidPollution.PurgeAll);
+        var purged = MonsterAccess.LivingEnemies.Sum(WitherPool.PurgeAll);
         purged += await StatusSweeper.ConsumeAsync(choiceContext, Owner, card => card is AeonglassWitherCard);
         if (IsUpgraded)
         {

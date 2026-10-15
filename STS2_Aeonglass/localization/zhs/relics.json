@@ -1,8 +1,8 @@
 {
   "STS2_AEONGLASS_RELIC_AEONGLASS_CORE.title": "永恒沙漏",
   "STS2_AEONGLASS_RELIC_AEONGLASS_CORE.description": "沙漏装有[gold]时之沙[/gold]，同时用于[gold]永时[/gold]与[gold]消逝[/gold]两副卡组。\n[gold]右键[/gold]即可切换卡组。",
-  "STS2_AEONGLASS_RELIC_AEONGLASS_CORE.flavor": "它一直在数着什么，只是还没数到你。",
+  "STS2_AEONGLASS_RELIC_AEONGLASS_CORE.flavor": "你也曾想象过,一个完全相反的自己吧.",
   "STS2_AEONGLASS_RELIC_AEONGLASS_BROKEN_WATCH.title": "破碎的怀表",
-  "STS2_AEONGLASS_RELIC_AEONGLASS_BROKEN_WATCH.description": "[gold]右键[/gold]可以进行一次[gold]回溯[/gold]（每场战斗 1 次；成功后消耗全部沙砾）。",
+  "STS2_AEONGLASS_RELIC_AEONGLASS_BROKEN_WATCH.description": "[gold]右键[/gold]可以进行一次[gold]回溯[/gold].",
   "STS2_AEONGLASS_RELIC_AEONGLASS_BROKEN_WATCH.flavor": "指针停在某一刻，从此再没走过。"
 }

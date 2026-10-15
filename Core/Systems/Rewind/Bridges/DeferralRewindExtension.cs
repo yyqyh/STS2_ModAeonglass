@@ -5,11 +5,11 @@ using STS2_Aeonglass.Core.Systems.Rewind.Policy;
 namespace STS2_Aeonglass.Core.Systems.Rewind.Bridges;
 
 /// <summary>
-/// M4 回溯 ↔「延宕」的接缝（<b>order 250</b>）。
+/// 回溯 ↔「延宕」的接缝（<b>order 250</b>）。
 /// </summary>
 /// <remarks>
 /// 规则层 §2.8.4 第 6 条：延宕与欠账都是<b>玩家侧状态</b> ⇒ 回溯要一并回退（合法且合理）。
-/// 所以这条接缝是**真的回档**（不是像 M2 间隙那样的刻意空实现）：把欠账列表与延宕窗口一起写回去。
+/// 所以这条接缝是**真的回档**（不是像 时空裂隙那样的刻意空实现）：把欠账列表与延宕窗口一起写回去。
 /// </remarks>
 internal sealed class DeferralRewindExtension : IRewindExtension
 {

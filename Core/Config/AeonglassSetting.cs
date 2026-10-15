@@ -1,17 +1,13 @@
 namespace STS2_Aeonglass.Core.Config;
 
-/// <summary>本 mod 的持久化设置。</summary>
+/// <summary>本 mod 的<b>持久化设置模型</b>（键名即存盘键，改名会让旧值读不回来）。</summary>
 /// <remarks>
-/// <para>
-/// 加字段给个合理默认值即可，不用写迁移 —— 老配置反序列化出来缺字段时会取这个默认值。
-/// </para>
-/// <para>
-/// <b>2026-10-13 收口</b>：删掉了 10 个"已失效 / 每人一份"的开关 ——
-/// 7 个面板开关（M1/M2/M3/M4/M6 面板 + 调试总开关 + 外观面板）合并成唯一的
-/// <see cref="ControlPanel" />；另删 3 个没人读的：<c>SandInRewind</c>（资源桥已退场）、
-/// <c>RewindArmEnemyTime</c>（敌人时间回退已删）、<c>GapHandArea</c>（额外手牌改由牌堆注册决定）。
-/// 老配置文件里这些键会被 JSON 反序列化忽略，不会报错。
-/// </para>
+/// ① 职责：机制开关与调参数的唯一数据源；各机制用 <c>AeonglassSettingStore.Current.X</c> 读。
+/// ② 挂点与时机：RitsuLib 设置框架读写；run 开始/机制注册时读一次，部分项局内实时读。
+/// ③ 依赖：存盘文件 <c>mod_data/STS2_Aeonglass/STS2_Aeonglass_settings.json</c>。
+/// ④ ⚠️ 口径：<b>2026-10-15 起这些项已从设置界面全部下架</b>（测试期结束，数值取注释里的"定档"值）；
+///    属性与读取代码<b>全部保留</b> ⇒ 旧存档里改过的值仍然生效（要强制回正式口径：手动改或删那个 json）。
+///    另：加字段给个合理默认值即可，不用写迁移（老配置缺字段时会取默认值）。
 /// </remarks>
 public sealed class AeonglassSetting
 {
@@ -20,11 +16,11 @@ public sealed class AeonglassSetting
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 2026-10-13 统一：原先每个机制一个面板（M1 / M2 / M3+M5 / M4 / M6 各一份，外加一个外观调试面板，
+    /// 2026-10-13 统一：原先每个机制一个面板（沙砾 / 时空裂隙 / 意图与凋萎 / 回溯 / 双卡组 各一份，外加一个外观调试面板，
     /// 一共 7 个开关）。现在只有<b>一个</b>面板 + 页签，本项就是"面板出不出"的<b>唯一</b>开关。
     /// </para>
     /// <para>
-    /// 页签按<b>机制总开关</b>出现（M1 关掉就没有「沙砾」页，以此类推）；关掉本项 = 一个节点都不建。
+    /// 页签按<b>机制总开关</b>出现（时之沙 关掉就没有「沙砾」页，以此类推）；关掉本项 = 一个节点都不建。
     /// </para>
     /// </remarks>
     public bool ControlPanel { get; set; } = true;
@@ -66,17 +62,17 @@ public sealed class AeonglassSetting
     // ============================ 机制开关（一条机制一个开关）============================
 
     /// <summary>
-    /// <b>M1「时之沙」总开关（默认开）</b>。
+    /// <b>时之沙总开关（默认开）</b>。
     /// </summary>
     /// <remarks>
     /// 关掉后：不注册沙砾 / 空隙两个次级资源、不注册两处 UI、不注册"支付→生成空隙"的订阅，
-    /// 也不挂 M1 的额外按键面板 —— 回到"只有卡牌数值"的状态。
+    /// 也不挂 时之沙的额外按键面板 —— 回到"只有卡牌数值"的状态。
     /// <b>需要重启游戏生效</b>（资源注册只在初始化时做一次）。
     /// </remarks>
     public bool SandEnabled { get; set; } = true;
 
     /// <summary>
-    /// <b>M7「滞留X」总开关（默认开）</b>。
+    /// <b>搁浅总开关（默认开）</b>。
     /// </summary>
     /// <remarks>
     /// 关掉后：不注册搁浅牌堆，滞留卡的"打出后进搁浅"覆写会退回本体默认行为
@@ -86,35 +82,35 @@ public sealed class AeonglassSetting
     public bool StasisEnabled { get; set; } = true;
 
     /// <summary>
-    /// M7 的 <b>X</b>：滞留牌打出后，过几场战斗归队（默认 2）。
+    /// 搁浅的 <b>X</b>：滞留牌打出后，过几场战斗归队（默认 2）。
     /// </summary>
     /// <remarks>打出<b>当场</b>不计一场；归队目标是"归队那一刻的当前卡组"。</remarks>
     public int StasisCombats { get; set; } = 2;
 
     /// <summary>
-    /// M7：搁浅同时滞留的**上限**（Step 3 定稿 4）。
+    /// 搁浅：同时滞留的**上限**（Step 3 定稿 4）。
     /// </summary>
     /// <remarks>超过上限时新的滞留会被拒绝（不丢牌、也不静默失效，日志会写明原因）。</remarks>
     public int StasisMaxStasis { get; set; } = 4;
 
     /// <summary>
-    /// M7：<b>回退开关</b> —— 归队是否回到"轮换之前"的旧口径（默认 <c>false</c> = 新口径）。
+    /// 搁浅：<b>回退开关</b> —— 归队是否回到"轮换之前"的旧口径（默认 <c>false</c> = 新口径）。
     /// </summary>
     /// <remarks>
-    /// 新口径（默认）：一局结束的固定顺序 = <b>M6 轮换 → M7 递减 → M7 归队</b>（由 <c>EndOfCombatSequencer</c> 显式驱动）；
+    /// 新口径（默认）：一局结束的固定顺序 = <b>双卡组 轮换 → 搁浅 递减 → 搁浅 归队</b>（由 <c>EndOfCombatSequencer</c> 显式驱动）；
     /// 打开这个开关 = 回到旧行为（<c>AfterCombatEnd</c> 里先归队、之后才轮换），仅供对照排查。
     /// </remarks>
     public bool StasisReturnBeforeSwitch { get; set; }
 
     /// <summary>
-    /// M7：有牌归队时闪一下顶栏「搁浅」按钮（<b>默认开</b>，Step 3 第 4 条）。
+    /// 搁浅：有牌归队时闪一下顶栏「搁浅」按钮（<b>默认开</b>，Step 3 第 4 条）。
     /// </summary>
     /// <remarks>纯表现层；关掉后行为与之前一致。找不到按钮（非本角色 / 顶栏未建）时静默跳过。</remarks>
     public bool StasisFlash { get; set; } = true;
 
-    // ============================ M2 时空间隙 ============================
+    // ============================ 时空裂隙 ============================
 
-    /// <summary><b>M2「时空间隙」总开关（默认开）</b>。</summary>
+    /// <summary><b>时空裂隙总开关（默认开）</b>。</summary>
     /// <remarks>
     /// 关掉后：不注册间隙牌堆与存档槽、不挂调试面板；`Activate` / `Recall` 直接拒绝并打日志 —— 不留坏状态。
     /// <b>需要重启游戏生效</b>（牌堆与数据槽只在初始化时注册一次）。
@@ -122,36 +118,36 @@ public sealed class AeonglassSetting
     public bool GapEnabled { get; set; } = true;
 
     /// <summary>
-    /// M2 的<b>战斗按键</b>（「坍缩」/「唤回」，默认开）—— 挂在<b>能量计数器正下方</b>。
+    /// 间隙的<b>战斗按键</b>（「坍缩」/「唤回」，默认开）—— 挂在<b>能量计数器正下方</b>。
     /// </summary>
     /// <remarks>
     /// <para>
     /// 2026-10-13 用户口径：顶栏已经有两个我们的牌堆按钮，不再往里塞；这两个动作要贴着能量 / 手牌那一片。
     /// </para>
     /// <para>
-    /// 关掉 = 不生成这两个按钮（机制本身与 <c>TimeGap.Activate</c> / <c>Recall</c> 接口不受影响）。
-    /// 按钮不可用时是原版"灰掉"的禁用态（判定复用 <c>TimeGap.PlanCollapse</c> / <c>PlanRecall</c>）。
+    /// 关掉 = 不生成这两个按钮（机制本身与 <c>GapCollapseActions.Activate</c> / <c>Recall</c> 接口不受影响）。
+    /// 按钮不可用时是原版"灰掉"的禁用态（判定复用 <c>GapCollapseActions.PlanCollapse</c> / <c>PlanRecall</c>）。
     /// </para>
     /// </remarks>
     public bool GapActionButtons { get; set; } = true;
 
-    /// <summary>M2 间隙容量（<b>Step 5 起 = 手牌上限</b>，默认 10）。</summary>
+    /// <summary>时空裂隙容量（<b>Step 5 起 = 手牌上限</b>，默认 10）。</summary>
     /// <remarks>规则层 v1：坍缩时把整手牌复制进间隙 ⇒ 容量按"手牌上限"给（本体手牌上限 10）。</remarks>
     public int GapCapacity { get; set; } = 10;
 
     /// <summary>
-    /// M2 坍缩（复制）后是否**补抽**（<b>Step 5 起默认关</b>）。
+    /// 时空裂隙 坍缩（复制）后是否**补抽**（<b>Step 5 起默认关</b>）。
     /// </summary>
     /// <remarks>旧口径会补抽"原手牌数量"的牌；新口径取消补抽（坍缩的代价就是这回合手牌变少）。</remarks>
     public bool GapRefillDraw { get; set; }
 
     /// <summary>
-    /// M2 副本是否**一次性**（定档 on）—— <b>硬闸</b>。
+    /// 时空裂隙 副本是否**一次性**（定档 on）—— <b>硬闸</b>。
     /// </summary>
     /// <remarks>
     /// <para>
     /// ⚠️ <b>当前实现下这一项已无实际差异</b>：间隙里放的是真实卡牌实例，"换回"就是把实例搬进手牌、
-    /// 搬走后间隙自然归空（见 <c>TimeGap.Recall</c> 第 ④ 步），所以副本在结构上就是一次性的。
+    /// 搬走后间隙自然归空（见 <c>GapRecallActions.Recall</c> 第 ④ 步），所以副本在结构上就是一次性的。
     /// </para>
     /// <para>保留开关只为将来若改回"记录式"实现（间隙只存数据、可反复换回）时重新启用那条硬闸。</para>
     /// </remarks>
@@ -167,7 +163,7 @@ public sealed class AeonglassSetting
     public bool GapEthereal { get; set; } = true;
 
     /// <summary>
-    /// **M2 两个动作的统一定价**（沙砾，定档 **2**）：坍缩、唤回各收这一笔。
+    /// **时空裂隙 两个动作的统一定价**（沙砾，定档 **2**）：坍缩、唤回各收这一笔。
     /// </summary>
     /// <remarks>
     /// <para>
@@ -178,10 +174,10 @@ public sealed class AeonglassSetting
     /// </remarks>
     public int GapActionCost { get; set; } = 2;
 
-    // ============================ M4 回溯 ============================
+    // ============================ 回溯 ============================
 
     /// <summary>
-    /// <b>M4「回溯」总开关（默认开）</b>。
+    /// <b>回溯总开关（默认开）</b>。
     /// </summary>
     /// <remarks>
     /// 关掉后：不装配回溯引擎、不挂调试按键、不装 VFX 屏障补丁 —— 回到"没有回溯"的状态。
@@ -190,21 +186,21 @@ public sealed class AeonglassSetting
     public bool RewindEnabled { get; set; } = true;
 
     /// <summary>
-    /// M4 成功回溯后<b>消耗全部沙砾</b>（定档开）。
+    /// 回溯 成功回溯后<b>消耗全部沙砾</b>（定档开）。
     /// </summary>
     /// <remarks>
     /// <para>
-    /// ⚠️ 代价是在**回档成功之后**收的：沙砾属于 M1 的回档范围，先收会被恢复动作还回来。
+    /// ⚠️ 代价是在**回档成功之后**收的：沙砾属于 时之沙的回档范围，先收会被恢复动作还回来。
     /// 见 <c>RewindModule.TryRequest</c> 的注释。
     /// </para>
     /// <para>关掉它 = 回溯免费（仅供实验；"每场 1 次"那条硬闸仍然生效）。</para>
     /// </remarks>
     public bool RewindCostAllSand { get; set; } = true;
 
-    // ============================ M6 双卡组 ============================
+    // ============================ 双卡组 ============================
 
     /// <summary>
-    /// <b>M6「双卡组」总开关（默认开）</b>。
+    /// <b>双卡组总开关（默认开）</b>。
     /// </summary>
     /// <remarks>
     /// 关掉后：不注册第二副牌组的牌堆、run 钩子直接返回、调试按键不挂 ——
@@ -224,7 +220,7 @@ public sealed class AeonglassSetting
     /// <para>
     /// <b>2026-10-14 改默认为开</b>：本机制<b>接线无条件安装</b>（补丁 + 生命周期订阅），
     /// 开关只 gate 运行时行为 —— 若它默认关，第一次测的人会看到"调用卡牌没效果"
-    /// （log 里只有 <c>总开关=False</c> 这一条线索）。与其他机制（M2/M6 默认开）保持一致。
+    /// （log 里只有 <c>总开关=False</c> 这一条线索）。与其他机制（时空裂隙/双卡组 默认开）保持一致。
     /// </para>
     /// </remarks>
     public bool RiotEnabled { get; set; } = true;
@@ -290,10 +286,10 @@ public sealed class AeonglassSetting
     /// <remarks>2026-10-13 定档：**2 沙砾**（原来是测试期的 0）。</remarks>
     public int DecksHotSwitchSandCost { get; set; } = 2;
 
-    // ============================ M3 操作时间（意图手牌）============================
+    // ============================ 操作时间（意图手牌）============================
 
     /// <summary>
-    /// <b>M3「操作时间」总开关（默认开）</b>。
+    /// <b>操作时间总开关（默认开）</b>。
     /// </summary>
     /// <remarks>
     /// 关掉后：不接管怪物掷招、不建意图牌堆、不挂调试按键 —— 怪物回到原版行为。
@@ -331,7 +327,7 @@ public sealed class AeonglassSetting
     /// </remarks>
     public string IntentHandEndOfTurn { get; set; } = "discard";
 
-    // ============================ M5 凋萎（= 虚无）============================
+    // ============================ 凋萎（= 虚无）============================
 
     /// <summary>
     /// 虚无在**怪物回合结束**结算时造成的伤害（<c>ValueProp.Unpowered</c>）。<b>Step 6 定稿 3</b>。
@@ -348,7 +344,7 @@ public sealed class AeonglassSetting
     /// <summary>一次"塞虚无"塞几张（调试按键用）。默认 1。</summary>
     public int WitherInjectPerUse { get; set; } = 1;
 
-    /// <summary>M3：怪物头顶的「意图卡带」（档 2 UI，默认开）。</summary>
+    /// <summary>意图：怪物头顶的「意图卡带」（档 2 UI，默认开）。</summary>
     /// <remarks>
     /// 把怪物的意图手牌画成一条只读卡带（空槽卡框 + 意图图标 + 角标），最多 5 张 + "…+N"，
     /// 挂在怪物意图行上方并自动跟随。原版意图图标照常显示（不冲突）。
@@ -362,9 +358,9 @@ public sealed class AeonglassSetting
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 用户 2026-10-11 明确要求："测试解放每场额度（所有功能都不带限制，之前 M2 等等也是）"。
-    /// 打开后：M1 倒置每回合 1 次、M3 每场意图操纵上限、M4 每场 1 次回溯、
-    /// M6 每场切换上限与冷却 —— 全部不再拦截（代价本身照旧收，只是不限次数）。
+    /// 用户 2026-10-11 明确要求："测试解放每场额度（所有功能都不带限制，之前 时空裂隙 等等也是）"。
+    /// 打开后：时之沙 倒置每回合 1 次、意图 每场意图操纵上限、回溯 每场 1 次回溯、
+    /// 双卡组 每场切换上限与冷却 —— 全部不再拦截（代价本身照旧收，只是不限次数）。
     /// </para>
     /// <para>
     /// ⚠️ 这是**测试开关**：正式发布前应关掉（各机制自己的上限开关仍然独立保留，改这里不影响它们）。

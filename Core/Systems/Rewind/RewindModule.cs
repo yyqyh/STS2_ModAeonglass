@@ -10,17 +10,18 @@ using STS2RitsuLib;
 using STS2RitsuLib.Combat.SecondaryResources;
 
 using STS2_Aeonglass.Core.Config;
-using STS2_Aeonglass.Core.Systems.Rewind.Binding;
+using STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 using STS2_Aeonglass.Core.Systems.Rewind.Bridges;
 using STS2_Aeonglass.Core.Systems.Rewind.Host;
 using STS2_Aeonglass.Core.Systems.Rewind.Host.Patches;
 using STS2_Aeonglass.Core.Systems.Rewind.Policy;
-using STS2_Aeonglass.Core.Systems.SandResource;
+using STS2_Aeonglass.Core.Systems.Sand;
 
+using STS2_Aeonglass.Core.Systems.Bootstrap;
 namespace STS2_Aeonglass.Core.Systems.Rewind;
 
 /// <summary>
-/// M4「回溯」模块入口：装配引擎 + 接上三条接缝 + 对外提供唯一触发入口。
+/// 回溯模块入口：装配引擎 + 接上三条接缝 + 对外提供唯一触发入口。
 /// </summary>
 /// <remarks>
 /// <para>
@@ -36,11 +37,11 @@ namespace STS2_Aeonglass.Core.Systems.Rewind;
 internal static class RewindModule
 {
     /// <summary>日志 / 设置页里显示的机制名。</summary>
-    public const string DisplayName = "M4 回溯";
+    public const string DisplayName = "回溯";
 
     private static bool _registered;
 
-    /// <summary>M4 是否启用。</summary>
+    /// <summary>回溯 是否启用。</summary>
     public static bool Enabled => AeonglassSettingStore.Current.RewindEnabled;
 
     /// <summary>由 <c>MechanismBootstrap</c> 逐条注册调用。</summary>
@@ -55,9 +56,9 @@ internal static class RewindModule
 
         var facade = RewindFacade.Instance;
 
-        // ① 接缝 M4 ↔ M1：**Step 2 起资源桥退场**。
+        // ① 接缝 回溯 ↔ 沙砾：**Step 2 起资源桥退场**。
         //    口径（规则层 v1 · P2）：沙砾 / 空隙已是 **run 级跨战斗资源**，回溯**不还原**它们 ——
-        //    否则"回档返还资源"会让 M4 的代价（消耗全部沙砾）白付。
+        //    否则"回档返还资源"会让 回溯的代价（消耗全部沙砾）白付。
         //    实现 `AeonglassSecondaryResourceBridge` 已随整理删除（git 历史里可取回）：留着它只会让"这条接缝还在"产生误解。
         //    真要恢复"回档还原资源"，照它当时的写法重接 ISecondaryResourceBridge 即可。
         //    **不再注册** ⇒ 引擎走 NullSecondaryResourceBridge：快照不抓资源、恢复也不动资源。
@@ -79,7 +80,7 @@ internal static class RewindModule
             warn => Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Rewind} {warn}"));
 
         // ④ 宿主装配：生命周期订阅 + 回合开始打点。
-        Bootstrapper.Start();
+        RewindBootstrapper.Start();
 
         // ⑤ 事件遗物「破碎的怀表」的获取入口（用户 2026-10-14：**改事件获得、另开、紧随捏奥之后**）：
         //    事件本体在 Content/Events/AeonglassBrokenWatchEvent.cs，
@@ -125,9 +126,9 @@ internal static class RewindModule
     {
         var facade = RewindFacade.Instance;
         var used = player is not null && RewindCombatLimit.Used(player) ? 1 : 0;
-        var sand = player is null || AeonglassSecondaryResources.Sand is null
+        var sand = player is null || SandResourceRegistry.Sand is null
             ? "-"
-            : SecondaryResourceCmd.Get(player, AeonglassSecondaryResources.SandId).ToString();
+            : SecondaryResourceCmd.Get(player, SandResourceRegistry.SandId).ToString();
 
         return $"快照 {facade.Ring.Items.Count}/{facade.Ring.Capacity}"
                + $" ｜ 本场已用 {used}/1 ｜ 沙砾 {sand} ｜ {facade.State.Phase}";
@@ -197,7 +198,7 @@ internal static class RewindModule
     /// 唯一触发入口（现在由调试按键调用，将来由卡牌 / 遗物调用）。
     /// </summary>
     /// <remarks>
-    /// <b>代价为什么在"回档成功之后"才收</b>：M1 的沙砾属于回档范围（<c>ISecondaryResourceBridge</c>），
+    /// <b>代价为什么在"回档成功之后"才收</b>：时之沙的沙砾属于回档范围（<c>ISecondaryResourceBridge</c>），
     /// 回档会把沙砾恢复成快照值 —— 如果先收，收掉的沙砾会被恢复动作**还回来**，代价等于不存在。
     /// 所以：先占位 → 发回档 → 成功后**把此刻（= 已恢复）的沙砾全部扣掉**；回档没成立就退回占位。
     /// </remarks>
@@ -218,7 +219,7 @@ internal static class RewindModule
         }
 
         var charged = AeonglassSettingStore.Current.RewindCostAllSand
-                      && AeonglassSecondaryResources.Sand is not null;
+                      && SandResourceRegistry.Sand is not null;
 
         RewindCombatLimit.Mark(player);
         message = charged ? "回溯中…（成功后消耗全部沙砾）" : "回溯中…";
@@ -250,14 +251,14 @@ internal static class RewindModule
     {
         try
         {
-            var amount = Math.Max(0, SecondaryResourceCmd.Get(player, AeonglassSecondaryResources.SandId));
+            var amount = Math.Max(0, SecondaryResourceCmd.Get(player, SandResourceRegistry.SandId));
             if (amount == 0)
             {
                 Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Rewind} 回溯代价：本来就没有沙砾，跳过。");
                 return;
             }
 
-            var spent = await SecondaryResourceCmd.Spend(player, AeonglassSecondaryResources.SandId, amount);
+            var spent = await SecondaryResourceCmd.Spend(player, SandResourceRegistry.SandId, amount);
             Const.Logger.Info(
                 $"[{Const.ModId}] {Const.Prefix.Rewind} 回溯代价：消耗 {amount} 沙砾（成功={spent}）"
                 + $" → 现在 {Describe(player)}");

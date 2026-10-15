@@ -4,6 +4,7 @@ using MegaCrit.Sts2.Core.Nodes.Combat;
 
 using STS2_Aeonglass.Core.Systems;
 
+using STS2_Aeonglass.Core.Systems.Bootstrap;
 namespace STS2_Aeonglass.Core.Patches;
 
 /// <summary>

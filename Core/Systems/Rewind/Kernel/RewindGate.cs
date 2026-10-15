@@ -1,11 +1,5 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
-/// <summary>单项闸门结果。</summary>
-public readonly record struct GateCheck(string Name, bool Ok, string Reason)
-{
-    public string Display => Ok ? $"ok {Name}" : $"x  {Name}：{Reason}";
-}
-
 /// <summary>整组闸门结果。</summary>
 public readonly record struct GateResult(bool Ok, IReadOnlyList<GateCheck> Checks)
 {
@@ -14,14 +8,6 @@ public readonly record struct GateResult(bool Ok, IReadOnlyList<GateCheck> Check
 
     public string FirstFailureReason =>
         Checks.Where(c => !c.Ok).Select(c => c.Reason).FirstOrDefault() ?? string.Empty;
-}
-
-/// <summary>单项闸门。加一条判据 = 加一个实现并注册，不改其它闸门。</summary>
-public interface IRewindGateCheck
-{
-    string Name { get; }
-
-    GateCheck Check();
 }
 
 /// <summary>闸门组：按注册顺序求值，全部通过才算可回档。</summary>

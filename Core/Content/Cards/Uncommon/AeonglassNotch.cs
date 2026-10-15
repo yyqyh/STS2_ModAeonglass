@@ -13,9 +13,14 @@ using STS2_Aeonglass.Core.Systems.History;
 namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 
 /// <summary>
-/// <b>刻痕</b>（CardANN2，v2）：1 费 · 8 伤（+3）；上回合你每打出 1 张牌：+3 伤（<b>无上限、不限攻击牌</b>；
-/// 升级每张 +4）。
+/// <b>刻痕</b>（CardANN2，v2）· <b>1 费 · Uncommon · 攻击</b> —— 造成 8 点伤害（升级 11）；上回合你每打出 1 张牌：+3 点伤害（升级每张 +4）。
 /// </summary>
+/// <remarks>
+/// ① 效果：基础 8 伤 + 上回合出牌数 × 3；升级同时抬基础与每张加成。
+/// ② 差分：无差分。
+/// ③ 依赖：<c>CombatHistory.CardsPlayedLastTurn</c>。
+/// ④ ⚠️ v2 去掉"只算攻击牌"的限定与硬上限 ⇒ <b>无上限、不限卡型</b>（与年轮同口径，越拖越强）。
+/// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassNotch() : ModCardTemplate(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
 {

@@ -2,8 +2,9 @@ using System.Reflection;
 
 using HarmonyLib;
 
-using STS2_Aeonglass.Core.Systems.Rewind.Binding;
+using STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
+using STS2_Aeonglass.Core.Systems.Bootstrap;
 namespace STS2_Aeonglass.Core.Systems.Rewind.Host.Patches;
 
 /// <summary>
@@ -70,7 +71,7 @@ internal static class VfxTrackingPatches
     /// ⚠️ <b>这是全模组唯一"无条件挂在共享路径上"的补丁</b>（12 个本体异步卡 VFX，任何角色都会走到）。
     /// 所以这里先过 <see cref="CharacterGate" />：<b>不是我们的角色就直接 return，连包装都不做</b>
     /// ⇒ 原版 / 其他 mod 的角色拿到的还是本体原来那个 Task，行为与未装本 mod 时逐字一致。
-    /// （屏障本身只被 M4 回溯读取，而回溯只对我们的角色开 —— 所以过滤掉没有损失。）
+    /// （屏障本身只被 回溯读取，而回溯只对我们的角色开 —— 所以过滤掉没有损失。）
     /// </remarks>
     private static void Postfix(MethodBase __originalMethod, ref Task __result)
     {

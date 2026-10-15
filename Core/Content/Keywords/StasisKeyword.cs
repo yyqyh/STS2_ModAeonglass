@@ -2,7 +2,7 @@ using STS2RitsuLib;
 
 namespace STS2_Aeonglass.Core.Content.Keywords;
 
-/// <summary>注册 mod 关键词「<b>搁浅</b>」（M7，原「滞留」更名后的机制名）。</summary>
+/// <summary>注册 mod 关键词「<b>搁浅</b>」（搁浅，原「滞留」更名后的机制名）。</summary>
 /// <remarks>
 /// <para>
 /// 与「凋萎」「迟滞」同一套写法：<c>RegisterCardKeywordOwnedByLocNamespace(stem)</c>，

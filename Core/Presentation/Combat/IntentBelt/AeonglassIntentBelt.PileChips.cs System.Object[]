@@ -1,0 +1,17 @@
+using Godot;
+
+using MegaCrit.Sts2.Core.Assets;
+using MegaCrit.Sts2.Core.Entities.Creatures;
+using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.Nodes.Combat;
+
+using STS2_Aeonglass.Core.Systems.EnemyTime;
+
+using STS2_Aeonglass.Core.Presentation.Support;
+
+
+namespace STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
+
+public partial class AeonglassIntentBelt : Control
+{
+}

@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3]
 
-[ext_resource type="Script" path="res://Core/Presentation/UI/SandCounterArtUi.cs" id="1_art"]
+[ext_resource type="Script" path="res://Core/Presentation/SecondaryResource/AeonglassSandCounterArt.cs" id="1_art"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/sand_counter/aeonglass_sand_counter_layer_1_shell.png" id="2_shell"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/sand_counter/aeonglass_sand_counter_layer_4_stream.png" id="3_stream"]
 [ext_resource type="Texture2D" path="res://STS2_Aeonglass/images/ui/sand_counter/aeonglass_sand_counter_layer_5_orb.png" id="4_orb"]

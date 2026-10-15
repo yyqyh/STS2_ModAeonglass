@@ -16,9 +16,9 @@ internal interface IRewindExtension
     /// <summary>拍快照时收集自己的数据。</summary>
     void OnCapture(ISnapshotDraft draft);
 
-    /// <summary>恢复前（例如 M7 先把滞留卡从搁浅摘掉）。</summary>
+    /// <summary>恢复前（例如 搁浅 先把滞留卡从搁浅摘掉）。</summary>
     void OnBeforeRestore(RewindContext ctx);
 
-    /// <summary>恢复后（例如 M7 母本回牌组 + 清计数）。</summary>
+    /// <summary>恢复后（例如 搁浅 母本回牌组 + 清计数）。</summary>
     void OnAfterRestore(RewindContext ctx);
 }

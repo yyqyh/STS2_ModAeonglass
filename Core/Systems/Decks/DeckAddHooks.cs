@@ -4,7 +4,7 @@ using MegaCrit.Sts2.Core.Models;
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
 /// <summary>
-/// M6「加入卡组 B」的原版钩子补齐（执行计划 Step 4 的第 4 条）。
+/// 双卡组「加入卡组 B」的原版钩子补齐（执行计划 Step 4 的第 4 条）。
 /// </summary>
 /// <remarks>
 /// 生效那一副的新牌本来就走在原版 <c>PileType.Deck</c> 路径上，钩子天然会响；

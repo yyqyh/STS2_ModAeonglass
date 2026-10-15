@@ -1,11 +1,12 @@
 using Godot;
 
 using STS2_Aeonglass.Core.Systems;
-using STS2_Aeonglass.Core.Systems.Rewind.Binding;
-using STS2_Aeonglass.Core.Systems.Rewind.Binding.Gates;
+using STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
+using STS2_Aeonglass.Core.Systems.Rewind.StateCapture.Guards;
 using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 using STS2_Aeonglass.Core.Systems.Rewind.Policy;
 
+using STS2_Aeonglass.Core.Systems.Bootstrap;
 namespace STS2_Aeonglass.Core.Systems.Rewind.Host;
 
 /// <summary>
@@ -116,7 +117,7 @@ internal sealed class RewindFacade
             return null;
         }
 
-        // 扩展草稿必须随这份快照一起带着 —— 否则恢复时拿不到"当时"的 M7 搁浅内容 / M2 间隙副本。
+        // 扩展草稿必须随这份快照一起带着 —— 否则恢复时拿不到"当时"的 搁浅 搁浅内容 / 时空裂隙副本。
         var aware = new ExtensionAwareSnapshot(snapshot, Extensions, draft.Parts);
         Ring.Add(aware);
         LastResult = $"拍摄 #{id.Index} @ T{turn}";
@@ -130,7 +131,7 @@ internal sealed class RewindFacade
     /// </summary>
     /// <param name="onFinished">
     /// 回档**结束**后的回调（参数 = 是否成功）。宿主用它做"成功后收取代价"这类收尾 ——
-    /// 不能在调用点之前收代价：M1 的沙砾会被快照恢复回去，代价就白收了。
+    /// 不能在调用点之前收代价：时之沙的沙砾会被快照恢复回去，代价就白收了。
     /// </param>
     public void RequestRewindToPreviousTurn(Action<bool>? onFinished = null)
     {
@@ -163,7 +164,7 @@ internal sealed class RewindFacade
         _ = RunRewindAsync(target, onFinished);
     }
 
-    /// <summary>撤销上一次成功回档（M4 只记录状态，实际撤销留给后续里程碑）。</summary>
+    /// <summary>撤销上一次成功回档（回溯 只记录状态，实际撤销留给后续里程碑）。</summary>
     public bool UndoLastRewind(out string error)
     {
         if (!_lastRewindSucceeded)

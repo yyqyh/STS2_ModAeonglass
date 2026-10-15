@@ -13,14 +13,13 @@ using STS2_Aeonglass.Core.Systems.History;
 namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 
 /// <summary>
-/// <b>因果</b>（CardRW2，v2）：1 费 · 9 伤（升级 12）；<b>本局游戏</b>你每回溯过一次 +3 伤（升级 +4）。
+/// <b>因果</b>（CardRW2，v2）· <b>1 费 · Uncommon · 攻击</b> —— 造成 9 点伤害（升级 12）；<b>本局游戏</b>你每回溯过一次 +3 伤（升级 +4）。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>口径是"本局"而不是"本场"</b>（v2 改动）：读 <see cref="RunHistory.Rewinds" />，
-/// 那个数存在起始遗物的 <c>[SavedProperty]</c> 上 ⇒ 跨战斗、跨读档累计，不会随战斗结束清零。
-/// </para>
-/// <para>加成的上限：v2 没写上限 ⇒ 不设上限（与年轮 / 刻痕 同口径）。</para>
+/// ① 效果：基础 9 伤 + 回溯次数 × 3；升级同时抬基础与每级加成。
+/// ② 差分：无差分。
+/// ③ 依赖：<c>RunHistory.Rewinds</c>（记在起始遗物的 <c>[SavedProperty]</c> 上 ⇒ 跨战斗、跨读档累计）。
+/// ④ ⚠️ 口径是"本局"而不是"本场"（v2 改动）；<b>无上限</b>（与年轮 / 刻痕同口径）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassCausality() : ModCardTemplate(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)

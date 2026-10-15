@@ -8,20 +8,19 @@ using STS2RitsuLib.Scaffolding.Content;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Content.Powers;
 using STS2_Aeonglass.Core.Systems.Cards;
-using STS2_Aeonglass.Core.Systems.EnemyTime;
+using STS2_Aeonglass.Core.Systems.Intent;
 
 namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 
 /// <summary>
-/// <b>豪赌</b>（NEW-1，v2）：0 费 · <b>迟滞</b> · 眩晕一只敌人，<b>跳过你的下一个回合</b>；升级 → 获得[保留]。
+/// <b>豪赌</b>（CardNEW1，v2）· <b>0 费 · Rare · 技能</b> · <b>迟滞</b> —— 眩晕一只敌人，并且<b>跳过你的下一个回合</b>；升级 → 获得[保留]。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>眩晕尊重本体的免疫规则</b>：走原生 <c>CreatureCmd.Stun</c>（带兜底 follow-up 状态），
-/// 那套"招牌招式不能被晕"的判定由引擎自己挡（不学 <c>IntentOps.StunForced</c> 去强行绕过）——
-/// 所以对 Boss 能生效、对免疫眩晕的怪**不生效**。落没落看事后的 <c>Creature.IsStunned</c>，日志里写清楚。
-/// </para>
-/// <para>代价与眩晕是两笔：**无论眩晕有没有落地，你的下一个回合照样被跳过**（卡面写的就是这个交换）。</para>
+/// ① 效果：眩晕目标（原生 <c>CreatureCmd.Stun</c>）+ 无条件跳过自己下回合（<c>AeonglassSkipNextTurnPower</c>）；升级挂 [保留]。
+/// ② 差分：无差分。
+/// ③ 依赖：本体眩晕 + 兜底 follow-up（<c>IntentOps.FallbackNextMoveId</c>）；迟滞关键词（不参与洗牌）。
+/// ④ ⚠️ 眩晕<b>尊重本体免疫</b>：Boss 能晕、免疫眩晕的怪不生效（不学 <c>IntentOps.StunForced</c> 强行绕过，落没落看 <c>IsStunned</c>）；
+///    代价与眩晕是<b>两笔</b>——无论眩晕有没有落地，你的下一个回合照样被跳过。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassGamble() : ModCardTemplate(0, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy),

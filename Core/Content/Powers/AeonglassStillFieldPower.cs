@@ -5,7 +5,7 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
-using STS2_Aeonglass.Core.Systems.EnemyTime;
+using STS2_Aeonglass.Core.Systems.Intent;
 
 namespace STS2_Aeonglass.Core.Content.Powers;
 
@@ -18,7 +18,7 @@ namespace STS2_Aeonglass.Core.Content.Powers;
 /// </para>
 /// <para>
 /// <b>标记权不在能力这里</b>：手牌是在玩家回合开始、意图解析时才重抽的
-/// （<c>IntentResolver.PrepareTurn</c>），比能力钩子晚一步；若在钩子里标"当时那手牌"，
+/// （<c>IntentTurnFlow.PrepareTurn</c>），比能力钩子晚一步；若在钩子里标"当时那手牌"，
 /// 玩家在本回合卡带上根本看不到被标记的那张。所以能力只回答"我还有几次额度"，
 /// 由解析器在<b>新抽好的手牌</b>上执行标记（见 <see cref="IIntentHysteresisSource" />）。
 /// </para>

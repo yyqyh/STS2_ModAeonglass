@@ -100,7 +100,7 @@ public sealed class AeonglassDeferralPower : ModPowerTemplate
             return;
         }
 
-        await DeferralLedger.PayDueAsync(choiceContext, player);
+        await DeferralSettlement.PayDueAsync(choiceContext, player);
 
         if (DeferralLedger.HasOpenDebt(player) || DeferralLedger.HasUnsettledInstance(player))
         {

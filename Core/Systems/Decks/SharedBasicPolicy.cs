@@ -1,8 +1,9 @@
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Models;
 
-using STS2_Aeonglass.Core.Systems.Zones;
+using STS2_Aeonglass.Core.Systems.Bootstrap;
 
+using STS2_Aeonglass.Core.Systems.Stasis;
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
 /// <summary>P3-4 的守门：**共用池的基础牌不带"离开牌堆 / 牌组"类关键词**。</summary>
@@ -22,7 +23,7 @@ internal static class SharedBasicPolicy
     /// <summary>这张牌违反了 P3-4 吗？违反就返回原因（中文，直接进日志 / 面板）。</summary>
     public static string? ViolationOf(CardModel card)
     {
-        // 搁浅（M7）：本 mod 自己的接口。
+        // 搁浅（搁浅）：本 mod 自己的接口。
         if (card is IStasisCard)
         {
             return "搁浅（打出后离开牌组）";

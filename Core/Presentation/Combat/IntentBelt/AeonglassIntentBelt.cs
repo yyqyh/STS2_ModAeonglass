@@ -186,13 +186,14 @@ public partial class AeonglassIntentBelt : Control
             return;
         }
 
-        // 卡带不可见（战斗 UI 隐藏 / 自己被隐藏）时不做任何定位与刷新 —— 省掉整条每帧开销。
-        if (!IsVisibleInTree())
+        // ⚠️ 这里**不能**用 `IsVisibleInTree()` 当门：手牌一空的那些帧我们会把卡带设成 Visible=false，
+        //    而它变回可见恰恰靠下面这段刷新 —— 用自身可见性当门会把自己永久锁死（实测踩到）。
+        //    所以只有"战斗 UI 整体不可见"时才跳过定位（战斗房间销毁时整条链会连带释放）。
+        var combatUiVisible = MegaCrit.Sts2.Core.Nodes.Rooms.NCombatRoom.Instance?.Ui?.IsVisibleInTree() ?? true;
+        if (combatUiVisible)
         {
-            return;
+            SyncPosition();
         }
-
-        SyncPosition();
 
         _timer += (float)delta;
         _numberTimer += (float)delta;

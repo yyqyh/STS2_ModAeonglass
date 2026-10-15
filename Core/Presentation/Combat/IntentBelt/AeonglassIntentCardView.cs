@@ -167,7 +167,6 @@ internal sealed class AeonglassIntentCardView
             view.ConnectEngineHover();
             view.ResizeTo(slotSize);
             view.SetInteractable(false);
-            view.CreateHoverBacklight();
             return view;
         }
         catch (Exception ex)
@@ -233,10 +232,25 @@ internal sealed class AeonglassIntentCardView
 
     /// <summary>
     /// 造一层金色背光：**复制本体那个 <c>%Highlight</c> 节点**（自带 shader 与 AnimShow/AnimHide），
-    /// 并把它的 <c>ShaderMaterial</c> 深拷贝一份 —— 否则两层共享同一个材质实例，改一层的宽度会连另一层一起变。
+    /// 并给它一份**独立但不深拷**的 <c>ShaderMaterial</c>。
     /// </summary>
-    private void CreateHoverBacklight()
+    /// <remarks>
+    /// <para>
+    /// ① 必须在<b>第一次悬停时</b>才建（不在创建卡视图时建）：复制材质 + 首帧上屏的开销挪出"进战斗"那一帧，
+    /// 进战斗不再因为这条装饰而卡一下。
+    /// </para>
+    /// <para>
+    /// ② <c>Duplicate()</c> 用**默认参数**（不深拷子资源）：材质实例独立 ⇒ 两层的 <c>width</c> 参数互不干扰，
+    /// 但 <c>Shader</c> 本体共享 ⇒ 不会给每张卡多编译一份 shader 管线（`Duplicate(true)` 会，那正是卡顿的来源之一）。
+    /// </para>
+    /// </remarks>
+    private void EnsureHoverBacklight()
     {
+        if (_hoverLayer is { } existing && GodotObject.IsInstanceValid(existing))
+        {
+            return;
+        }
+
         if (_card.CardHighlight is not { } source || source.GetParent() is not { } parent)
         {
             return;
@@ -247,7 +261,7 @@ internal sealed class AeonglassIntentCardView
             var layer = (NCardHighlight)source.Duplicate();
             if (layer.Material is ShaderMaterial shared)
             {
-                layer.Material = (ShaderMaterial)shared.Duplicate(true);
+                layer.Material = (ShaderMaterial)shared.Duplicate();
             }
 
             layer.Name = "HoverBacklight";
@@ -295,6 +309,12 @@ internal sealed class AeonglassIntentCardView
 
         _hovered = hovered;
         _wrapper.ZIndex = hovered ? HoverZIndex : 0;
+
+        // 背光层是**第一次悬停才建**的（把复制材质/首次上屏的成本挪出"进战斗"那一帧）。
+        if (hovered)
+        {
+            EnsureHoverBacklight();
+        }
 
         if (_hoverLayer is { } layer && GodotObject.IsInstanceValid(layer))
         {

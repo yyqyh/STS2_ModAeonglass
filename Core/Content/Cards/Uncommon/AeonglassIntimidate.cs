@@ -16,10 +16,11 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ① 效果：只重排顺序（把那意图往后压）；升级挂 [保留]。
 /// ② 差分：无差分。
 /// ③ 依赖：意图 敌人时间（<c>IntentMoves.Postpone</c>）+ 原版指向链路。
-/// ④ ⚠️ v2 由「跳过」改名；候选只有"可行动的"意图。
+/// ④ ⚠️ v2 由「跳过」改名；目标类型必须用 <c>AnyEnemy</c>（同「提前」：只有生物目标类型才会走
+/// 本体的 <c>SingleCreatureTargeting</c>，否则拖完立刻结算、拿不到指向）；候选只有"可行动的"意图。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassIntimidate() : ModCardTemplate(1, CardType.Skill, CardRarity.Uncommon, TargetType.TargetedNoCreature),
+public sealed class AeonglassIntimidate() : ModCardTemplate(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy),
     IIntentTargetCard
 {
     protected override HashSet<CardTag> CanonicalTags => [];

@@ -13,21 +13,37 @@ using STS2_Aeonglass.Core.Systems.Intent;
 namespace STS2_Aeonglass.Core.Patches;
 
 /// <summary>
-/// **原版卡牌指向**的三个落点（用户 2026-10-12：用 <c>TargetedNoCreature</c> 那种形态、
-/// 只能指向我们的意图卡、不用选择器也不用我们自己接点击）。
+/// **原版卡牌指向**的三个落点（用户口径：走本体那套"选目标"交互，但只能指向我们的意图卡、
+/// 不用选择器、也不用我们自己接点击）。
 /// </summary>
 /// <remarks>
+/// <para>
+/// <b>前提（2026-10-15 定案）</b>：动作卡的 <c>TargetType</c> 必须是 <c>AnyEnemy</c> 这类**生物目标**类型 ——
+/// 本体 <c>NMouseCardPlay.TargetSelection</c> 只对 <c>AnyEnemy</c> / <c>AnyAlly</c> 调
+/// <c>SingleCreatureTargeting</c>；<c>TargetedNoCreature</c> 会掉进 <c>MultiCreatureTargeting</c>
+/// （不等待点目标）⇒ 永远拿不到指向结果。
+/// </para>
+/// <para>
 /// 链路（已核）：
 /// <c>NMouseCardPlay</c> 起瞄准 → <c>NTargetManager.AllowedToTargetNode</c> 判合法节点 →
 /// 悬停/确认 → 出牌 → <c>PlayCardAction</c> 里 <c>_card.IsValidTarget(target)</c> 再校验一次。
 /// 所以：
 /// <list type="number">
-///   <item><description><b>IsValidTarget</b>：我们的卡 + 目标为 null（<c>TargetedNoCreature</c>）判为合法 —— 对应药水那条口径。</description></item>
-///   <item><description><b>AllowedToTargetNode</b>：放行"我们登记过的意图卡节点"。</description></item>
+///   <item><description><b>AllowedToTargetNode</b>：瞄准期间<b>挡住敌人节点</b>（只能点意图卡）；放行"我们登记过的意图卡节点"。</description></item>
 ///   <item><description><b>OnNodeHovered / FinishTargeting</b>：记下"最近指向的那张 / 确认那一张"，交给侧表。</description></item>
+///   <item><description><b>SelectionFinished</b>：把被点中的意图卡节点换成它所属怪的 <c>NCreature</c>（本体拿到非生物节点会抛）。</description></item>
+///   <item><description><b>IsValidTarget</b>：留给以后真用 <c>TargetedNoCreature</c> 的卡（当前两张动作卡不需要它）。</description></item>
 /// </list>
-/// <b>全部只在"正在打出我们这三张动作卡"时生效</b>（<see cref="IsOurActionCard" /> / 节点是否登记过），
+/// </para>
+/// <para>
+/// ⚠️ <b>悬停上报不能只靠 <c>MouseEntered</c></b>：瞄准是"按住拖到目标再松开"（<c>ReleaseMouseToTarget</c>），
+/// 拖动期间鼠标被被拖的卡节点占住 ⇒ 槽位收不到进入事件。所以卡带在瞄准期间每帧自己按鼠标位置做命中测试
+/// （见 <c>AeonglassIntentBelt.UpdateTargetingHover</c>）。
+/// </para>
+/// <para>
+/// <b>全部只在"正在打出我们的动作卡"时生效</b>（<see cref="IsOurActionCard" /> / 节点是否登记过），
 /// 其余卡与本体行为一点不改 ✔。
+/// </para>
 /// </remarks>
 internal static class IntentTargetingPatches
 {
@@ -40,7 +56,13 @@ internal static class IntentTargetingPatches
     /// </remarks>
     private static bool IsOurActionCard(CardModel? card) => card is IIntentTargetCard;
 
-    /// <summary>① 目标为 null（非生物目标）时，我们这三张卡要判为合法。</summary>
+    /// <summary>
+    /// ① 目标为 null（非生物目标）时，把"我们的动作卡"判为合法。
+    /// </summary>
+    /// <remarks>
+    /// 当前两张动作卡用的是 <c>AnyEnemy</c>（走正常选目标），并不需要这条；
+    /// 它是留给以后真用 <c>TargetedNoCreature</c> 的卡的兜底（本体那条路要求 <c>IsValidTarget(null)</c> 为真）。
+    /// </remarks>
     [HarmonyPatch(typeof(CardModel), nameof(CardModel.IsValidTarget))]
     internal static class IsValidTargetPatch
     {

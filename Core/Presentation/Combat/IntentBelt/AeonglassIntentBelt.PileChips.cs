@@ -344,9 +344,18 @@ public partial class AeonglassIntentBelt : Control
             ClearPileRow();
             Visible = false;
             _rowWidthDirty = true;
+
+            if (_lastShown != false)
+            {
+                _lastShown = false;
+                Const.Logger.Info(
+                    $"[{Const.ModId}] {Const.Prefix.Intent} 卡带隐藏（手牌空）：monster={_creature?.Monster?.Id.Entry ?? "-"}");
+            }
+
             return;
         }
 
+        _lastShown = true;
         Visible = true;
         IntentTargetRegistry.Clear();
         var openKind = _popupIsDrawPile;
@@ -474,6 +483,17 @@ public partial class AeonglassIntentBelt : Control
         // 牌堆行（第一张卡正下方）：抽 / 弃 两格，用**玩家牌堆那种**样式（只有两个小节点，照旧重建）。
         AddPileIndicator(isDraw: true, "抽", state.Deck);
         AddPileIndicator(isDraw: false, "弃", state.Discard);
+
+        // 一次性诊断（每场战斗每只怪一行）：卡带出图时把"用了哪张锚点、行宽多少、落在哪"打出来，
+        // 位置不对时对着这一行看数值即可（不是每帧，代价可忽略）。
+        if (!_loggedReady)
+        {
+            _loggedReady = true;
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 卡带就绪：monster={state.MonsterId} 卡面 {slots.Count} 张"
+                + $"｜锚点 local pos={_anchor?.Position} size={_anchor?.Size}"
+                + $"｜行宽={_rowWidth:0.#}｜卡带 pos={Position}｜父={GetParent()?.Name}");
+        }
 
         // 预览面板如果开着 ⇒ 用**当前**内容重建一次。
         // 这既修"自动修改后没刷新"，也修"关掉再点还是旧内容"（每次刷新时面板都跟着重算）。

@@ -89,6 +89,12 @@ public partial class AeonglassIntentBelt : Control
     private Vector2 _anchorSize;
     private bool _anchorCached;
 
+    /// <summary>一次性诊断：这条卡带是否已经打过"就绪"那行（每场战斗每只怪只打一次）。</summary>
+    private bool _loggedReady;
+
+    /// <summary>"空 ↔ 有"切换只在变化时打一行（不是每帧）。</summary>
+    private bool? _lastShown;
+
     /// <summary>
     /// "我们选中的"那张意图（青色高光）—— 动作卡进入**指向模式**时由它填上，平时是 null。
     /// </summary>

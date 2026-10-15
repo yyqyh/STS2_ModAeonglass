@@ -58,6 +58,33 @@ public partial class AeonglassGapPortals : Control
     /// </remarks>
     private const bool CompensateCameraScale = true;
 
+    /// <summary>
+    /// 传送门挂在哪个"场景层"里（2026-10-15 用户口径：门属于世界，不在 UI 里）。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>CombatVfx</c>（默认，用户指定）= <c>%CombatVfxContainer</c>（本体给它设了 <c>ZIndex = -9</c>）。
+    /// <c>BackCombatVfx</c> = <c>%BackCombatVfxContainer</c>（z 相对 0 ⇒ 与人物同层、按树序排在人物之前）。
+    /// </para>
+    /// <para>
+    /// ⚠️ 本体没关掉 <c>z_as_relative</c>，所以 z 是**沿父链累加**的：<c>CombatSceneContainer</c> 是 -10 ⇒
+    /// <c>CombatVfxContainer</c> 的有效 z ≈ <b>-19</b>（比背景、人物那些 -10 的兄弟还低），
+    /// <c>BackCombatVfxContainer</c> 则是 -10（与人物同层、树序在前）。**进战斗时 log 里会打一行实测值**
+    /// （`[间隙] 场景分层…`），门被背景或人物盖住时照那行改这个常量即可。
+    /// </para>
+    /// </remarks>
+    private const PortalSceneLayer SceneLayer = PortalSceneLayer.CombatVfx;
+
+    /// <summary>传送门可选的场景层（见 <see cref="SceneLayer" />）。</summary>
+    private enum PortalSceneLayer
+    {
+        /// <summary><c>%CombatVfxContainer</c>（本体的"战斗特效"容器，z 相对 -9）。</summary>
+        CombatVfx,
+
+        /// <summary><c>%BackCombatVfxContainer</c>（背景层特效容器，z 相对 0）。</summary>
+        BackCombatVfx,
+    }
+
     /// <summary>"没张开"时门缩到多小（只在 <see cref="AlwaysVisible" /> 为 false 时用）。</summary>
     private const float HiddenScale = 0.55f;
 
@@ -117,7 +144,11 @@ public partial class AeonglassGapPortals : Control
         // 会被人物节点遮住、跟着屏幕震动一起晃。⚠️ 那个容器在 `%CombatSceneContainer` 里，
         // **继承相机缩放** ⇒ 本节点每次定位都把自己的 Scale 抵消成 1/缩放，并把额外手牌容器的全局坐标
         // 换算到本节点局部（内部一切仍是"屏幕像素"口径）。取不到容器就退回挂 UI（旧行为，能跑）。
-        var vfx = combatRoom.CombatVfxContainer;
+        var scene = combatRoom.SceneContainer;
+        var vfx = SceneLayer == PortalSceneLayer.BackCombatVfx
+            ? scene?.GetNodeOrNull<Control>("%BackCombatVfxContainer")
+            : combatRoom.CombatVfxContainer;
+
         if (vfx is null || !GodotObject.IsInstanceValid(vfx) || combatRoom.Ui is null)
         {
             combatRoom.Ui?.AddChild(new AeonglassGapPortals { Name = nameof(AeonglassGapPortals) });
@@ -129,6 +160,53 @@ public partial class AeonglassGapPortals : Control
             Name = nameof(AeonglassGapPortals),
             ZIndex = -1, // 落在本体战斗特效之下、人物（其父级兄弟）之下
         });
+
+        DumpLayerOrder(combatRoom, vfx);
+    }
+
+    /// <summary>
+    /// 把"战斗场景的实际分层"打一行日志（一次性，改挂点/排查被盖住时看它）。
+    /// </summary>
+    /// <remarks>
+    /// z 是沿父链累加的（本体没关 <c>z_as_relative</c>），所以这里按 Godot 的规则手算有效 z：
+    /// 从节点往上叠 <c>ZIndex</c>，遇到 <c>ZAsRelative == false</c> 就停。
+    /// </remarks>
+    private static void DumpLayerOrder(MegaCrit.Sts2.Core.Nodes.Rooms.NCombatRoom room, Control parent)
+    {
+        try
+        {
+            var scene = room.SceneContainer;
+            var children = scene is null
+                ? "(no scene)"
+                : string.Join(", ", scene.GetChildren().OfType<CanvasItem>()
+                    .Select(c => $"{c.Name}(z={c.ZIndex}{(c.ZAsRelative ? "rel" : "abs")})"));
+
+            Const.Logger.Info(
+                $"{Const.Prefix.Gap} 场景分层：CombatSceneContainer(z={scene?.ZIndex}rel) 子=[{children}]"
+                + $"｜传送门父={parent.Name}(有效 z={EffectiveZ(parent)})"
+                + $"｜人物侧 AllyContainer(有效 z={EffectiveZ(scene?.GetNodeOrNull<Control>("%AllyContainer"))})"
+                + $"/ EnemyContainer(有效 z={EffectiveZ(scene?.GetNodeOrNull<Control>("%EnemyContainer"))})");
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Warn($"{Const.Prefix.Gap} 场景分层打印失败（已忽略）：{ex.GetType().Name}");
+        }
+    }
+
+    /// <summary>节点在 Godot 里的有效绘制序（沿父链累加 ZIndex，遇到绝对 z 就停）。</summary>
+    private static int EffectiveZ(Node? node)
+    {
+        var z = 0;
+        for (var n = node; n is CanvasItem item; n = item.GetParent())
+        {
+            z += item.ZIndex;
+            if (!item.ZAsRelative)
+            {
+                break;
+            }
+        }
+
+        return z;
     }
 
     public override void _Ready()

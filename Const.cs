@@ -346,6 +346,34 @@ internal static class Const
             public const string Shards = Dir + "aeonglass_shard_particles.png";
         }
 
+        /// <summary>
+        /// 卡牌框材质（<b>双色 · 对角分割</b>）——每张框一份，只差 <c>uv_rect</c>。
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// 卡框贴图是本体 <c>ui_atlas_0.png</c> 的 <c>AtlasTexture</c> 切片，UV 是**图集坐标**，
+        /// 分割线 / 面板 / 图标都要先把坐标归一化回卡框本地像素 ⇒ 每种框必须单独一份材质。
+        /// </para>
+        /// <para>
+        /// 颜色**不在这里**：按 [永时] / [消逝] 换色走
+        /// <c>Core/Presentation/Art/AeonglassFramePalette</c> 与 <c>AeonglassFrameMaterial</c>
+        /// （那里 <c>Duplicate()</c> 出一份一份的染色材质，不碰这三份共享资源）。
+        /// </para>
+        /// </remarks>
+        public static class CardFrame
+        {
+            private const string Dir = Root + "/materials/cards/frames/";
+
+            /// <summary>攻击框（图集切片 (1320, 83, 598, 844)）。</summary>
+            public const string Attack = Dir + "aeonglass_frame_attack_mat.tres";
+
+            /// <summary>技能框（同时兜住"状态牌"——本体给状态 / 诅咒用的是技能框）。</summary>
+            public const string Skill = Dir + "aeonglass_frame_skill_mat.tres";
+
+            /// <summary>能力框。</summary>
+            public const string Power = Dir + "aeonglass_frame_power_mat.tres";
+        }
+
         /// <summary>遗物：自己的图标（空槽）。</summary>
         public static class Relic
         {
@@ -353,6 +381,29 @@ internal static class Const
 
             /// <summary>初始遗物「沙漏之心」的图标（128×128 透明空槽，出图后同名覆盖）。</summary>
             public const string Core = Dir + "aeonglass_core.png";
+
+            /// <summary>
+            /// 事件遗物「破碎的怀表」的图标（128×128 透明空槽，出图后同名覆盖）。
+            /// </summary>
+            public const string BrokenWatch = Dir + "aeonglass_broken_watch.png";
+        }
+
+        /// <summary>
+        /// 事件：立绘空槽。
+        /// </summary>
+        /// <remarks>
+        /// <b>必须有这张图</b>：本体事件立绘的默认路径是按事件 id 推出来的
+        /// （<c>res://images/events/&lt;id 小写&gt;.png</c>），文件不存在时
+        /// <c>NEventRoom.SetupLayout()</c> 里的 <c>CreateInitialPortrait</c> 会抛
+        /// <c>AssetLoadException</c> ⇒ <b>整个事件布局初始化中断、界面上一个选项都没有</b>（实测踩到）。
+        /// 这里显式给 <c>EventAssetProfile.InitialPortraitPath</c> 指到我们的空槽图，出图后同名覆盖即可。
+        /// </remarks>
+        public static class Event
+        {
+            private const string Dir = Root + "/images/events/";
+
+            /// <summary>「破碎的怀表」事件的立绘（空槽，出图后同名覆盖）。</summary>
+            public const string BrokenWatchPortrait = Dir + "aeonglass_broken_watch_event.png";
         }
 
         /// <summary>次级资源（M1 时之沙）的图标：全是空槽，出图后同名覆盖。</summary>

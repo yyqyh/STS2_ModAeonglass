@@ -9,7 +9,9 @@ using STS2RitsuLib.CardPiles;
 using STS2RitsuLib.Combat.SecondaryResources;
 
 using STS2_Aeonglass.Core.Config;
+using STS2_Aeonglass.Core.Systems.AlphaBeta;
 using STS2_Aeonglass.Core.Systems.SandResource;
+using STS2_Aeonglass.Core.Systems.Decks;
 
 namespace STS2_Aeonglass.Core.Systems.Zones;
 
@@ -84,6 +86,13 @@ internal static class TimeGap
     /// </remarks>
     public static int ActionCost => Math.Clamp(AeonglassSettingStore.Current.GapActionCost, 0, 6);
 
+    /// <summary>
+    /// 该玩家这一次要付的沙砾数：<b>α or β（流逝副）</b>在场且本局还没用过回溯 ⇒ 只付 1 点。
+    /// </summary>
+    /// <remarks>⚠️ 这是卡池侧标红的"给 M2 降门槛"那一条（P11 守则 4）；要撤就撤这一个方法。</remarks>
+    public static int ActionCostFor(Player player)
+        => AlphaBetaPassive.GapCostReduced(player) ? Math.Min(ActionCost, 1) : ActionCost;
+
     // ============================ 生命周期 ============================
 
     /// <summary>由 <see cref="ZonesModule.RegisterTimeGap" /> 在注册牌堆后调用。</summary>
@@ -154,7 +163,7 @@ internal static class TimeGap
         // **预测必须与执行端一致**（2026-10-14：必须交替 + 坍缩代价）：任一不满足就"什么都不该演"。
         // ⚠️ 每回合激活次数的上限已取消（用户口径）⇒ 这里不再有"本回合额度"这一条。
         if (!GapTurnLimit.AllowsAlternation(player, GapTurnLimit.GapAction.Collapse)
-            || ActionCost > SecondaryResourceCmd.Get(player, AeonglassSecondaryResources.SandId))
+            || ActionCostFor(player) > SecondaryResourceCmd.Get(player, AeonglassSecondaryResources.SandId))
         {
             return [];
         }
@@ -231,11 +240,12 @@ internal static class TimeGap
             return GapResult.Fail(blocked);
         }
 
-        if (ActionCost > 0
-            && !await SecondaryResourceCmd.Spend(player, AeonglassSecondaryResources.SandId, ActionCost))
+        var cost = ActionCostFor(player);
+        if (cost > 0
+            && !await SecondaryResourceCmd.Spend(player, AeonglassSecondaryResources.SandId, cost))
         {
             var have = SecondaryResourceCmd.Get(player, AeonglassSecondaryResources.SandId);
-            var blocked = $"坍缩被拒（沙砾不足：需要 {ActionCost}，现有 {have}）";
+            var blocked = $"坍缩被拒（沙砾不足：需要 {cost}，现有 {have}）";
             Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} {blocked}");
             return GapResult.Fail(blocked);
         }
@@ -254,11 +264,20 @@ internal static class TimeGap
         var hand = combatPiles.Hand;
         var handBefore = hand.Cards.Count;
         var plan = PlanCore(hand, room);
+        // 来源副**先记下来**：下面会把这几张牌移出手牌，先算能保证与"记进间隙的那一份"逐字一致。
+        var planSides = plan.Select(card => DeckVariants.SideOf(player, card)).ToList();
 
         // ① 复制实例 → ② 进间隙（真实实例，牌堆界面可见、可跨战斗）→ ③ 真实移出手牌。
-        foreach (var card in plan)
+        for (var i = 0; i < plan.Count; i++)
         {
+            var card = plan[i];
             var copy = combat.CloneCard(card);
+
+            // ★ 2026-10-14 用户口径：「间隙」卡回到手牌要**保持它原本的差分**。
+            //   副本的 DeckVersion 被本体清空了（AfterCloned）⇒ 单看牌堆认不出来源副，
+            //   所以在这里把"来源副"记到副本上（随存档走，见 DeckOrigin）。
+            DeckOrigin.Stamp(copy, planSides[i]);
+
             // 存储牌堆是 **Headless** 的 ⇒ 这里静默写就行（显示由 GapView 镜像负责）。
             gap.AddInternal(copy, -1, true);
 
@@ -299,6 +318,8 @@ internal static class TimeGap
         var text = $"坍缩：手牌 {handBefore} 张 → 间隙 +{copied}（{CountOf(player)}/{Capacity}）"
                    + $" → 移出手牌 {copied}"
                    + (AeonglassSettingStore.Current.GapRefillDraw ? $" → 补抽 {drawn}/{drawCount}" : " → 不补抽");
+        var fromB = planSides.Count(side => side == DeckSide.B);
+        text += $"｜来源副：A {copied - fromB} / B {fromB}";
         Const.Logger.Info($"[{Const.ModId}] [M2] {text}");
         return GapResult.Success(text);
     }

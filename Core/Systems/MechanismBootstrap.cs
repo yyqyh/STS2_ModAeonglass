@@ -45,6 +45,11 @@ internal static class MechanismBootstrap
 
         // M3「操作时间」+ M5「凋萎」：订阅回合事件驱动意图手牌解析（C11 补丁随 Main 的补丁扫描一起装）。
         Register(EnemyTime.EnemyTimeModule.DisplayName, EnemyTime.EnemyTimeModule.Enabled, EnemyTime.EnemyTimeModule.Register);
+
+        // 「乱流」抽弃互换（不是 M1–M7 里的某一条，单列）。
+        // ⚠️ **无条件注册**：接线（生命周期订阅 + 盯弃牌堆）永远装，总开关只 gate 运行时行为 ——
+        // 否则"先在设置页打开开关"不会生效（实测：调用卡牌测试没效果）。
+        Register("乱流（抽弃互换）", enabled: true, Riot.RiotSwap.Register);
     }
 
     /// <summary>注册单个机制模块（带开关判断与独立的错误隔离）。</summary>

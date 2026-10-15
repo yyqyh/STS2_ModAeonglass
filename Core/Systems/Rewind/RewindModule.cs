@@ -4,7 +4,9 @@ using HarmonyLib;
 
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.Commands;
 
+using STS2RitsuLib;
 using STS2RitsuLib.Combat.SecondaryResources;
 
 using STS2_Aeonglass.Core.Config;
@@ -68,6 +70,7 @@ internal static class RewindModule
         facade.Extensions.Add(new StasisRewindExtension());
         facade.Extensions.Add(new GapRewindExtension());
         facade.Extensions.Add(new DeferralRewindExtension());
+        facade.Extensions.Add(new AlphaBetaRewindExtension());
 
         // ③ VFX 屏障补丁：12 个异步卡 VFX 目标，逐个手动装（一个改名不会带崩整组）。
         var harmony = new Harmony(Const.ModId + ".rewind");
@@ -77,6 +80,38 @@ internal static class RewindModule
 
         // ④ 宿主装配：生命周期订阅 + 回合开始打点。
         Bootstrapper.Start();
+
+        // ⑤ 事件遗物「破碎的怀表」的获取入口（用户 2026-10-14：**改事件获得、另开、紧随捏奥之后**）：
+        //    事件本体在 Content/Events/AeonglassBrokenWatchEvent.cs，
+        //    现场那条钩子在 Core/Patches/BrokenWatchEventChainPatch.cs（随 Main 的补丁扫描一起装），
+        //    这里补的是"房间进入"那条（读档恢复时本体不会再触发那个钩子，实测漏过一次）。
+        RitsuLibFramework.SubscribeLifecycle<RoomEnteredEvent>(evt =>
+        {
+            try
+            {
+                switch (evt.Room)
+                {
+                    case MegaCrit.Sts2.Core.Rooms.EventRoom { CanonicalEvent: MegaCrit.Sts2.Core.Models.Events.Neow } ancient:
+                        Systems.Rewind.BrokenWatchChain.HandleAncientRoomEntered(
+                            ancient, evt.RunState.Players, "先古房间进入（含读档恢复）");
+                        break;
+                    default:
+                        foreach (var player in evt.RunState.Players)
+                        {
+                            Systems.Rewind.BrokenWatchChain.TryChainAtRest(player, evt.Room);
+                        }
+
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Rewind} 事件链（房间进入）失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
+            }
+        });
+
+        // ⚠️ 先前"跑局开始直接发放"与"捏奥界面加一个选项"两条临时做法都已按用户口径删除。
 
         Const.Logger.Info(
             $"[{Const.ModId}] {Const.Prefix.Rewind} 回溯引擎就绪："

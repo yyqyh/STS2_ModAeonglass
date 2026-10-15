@@ -44,8 +44,8 @@
   "STS2_AEONGLASS_POWER_AEONGLASS_ANNALS_POWER.smartDescription": "每回合开始时：若你上回合打出的牌 ≤1 张，获得 [blue]{Amount}[/blue] 点格挡。"
   ,
   "STS2_AEONGLASS_POWER_AEONGLASS_LOAN_TIME_POWER.title": "贷时",
-  "STS2_AEONGLASS_POWER_AEONGLASS_LOAN_TIME_POWER.description": "每回合开始时：借{Amount}点能量（本回合 +{Amount}、下回合 −{Amount}）。",
-  "STS2_AEONGLASS_POWER_AEONGLASS_LOAN_TIME_POWER.smartDescription": "每回合开始时：借[blue]{Amount}[/blue]点能量（本回合 +[blue]{Amount}[/blue]、下回合 −[blue]{Amount}[/blue]）。",
+  "STS2_AEONGLASS_POWER_AEONGLASS_LOAN_TIME_POWER.description": "每回合开始时：把下回合的能量提前到本回合使用（下回合对应减少）。",
+  "STS2_AEONGLASS_POWER_AEONGLASS_LOAN_TIME_POWER.smartDescription": "每回合开始时：把下回合的能量提前到本回合使用（下回合对应减少）。",
   "STS2_AEONGLASS_POWER_AEONGLASS_TIME_HUB_POWER.title": "时枢",
   "STS2_AEONGLASS_POWER_AEONGLASS_TIME_HUB_POWER.description": "每回合开始时：获得{Amount}点能量。你的手牌上限 −1。",
   "STS2_AEONGLASS_POWER_AEONGLASS_TIME_HUB_POWER.smartDescription": "每回合开始时：获得[blue]{Amount}[/blue]点能量。你的手牌上限 −1。",

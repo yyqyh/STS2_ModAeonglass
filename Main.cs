@@ -21,7 +21,8 @@ namespace STS2_Aeonglass;
 /// <para>
 /// 内容（角色 / 卡牌 / 卡池）全部走 RitsuLib 的自动注册注解，这里只负责四件事：
 /// <b>① 让 RitsuLib 发现本程序集；② 初始化设置存储与设置页；③ 装 Harmony 补丁；
-/// ④ 把内容 id 打进日志</b>。
+/// ④ 把内容 id 打进日志</b>；外加一条纯表现层的接线 —— ⑤ 注册卡框（
+/// <c>Core/Presentation/Art/AeonglassFrameMaterial</c>，双色对角分割 + [永时]/[消逝] 换色）。
 /// </para>
 /// <para>
 /// 第 ① 步只有一条补丁（战斗房间挂调试面板）。补丁骨架保留在这里是<b>刻意的</b> ——
@@ -38,6 +39,18 @@ public static class Main
         // 必须先让 RitsuLib 认识本程序集，注解注册才会生效。
         RitsuLibFramework.EnsureGodotScriptsRegistered(assembly, RitsuLibFramework.CreateLogger(Const.ModId));
         ModTypeDiscoveryHub.RegisterModAssembly(Const.ModId, assembly);
+
+        // 卡牌「来源副」记录（M2 间隙副本用）：走 RitsuLib 的 SavedAttachedState，
+        // **必须在"存档属性名冻结"之前注册**（本体的序列化缓存是进跑局时才建的）⇒ 放在最前面。
+        try
+        {
+            Core.Systems.Decks.DeckOrigin.Register();
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Error(
+                $"[{Const.ModId}] 卡牌「来源副」记录注册失败（间隙副本会退回「跟当前生效副」）：{Describe(ex)}");
+        }
 
         // 设置必须在任何「读设置」的代码之前就位（调试面板在战斗里才读，但补丁装完就可能被调用）。
         try
@@ -58,6 +71,17 @@ public static class Main
             Const.Logger.Error($"[{Const.ModId}] 设置页注册失败：{Describe(ex)}");
         }
 
+        // 卡框（纯表现层，无开关）：双色对角分割 + [永时]/[消逝] 换色。
+        // 走 RitsuLib 的"外部卡框材质注册表"，一个入口管全部卡，不必给每张卡加基类。
+        try
+        {
+            Core.Presentation.Art.AeonglassFrameMaterial.Register();
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Error($"[{Const.ModId}] 卡框注册失败（卡面按本体默认框走）：{Describe(ex)}");
+        }
+
         // 机制接入：Main 不认识任何机制细节，只按开关逐条注册（见 MechanismBootstrap 的纪律）。
         MechanismBootstrap.RegisterAll();
 
@@ -69,6 +93,7 @@ public static class Main
 
         // 搁浅（M7）：注册 mod 关键词「搁浅」（同上）。
         Core.Content.Keywords.StasisKeyword.Register();
+        Core.Content.Keywords.EternalKeyword.Register();
 
         var (applied, failed) = InstallHarmonyPatches(assembly);
 

@@ -63,6 +63,31 @@ internal static class DecksModule
         DoubleDeckService.Configure(pile);
 
         // 进战斗时把"非生效那一副"补齐（第一次播种），这样顶栏按键一开始就有内容可看。
+        // 2026-10-14 用户口径：**进游戏（跑局开始）就立刻播种**，不要等到第一场战斗、更不要等到先古之后。
+        // 两个订阅都留着：跑局开始那次是主路径，战斗开始那次只是兜底（EnsureInitialized 自带幂等闸）。
+        RitsuLibFramework.SubscribeLifecycle<RunStartedEvent>(evt =>
+        {
+            try
+            {
+                if (!Enabled)
+                {
+                    return;
+                }
+
+                foreach (var player in evt.RunState.Players)
+                {
+                    DoubleDeckService.EnsureInitialized(player);
+                }
+
+                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Decks} 跑局开始：第二副牌组已就位（早于第一场战斗）");
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Decks} 跑局开始时播种失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
+            }
+        });
+
         RitsuLibFramework.SubscribeLifecycle<CombatStartingEvent>(_ =>
         {
             try

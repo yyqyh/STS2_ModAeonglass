@@ -35,7 +35,7 @@ internal sealed class DeferralRewindExtension : IRewindExtension
 
     public void OnAfterRestore(RewindContext ctx)
     {
-        if (ctx.Parts.GetValueOrDefault(DraftKey) is not Dictionary<ulong, (List<(int DueTurn, decimal Amount, string Source)> Debts, (int ArmedTurn, int DueTurn, int Turns)? Arm)> snapshot)
+        if (ctx.Parts.GetValueOrDefault(DraftKey) is not Dictionary<ulong, (List<(int DueTurn, decimal Amount, string Source)> Debts, List<(int ArmedTurn, int DueTurn, int Turns)> Arms)> snapshot)
         {
             Const.Logger.Warn($"[{Const.ModId}] 延宕：回溯 afterRestore 拿不到片段 ⇒ 本次不回档（只记日志）");
             return;

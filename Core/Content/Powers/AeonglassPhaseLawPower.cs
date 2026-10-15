@@ -14,11 +14,18 @@ using STS2_Aeonglass.Core.Systems.SandResource;
 namespace STS2_Aeonglass.Core.Content.Powers;
 
 /// <summary>
-/// <b>相位律</b>（PH-7 挂的能力）：每回合开始时按相位给收益 ——
-/// 沙砾侧 +格挡 / 平衡档 +格挡 / 空隙侧抽 1；<b>消逝副</b>改为看"上回合有没有消耗过沙砾"。
+/// <b>相位律</b>（CardPH7 挂的能力，delta 20261015）：每回合开始时按相位三档给收益 ——
+/// <b>沙砾侧 +1 能量 / 平衡档 3 点格挡 / 空隙侧抽 1 张牌</b>；
+/// <b>消逝副</b>三档镜像换位（沙砾侧抽 1 / 平衡档 3 点格挡 / 空隙侧 +1 能量）。
 /// </summary>
 /// <remarks>
-/// <c>Amount</c> = 沙砾侧每回合的格挡（升级 +1）；平衡档固定 1 挡。
+/// <para>
+/// 2026-10-15 delta 把三档从"两档格挡 + 一档抽牌"改成"能量 / 格挡 / 抽牌"各占一档，且<b>升级不抬数值</b>
+/// ⇒ 这里不再读 <c>Amount</c> 做缩放，<c>Amount</c> 只当"这张能力在场"的标记。
+/// </para>
+/// <para>
+/// ⚠️ 沙砾侧那一档（+1 能量）是每回合白拿 1 费，卡池侧已标"极强引擎"；要削就改这一个常量。
+/// </para>
 /// </remarks>
 [RegisterPower]
 public sealed class AeonglassPhaseLawPower : ModPowerTemplate
@@ -27,52 +34,47 @@ public sealed class AeonglassPhaseLawPower : ModPowerTemplate
 
     public override PowerStackType StackType => PowerStackType.Counter;
 
-    /// <summary>平衡档每回合的格挡（定值）。</summary>
-    private const decimal BalanceBlock = 1m;
+    /// <summary>沙砾侧 / 空隙侧那一档的能量。</summary>
+    private const decimal EnergyPerTurn = 1m;
+
+    /// <summary>平衡档每回合的格挡（两副相同）。</summary>
+    private const decimal BalanceBlock = 3m;
+
+    /// <summary>抽牌那一档抽几张。</summary>
+    private const int DrawPerTurn = 1;
 
     public override async Task AfterPlayerTurnStartEarly(PlayerChoiceContext choiceContext, Player player)
     {
-        if (!ReferenceEquals(player.Creature, Owner) || Amount <= 0m)
+        if (!ReferenceEquals(player.Creature, Owner))
         {
             return;
         }
 
-        var side = DeckVariants.SideOf(player, player.Deck.Cards.FirstOrDefault()!);
-        _ = side; // 相位律的判定与"牌在哪副"无关；下面按玩家所在副的差分口径走。
-
-        var spentLastTurn = SandTurnCounters.SandsSpentLastTurn(player);
+        // 消逝副（B）：三档镜像换位；永时副（A）：沙砾侧给能量、空隙侧给抽牌。
+        var mirrored = VariantSideOf(player) == DeckSide.B;
         var phase = SandPhases.Of(player);
-
-        // 消逝副：只看"上回合消耗过沙砾"；其余（永恒副 / 共用）：按相位三档。
-        var useVariant = VariantSideOf(player) == DeckSide.B;
-
-        if (useVariant)
-        {
-            if (spentLastTurn > 0)
-            {
-                await CardPileCmd.Draw(choiceContext, 1, player);
-                Const.Logger.Info($"[{Const.ModId}] 相位律（消逝副）：上回合消耗过沙砾 ⇒ 抽 1");
-            }
-            else
-            {
-                await CreatureCmd.GainBlock(player.Creature, BalanceBlock, ValueProp.Move, null);
-            }
-
-            return;
-        }
+        var what = string.Empty;
 
         switch (phase)
         {
-            case SandPhase.Sand:
-                await CreatureCmd.GainBlock(player.Creature, Amount, ValueProp.Move, null);
+            case SandPhase.Sand when !mirrored:
+            case SandPhase.Void when mirrored:
+                await PlayerCmd.GainEnergy(EnergyPerTurn, player);
+                what = $"能量 +{EnergyPerTurn}";
                 break;
+
             case SandPhase.Balanced:
                 await CreatureCmd.GainBlock(player.Creature, BalanceBlock, ValueProp.Move, null);
+                what = $"格挡 +{BalanceBlock}";
                 break;
+
             default:
-                await CardPileCmd.Draw(choiceContext, 1, player);
+                await CardPileCmd.Draw(choiceContext, DrawPerTurn, player);
+                what = $"抽 {DrawPerTurn}";
                 break;
         }
+
+        Const.Logger.Info($"[{Const.ModId}] 相位律（{(mirrored ? "消逝副" : "永时副")} · {phase}）：{what}");
     }
 
     /// <summary>当前生效副（拿不到牌时按 A 副算）。</summary>

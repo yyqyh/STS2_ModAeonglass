@@ -1,4 +1,6 @@
 using MegaCrit.Sts2.Core.Entities.Relics;
+using MegaCrit.Sts2.Core.Commands;
+using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Cards;
@@ -21,18 +23,20 @@ using STS2_Aeonglass.Core.Systems.Rewind;
 namespace STS2_Aeonglass.Core.Content.Relics;
 
 /// <summary>
-/// 初始遗物：<b>沙漏之心</b>。
+/// 初始遗物：<b>永恒沙漏</b> —— 装有时之沙、同时服务[永时]/[消逝]两副卡组，<b>右键切换卡组</b>。
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>第 ① 步它是"空遗物"（没有任何效果）</b>，存在的唯一理由是本体选人界面里那句写死的
+/// <b>它也是"选人界面必须存在的那件遗物"</b>：本体选人界面里那句写死的
 /// <c>RelicModel relicModel = characterModel.StartingRelics[0];</c>
 /// （见 <c>MegaCrit.Sts2.Core.Nodes.Screens.CharacterSelect.NCharacterSelectScreen.SelectCharacter</c>）——
 /// <b>角色必须有至少一件初始遗物，否则点它会抛 <c>ArgumentOutOfRangeException</c>，
 /// 选人失败、游戏沿用上一个角色开局</b>（2026-10-11 实测踩到：表现为"选了沙漏，进去却是铁甲战士"）。
 /// </para>
 /// <para>
-/// 正式的初始遗物（承载角色身份 / 机制入口）在阶段 ④ 定档，届时可以换掉本类或给它加效果。
+/// <b>2026-10-14 用户定档</b>：它是<b>双卡组的右键入口</b>（永时 ⇄ 消逝），
+/// 而"回溯"的右键入口搬到事件遗物「破碎的怀表」（<see cref="AeonglassBrokenWatch" />）。
+/// 沙砾本身是 run 级资源（M1 次级资源），这里的"沙漏装有时之沙"是它的叙事归属。
 /// </para>
 /// <para>
 /// <b>美术</b>：指向 <c>images/relics/aeonglass_core.png</c>（刻意做成透明的空槽图）——
@@ -125,48 +129,67 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
         IconOutlinePath: Const.Paths.Relic.Core,
         BigIconPath: Const.Paths.Relic.Core);
 
-    // ============================ M4 回溯入口（Step 2）============================
-    // 规则层 v1：回溯的正式入口归**遗物**（每场 1 次），卡牌只保留"强制接口"（Step 8 的卡表会用）。
+    // ============================ M6 双卡组的右键入口（2026-10-14 用户定档）============================
     // 走 RitsuLib 的右键遗物体系（`IModRightClickableRelic`）—— 它把右键打包成**同步动作**，
     // 所以将来支持多人时这条入口天然安全（不像"本地直调"那样会只在本机换状态）。
+    // 回溯的右键入口已搬到事件遗物「破碎的怀表」（AeonglassBrokenWatch）。
 
     /// <summary>本地快速筛选：只认我们自己的遗物 + 本角色（其余情况不拦）。</summary>
     public bool CanHandleRightClickLocal(ModRightClickContext context) =>
         context.Model is AeonglassCore && context.Player.Character is Aeonglass;
 
-    /// <summary>同步判定：本角色 + 本场还没用过（更细的闸门交给 <see cref="RewindModule.TryRequest" /> 回话）。</summary>
+    /// <summary>同步判定：本角色 + M6 就绪（更细的闸门交给 <see cref="DoubleDeckService.ManualSwitchAsync" /> 回话）。</summary>
     public bool CanExecuteRightClick(ModRightClickExecutionContext context) =>
-        context.Player.Character is Aeonglass && RewindModule.CanRequest(context.Player);
+        context.Player.Character is Aeonglass && DecksModule.Enabled && DoubleDeckService.IsReady;
 
-    /// <summary>右键 = <b>回溯到上一回合</b>（每场 1 次；成功后消耗全部沙砾）。</summary>
+    /// <summary>右键 = <b>切换卡组</b>（永时 ⇄ 消逝）。</summary>
     /// <remarks>
-    /// ⚠️ 这里必须走 <see cref="RewindModule.RequestFromQueuedAction" /> 而不是 TryRequest：
-    /// 右键是**排队动作**，在队列为空之前回溯的闸门会拦（实测踩过），
-    /// 所以先立刻返回让动作出队，再在后台等稳定后发起。
+    /// <para>
+    /// 走的还是 M6 自己那条**主动切换**入口（<see cref="DoubleDeckService.ManualSwitchAsync" />）⇒
+    /// 代价、每场上限、冷却这些闸门全都照旧生效，这里只负责"把右键接上去"。
+    /// </para>
+    /// <para>
+    /// 延迟一小拍再发起：右键是**排队动作**，立刻切换会跟引擎自己的动作队列抢时序
+    /// （回溯入口当初也踩过同一个坑，见 <see cref="RewindModule.RequestFromQueuedAction" />）。
+    /// </para>
     /// </remarks>
     public Task OnRightClick(ModRightClickExecutionContext context)
     {
         var chain = context.Action is null ? "本地直调（多人下会不同步！）" : "同步动作";
-        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Rewind} 遗物右键触发回溯（链路={chain}）：已排队，等运行期稳定后发起");
-        RewindModule.RequestFromQueuedAction(context.Player);
-
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Decks} 永恒沙漏右键：切换卡组（链路={chain}）");
+        TaskHelper.RunSafely(SwitchDeckSoonAsync(context.Player));
         return Task.CompletedTask;
     }
+
+    private static async Task SwitchDeckSoonAsync(Player player)
+    {
+        try
+        {
+            await Cmd.Wait(SwitchDelay, ignoreCombatEnd: true);
+            var outcome = await DoubleDeckService.ManualSwitchAsync(player, null);
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Decks} 永恒沙漏右键切换：{(outcome.Ok ? "成功" : "被拒")}｜{outcome.Message}");
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Error($"[{Const.ModId}] {Const.Prefix.Decks} 右键切换卡组抛异常：{ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    /// <summary>切换前等多久（秒）—— 只为错开"右键还在动作队列里"的那一小段。</summary>
+    private const float SwitchDelay = 0.2f;
 
     // ============================ 遗物额外角标（用户 2026-10-11 要求，x/2 形态）============================
     // 走 RitsuLib 的「额外角标」体系（教程 04-22-1）：`IRelicExtraIconAmountLabelSpecsProvider`。
     // 角落：TopLeft / TopRight / BottomLeft / BottomRight（BottomRight 是原版主计数，别占）。
 
     /// <summary>
-    /// 两个角标：
-    /// <list type="bullet">
-    ///   <item><description><b>左上 = 回溯</b>：本场还剩几次可用（<c>剩余/1</c>，M4 每场 1 次）；</description></item>
-    ///   <item><description><b>右上 = 切换冷却</b>：<c>已积累/需要</c>（M6 每 2 场 1 次 ⇒ 就是用户说的 <c>x/2</c>）。</description></item>
-    /// </list>
+    /// 一个角标：<b>右上 = 切换冷却</b>（<c>已积累/需要</c>，就是用户说的 <c>x/2</c> 那种形态）。
     /// </summary>
     /// <remarks>
-    /// 数值来源都在机制层（<c>RewindCombatLimit</c> / <c>DeckState</c>），这里只做显示；
+    /// 数值来源在机制层（<c>DeckState</c>），这里只做显示；
     /// 拿不到玩家（未入手 / 已移除）时返回空列表。
+    /// 回溯的 x/1 角标已随入口搬到「破碎的怀表」。
     /// </remarks>
     public IReadOnlyList<ExtraIconAmountLabelSpec> GetRelicExtraIconAmountLabelSpecs()
     {
@@ -175,17 +198,12 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
             return [];
         }
 
-        var rewindLeft = RewindCombatLimit.Used(player) ? 0 : 1;
-
         var cooldown = Math.Clamp(AeonglassSettingStore.Current.DecksManualCooldownCombats, 0, 99);
         var since = DeckState.CombatsSinceManualSwitch(player);
         var switchText = cooldown > 0 ? $"{since}/{cooldown}" : since.ToString();
 
         return
         [
-            ExtraIconAmountLabelSpec.RichText(
-                ExtraIconAmountLabelCorner.TopLeft,
-                $"[color=#7FE7DD]{rewindLeft}/1[/color]"),
             ExtraIconAmountLabelSpec.RichText(
                 ExtraIconAmountLabelCorner.TopRight,
                 $"[color=gold]{switchText}[/color]"),
@@ -223,4 +241,19 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
     /// </remarks>
     [SavedProperty]
     public int RewindsThisRun { get; set; }
+
+    /// <summary>
+    /// 「破碎的怀表」那件事**还没办完**（M4 的事件链用；随存档走）。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 记在遗物上是因为它要<b>跨读档</b>：在初始房间存档 / 读档之后，那个先古事件房间是"已完成"状态恢复的，
+    /// 本体**不会再触发** <c>EventRoom.OnEventStateChanged</c> ⇒ 光靠那个钩子会漏掉"读档"这条路
+    /// （用户 2026-10-14 实测：初始房间 SL 之后事件不再出现）。
+    /// </para>
+    /// <para>拿到怀表（或在别的入口把它发出去）之后由机制层清零。</para>
+    /// </remarks>
+    [SavedProperty]
+    public bool BrokenWatchPending { get; set; }
+
 }

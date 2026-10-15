@@ -120,6 +120,17 @@ internal static class AeonglassModSettingsPage
             settings => settings is null || settings.GapEnabled,
             (settings, value) => settings.GapEnabled = value);
 
+        // 「乱流」抽弃互换（单列机制，默认关：实验件）
+        var riotEnabled = new ModSettingsValueBinding<AeonglassSetting, bool>(
+            Const.ModId, AeonglassSettingStore.DataKey, SaveScope.Global,
+            settings => settings is not null && settings.RiotEnabled,
+            (settings, value) => settings.RiotEnabled = value);
+
+        var riotForceSwap = new ModSettingsValueBinding<AeonglassSetting, bool>(
+            Const.ModId, AeonglassSettingStore.DataKey, SaveScope.Global,
+            settings => settings is not null && settings.RiotForceSwap,
+            (settings, value) => settings.RiotForceSwap = value);
+
         var m2Capacity = new ModSettingsValueBinding<AeonglassSetting, int>(
             Const.ModId, AeonglassSettingStore.DataKey, SaveScope.Global,
             settings => settings?.GapCapacity ?? 5,
@@ -292,6 +303,26 @@ internal static class AeonglassModSettingsPage
                     ModSettingsText.Literal("写入日志"),
                     () => Const.Logger.Info($"[{Const.ModId}] {PlaceholderAssetRegistry.Summary}"),
                     description: ModSettingsText.Literal("把「当前仍是铁甲战士的资源」与「空槽图」逐条打进 godot.log。")))
+            .AddSection("mechanism_riot", section => section
+                .WithTitle(ModSettingsText.Literal("机制 · 乱流（抽弃互换）"))
+                .AddToggle(
+                    "mechanism_riot_enabled",
+                    ModSettingsText.Literal("乱流总开关（默认关）"),
+                    riotEnabled,
+                    ModSettingsText.Literal(
+                        "开启：诅咒「乱流」进入弃牌堆时点亮 —— 本场之内**抽牌堆与弃牌堆互换**"
+                        + "（抽 / 弃 / 检索 / 洗回 / 使用，全部按类型换到对面那张堆上）。\n"
+                        + "口径（用户 2026-10-14）：**持续生效**（本场锁存）、**战斗结束复位**、"
+                        + "迟滞在互换期间算作「永久滞留」（这是迟滞玩法之一，刻意不管）。\n"
+                        + "关闭：两个 getter 的后置改写直接返回原值，这张诅咒就只是一张不可打出的牌。\n"
+                        + "⚠️ 实现是「读取重定向」：牌堆内容一卡都不动 ⇒ 存档 / 读档天然一致。"))
+                .AddToggle(
+                    "mechanism_riot_force_swap",
+                    ModSettingsText.Literal("【调试】强制互换（不等乱流）"),
+                    riotForceSwap,
+                    ModSettingsText.Literal(
+                        "打开后立刻一直互换，用来单独验这条链路，或排查「是没点亮还是改写没生效」。\n"
+                        + "⚠️ 会连抽牌堆按钮里的内容一起换（那就是这个机制本身的样子）。")))
             .AddSection("appearance", section => section
                 .WithTitle(ModSettingsText.Literal("外观（= 控制面板「外观」页）"))
                 .AddToggle(

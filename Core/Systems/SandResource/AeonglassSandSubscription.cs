@@ -126,6 +126,13 @@ internal sealed class AeonglassSandSubscription : ISecondaryResourceHookListener
             return;
         }
 
+        // 回合内记账：这一笔算"本回合沙砾变换过"（翻转 / 消耗 / 获得都过这里）。
+        // 例：INV-1 回摆的"沙砾变换过"条件就只读这一个标记。
+        if (context.Definition.Id == AeonglassSecondaryResources.SandId && context.Delta != 0)
+        {
+            SandTurnCounters.MarkSandChanged(context.Player);
+        }
+
         CheckInvariant(
             context.Player,
             SecondaryResourceCmd.Get(context.Player, AeonglassSecondaryResources.SandId),

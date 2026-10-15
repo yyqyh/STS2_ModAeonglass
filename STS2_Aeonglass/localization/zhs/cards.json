@@ -9,8 +9,8 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_TIDE.variant.a": "永时副：改为造成 3 点伤害，并向怪物弃牌堆塞{VariantWither}张凋萎。",
   "STS2_AEONGLASS_CARD_AEONGLASS_TIDE.variant.b": "",
   
-  "STS2_AEONGLASS_CARD_AEONGLASS_RAMPART.title": "垒壁",
-  "STS2_AEONGLASS_CARD_AEONGLASS_RAMPART.description": "获得{Block:diff()}点[gold]格挡[/gold]。你的下一张[gold]防御牌[/gold] +{NextDefenseBonus:diff()} 点格挡。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_FORTIFY.title": "防护",
+  "STS2_AEONGLASS_CARD_AEONGLASS_FORTIFY.description": "获得{Block:diff()}点[gold]格挡[/gold]。你的下一张[gold]防御牌[/gold] +{NextDefenseBonus:diff()} 点格挡。",
   
   "STS2_AEONGLASS_CARD_AEONGLASS_DIAL_NUDGE.title": "拨针",
   "STS2_AEONGLASS_CARD_AEONGLASS_DIAL_NUDGE.description": "抽 1 张牌然后弃 1 张牌。若你处于[gold]平衡档[/gold]（沙砾＝3）：改为抽 2 张牌然后弃 1 张牌。{UpgradeText}",
@@ -39,7 +39,20 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_OVERDRAFT.title": "透支",
   "STS2_AEONGLASS_CARD_AEONGLASS_OVERDRAFT.description": "本回合获得{Gain:diff()}点能量。下回合少{Debt}点能量。",
   "STS2_AEONGLASS_CARD_AEONGLASS_SCROLL_STACK.title": "积卷",
-  "STS2_AEONGLASS_CARD_AEONGLASS_SCROLL_STACK.description": "抽{Draw:diff()}张牌。本场你每[gold]翻转[/gold]一次沙漏：多抽 1 张牌（最多{Cap}张）。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_SCROLL_STACK.description": "抽{Draw:diff()}张牌。本场你每[gold]翻转[/gold]一次沙漏：多抽 1 张牌（最多{Cap:diff()}张）。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_TIME_HUB.title": "时枢",
+  "STS2_AEONGLASS_CARD_AEONGLASS_TIME_HUB.description": "获得{TurnEnergy}点[gold]时枢[/gold]：每回合开始时，获得等量点能量。你的手牌上限 −1。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_INSCRIPTION.title": "铭刻",
+  "STS2_AEONGLASS_CARD_AEONGLASS_INSCRIPTION.description": "造成{Damage:diff()}点伤害。[gold]搁浅 3[/gold]。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_SAND_SEAL.title": "封沙",
+  "STS2_AEONGLASS_CARD_AEONGLASS_SAND_SEAL.description": "获得{Block:diff()}点[gold]格挡[/gold]。[gold]搁浅 3[/gold]。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_LOAN_TIME.title": "贷时",
+  "STS2_AEONGLASS_CARD_AEONGLASS_LOAN_TIME.description": "获得1点[gold]贷时[/gold]：每回合开始时，你可以把[gold]下回合的能量[/gold]提前到本回合使用（下回合对应减少）。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_WITHERING.title": "枯萎",
+  "STS2_AEONGLASS_CARD_AEONGLASS_WITHERING.description": "对一只敌人造成「它弃牌堆里[gold]凋萎[/gold]数量 × {PerWither}」点伤害。{UpgradeText}",
+  "STS2_AEONGLASS_CARD_AEONGLASS_WITHERING.upgraded": "（升级档：它[gold]抽牌堆[/gold]里的凋萎也算进去。）",
+  "STS2_AEONGLASS_CARD_AEONGLASS_RIOT.title": "乱流",
+  "STS2_AEONGLASS_CARD_AEONGLASS_RIOT.description": "[gold]迟滞[/gold] · [gold]永恒[/gold]。\n当这张牌在弃牌堆里时：[gold]抽牌堆[/gold]与[gold]弃牌堆[/gold]互换。",
   "STS2_AEONGLASS_CARD_AEONGLASS_STASIS.title": "滞留",
   "STS2_AEONGLASS_CARD_AEONGLASS_STASIS.description": "打出后离开牌组，进入[gold]搁浅[/gold]。\n{Combats} 场战斗后回到当时的当前卡组。",
   "STS2_AEONGLASS_CARD_AEONGLASS_COLLAPSE.title": "坍缩",
@@ -73,6 +86,30 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_PURIFY.description": "消耗场上所有[gold]凋萎[/gold]，对所有敌人造成「凋萎数量 × {PerWither}」点伤害。{UpgradeText}",
   "STS2_AEONGLASS_CARD_AEONGLASS_PURIFY.upgraded": "（升级档：消耗范围扩到所有[gold]状态牌[/gold]。）",
   "STS2_AEONGLASS_CARD_AEONGLASS_DEAD_END.title": "穷途陌路",
-  "STS2_AEONGLASS_CARD_AEONGLASS_DEAD_END.description": "消耗所有[gold]沙砾[/gold]，立刻额外[gold]回溯[/gold]一次。\n[gold]搁浅 3[/gold]。"
+  "STS2_AEONGLASS_CARD_AEONGLASS_DEAD_END.description": "消耗所有[gold]沙砾[/gold]，立刻额外[gold]回溯[/gold]一次。\n[gold]搁浅 3[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_BACKSWING.title": "回摆",
+  "STS2_AEONGLASS_CARD_AEONGLASS_BACKSWING.description": "获得{Block:diff()}点[gold]格挡[/gold]。[gold]沙砾变换过[/gold]：额外获得 {Bonus} 点[gold]格挡[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_FRAGMENT.title": "破片",
+  "STS2_AEONGLASS_CARD_AEONGLASS_FRAGMENT.description": "造成{Damage:diff()}点伤害。[gold]搁浅 1[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_PHASE_LAW.title": "相位律",
+  "STS2_AEONGLASS_CARD_AEONGLASS_PHASE_LAW.description": "每回合开始时：沙砾侧获得 1 点能量；平衡档获得 3 点[gold]格挡[/gold]；空隙侧抽 1 张牌。\n[gold]消逝副[/gold]：沙砾侧抽 1 张牌；平衡档获得 3 点[gold]格挡[/gold]；空隙侧获得 1 点能量。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_SAND.title": "沙",
+  "STS2_AEONGLASS_CARD_AEONGLASS_SAND.description": "获得{Sand}点[gold]沙砾[/gold]（从[gold]空隙[/gold]划）。抽{Draw:diff()}张牌。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_MUTUAL_RUIN.title": "玉石俱焚",
+  "STS2_AEONGLASS_CARD_AEONGLASS_MUTUAL_RUIN.description": "将{ToEnemy:diff()}张[gold]凋萎[/gold]放入敌人的[gold]弃牌堆[/gold]；将{ToSelf:diff()}张[gold]凋萎[/gold]放入自己的[gold]弃牌堆[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_DESERTIFICATION.title": "荒漠化",
+  "STS2_AEONGLASS_CARD_AEONGLASS_DESERTIFICATION.description": "升级所有的[gold]凋萎[/gold]（包括你自己的）。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_TIME_MAGIC.title": "时之魔法",
+  "STS2_AEONGLASS_CARD_AEONGLASS_TIME_MAGIC.description": "「虚无」2.14!",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_ALPHA_BETA.title": "α or β",
+  "STS2_AEONGLASS_CARD_AEONGLASS_ALPHA_BETA.description": "回溯后同时进入手牌和卡组。\n若未使用[gold]回溯[/gold]：[gold]永时[/gold]——给予凋萎时额外给予 1 张；[gold]流逝[/gold]——「坍缩」「唤回」只消耗 1 沙砾。"
 }
 

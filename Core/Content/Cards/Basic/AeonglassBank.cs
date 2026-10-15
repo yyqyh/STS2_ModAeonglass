@@ -66,20 +66,12 @@ public sealed class AeonglassBank() : ModCardTemplate(1, CardType.Skill, CardRar
     }
 
     /// <summary>
-    /// 开延宕窗口（<b>不可叠加</b>，规则 5b）：先把旧窗口的能力撤掉再挂新的 ——
-    /// 欠账记在账本上、各自带到期回合，换能力不影响它们；这样图标上的数字也不会被叠成 2X。
+    /// <b>新增一个延宕实例</b>（规则 5c，2026-10-15 用户口径）：不再撤掉旧实例，直接叠上去 ——
+    /// 每个实例各带自己的到期回合与待结算量，各自独立结算；"不可叠加"指的是同一笔伤害不会被二次延宕。
     /// </summary>
     private async Task ArmDeferralAsync(PlayerChoiceContext choiceContext)
-    {
-        foreach (var existing in Owner.Creature.Powers.OfType<AeonglassDeferralPower>().ToList())
-        {
-            await PowerCmd.Apply<AeonglassDeferralPower>(
-                choiceContext, Owner.Creature, -existing.Amount, Owner.Creature, null);
-        }
-
-        await PowerCmd.Apply<AeonglassDeferralPower>(
+        => await PowerCmd.Apply<AeonglassDeferralPower>(
             choiceContext, Owner.Creature, DynamicVars["Delay"].BaseValue, Owner.Creature, this);
-    }
 
     protected override void OnUpgrade()
     {

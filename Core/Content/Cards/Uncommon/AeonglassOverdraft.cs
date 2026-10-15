@@ -12,15 +12,15 @@ using STS2_Aeonglass.Core.Content.Powers;
 namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 
 /// <summary>
-/// <b>透支</b>（CardETR2，v2）：1 费 · 本回合获得 2 点能量；下回合少 2 点能量
-/// （升级：本回合 +3，<b>下回合仍只少 2</b>）。
+/// <b>透支</b>（CardETR2，v2 二次更新）：<b>0 费</b> · 本回合获得 2 点能量；下回合少 <b>1</b> 点能量
+/// （升级：本回合 +3，下回合仍只少 1）。
 /// </summary>
-/// <remarks>⚠️ 与「预支」同口径：v2 的升级只加本回合那半边 ⇒ 升级档净值 <b>+1</b>。</remarks>
+/// <remarks>用户 2026-10-14 二次改动：费用 1 → 0；挂账 2 → 1（升级档净值因此变成 +2）。</remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassOverdraft() : ModCardTemplate(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
+public sealed class AeonglassOverdraft() : ModCardTemplate(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
 {
     private const decimal GainBase = 2m;
-    private const decimal DebtBase = 2m;
+    private const decimal DebtBase = 1m;
 
     protected override HashSet<CardTag> CanonicalTags => [];
 

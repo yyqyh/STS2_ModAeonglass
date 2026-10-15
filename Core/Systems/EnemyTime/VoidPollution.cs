@@ -7,6 +7,8 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.ValueProps;
 
+using STS2_Aeonglass.Core.Systems.AlphaBeta;
+
 namespace STS2_Aeonglass.Core.Systems.EnemyTime;
 
 /// <summary>
@@ -34,6 +36,10 @@ internal static class VoidPollution
     /// <summary>某只怪**弃牌堆里**有几张凋萎（还没被抽到的污染）。</summary>
     public static int WithersInDiscard(Creature creature) =>
         IntentDeck.TryGet(creature, out var state) ? state.Discard.Count(c => c.IsVoid) : 0;
+
+    /// <summary>某只怪**抽牌堆里**有几张凋萎（「枯萎」升级档要数它）。</summary>
+    public static int WithersInDeck(Creature creature) =>
+        IntentDeck.TryGet(creature, out var state) ? state.Deck.Count(c => c.IsVoid) : 0;
 
     /// <summary>
     /// 这只怪**场上（三个意图堆）**一共有几张凋萎 —— 「净化」（WTH-3）按它算伤害。
@@ -122,6 +128,14 @@ internal static class VoidPollution
         if (count <= 0)
         {
             return "skip: count<=0";
+        }
+
+        // α or β（永时副）：「给予凋萎」额外 +1 张（仅当本局还没用过回溯）。
+        var passiveOwner = MonsterAccess.Combat?.PlayerCreatures?.FirstOrDefault()?.Player;
+        if (passiveOwner is not null && AlphaBetaPassive.WitherBonus(passiveOwner))
+        {
+            count += 1;
+            Const.Logger.Info($"[{Const.ModId}] α or β（永时副）：给予凋萎额外 +1 张");
         }
 
         // 凋萎要做成**真卡实例**（用户 2026-10-12）：拿不到玩家（不在战斗里）就退回纯元数据，

@@ -214,6 +214,27 @@ public sealed class AeonglassSetting
     /// </remarks>
     public bool DecksEnabled { get; set; } = true;
 
+    /// <summary>
+    /// <b>「乱流」抽弃互换总开关（默认开）</b>。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 关掉后：两个 getter 的后置改写直接返回原值（等于这张诅咒只是一张不可打出的牌），不留坏状态。
+    /// </para>
+    /// <para>
+    /// <b>2026-10-14 改默认为开</b>：本机制<b>接线无条件安装</b>（补丁 + 生命周期订阅），
+    /// 开关只 gate 运行时行为 —— 若它默认关，第一次测的人会看到"调用卡牌没效果"
+    /// （log 里只有 <c>总开关=False</c> 这一条线索）。与其他机制（M2/M6 默认开）保持一致。
+    /// </para>
+    /// </remarks>
+    public bool RiotEnabled { get; set; } = true;
+
+    /// <summary>
+    /// 【调试】<b>强制互换</b>（不等乱流进弃牌堆，直接一直互换）。
+    /// </summary>
+    /// <remarks>用来单独验"互换"这条链路，以及排查"是没点亮还是改写没生效"。</remarks>
+    public bool RiotForceSwap { get; set; }
+
     /// <summary>每场战斗胜利后<b>自动轮到另一副</b>（默认开）。</summary>
     /// <remarks>这是设计节奏，不收费；收费只针对下面的"主动切换 / 热切换"。</remarks>
     public bool DecksAutoSwitch { get; set; } = true;

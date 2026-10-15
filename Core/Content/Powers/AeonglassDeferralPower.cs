@@ -39,12 +39,25 @@ public sealed class AeonglassDeferralPower : ModPowerTemplate
 
     public override PowerStackType StackType => PowerStackType.Counter;
 
-    /// <summary>能力一挂上就开窗口（<c>Amount</c> = 延宕几回合）。</summary>
+    /// <summary>上次看到的累计回合数（用来算"这一次实际加了几回合"）。</summary>
+    private decimal _seenAmount;
+
+    /// <summary>
+    /// 能力一挂上就<b>新增一个延宕实例</b>（规则 5c：每次获得＝独立实例）。
+    /// <c>Amount</c> 是叠加后的总量，所以按差值取"这一次加了几回合"。
+    /// </summary>
     public override Task AfterApplied(Creature? applier, CardModel? cardSource)
     {
+        var delta = Amount - _seenAmount;
+        _seenAmount = Amount;
+        if (delta <= 0m)
+        {
+            delta = Amount; // 拿不到增量时退回"按当前总量开一次窗口"（例如回溯回档后重新挂上）。
+        }
+
         if (Owner.Player is { } player)
         {
-            DeferralLedger.Arm(player, (int)Amount);
+            DeferralLedger.Arm(player, (int)delta);
         }
 
         return Task.CompletedTask;
@@ -89,7 +102,7 @@ public sealed class AeonglassDeferralPower : ModPowerTemplate
 
         await DeferralLedger.PayDueAsync(choiceContext, player);
 
-        if (DeferralLedger.HasOpenDebt(player) || DeferralLedger.IsArmedThisTurn(player))
+        if (DeferralLedger.HasOpenDebt(player) || DeferralLedger.HasUnsettledInstance(player))
         {
             return;
         }

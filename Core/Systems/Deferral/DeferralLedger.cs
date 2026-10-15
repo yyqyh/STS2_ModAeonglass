@@ -32,8 +32,14 @@ internal static class DeferralLedger
     /// <summary>一笔待结算的欠账。</summary>
     internal sealed record Debt(CombatState Combat, int DueTurn, decimal Amount, string Source);
 
-    /// <summary>每个玩家当前的"延宕窗口"。</summary>
-    private static readonly Dictionary<Player, (CombatState Combat, int ArmedTurn, int DueTurn, int Turns)> Arms = [];
+    /// <summary>
+    /// 一次"获得延宕"＝<b>一个独立实例</b>（规则 §2.8.4 第 5c 条，2026-10-15 用户确认）：
+    /// 各带自己的到期回合；同一个实例窗口内记到的伤害汇成它自己的待结算量。
+    /// </summary>
+    internal sealed record ArmInstance(CombatState Combat, int ArmedTurn, int DueTurn, int Turns);
+
+    /// <summary>每个玩家的延宕<b>实例列表</b>（每次获得都追加一条，而不是覆盖一个全局变量）。</summary>
+    private static readonly Dictionary<Player, List<ArmInstance>> Arms = [];
 
     private static readonly Dictionary<Player, List<Debt>> Debts = [];
 
@@ -41,17 +47,28 @@ internal static class DeferralLedger
     private static bool _settling;
 
     /// <summary>本回合的延宕窗口是否打开（只有窗口内、且不在兑付中的伤害才被延宕）。</summary>
-    public static bool IsIntercepting(Player player) =>
-        !_settling
-        && Combat is { } combat
-        && Arms.TryGetValue(player, out var arm)
-        && ReferenceEquals(arm.Combat, combat)
-        && arm.ArmedTurn == TurnOf(player);
+    public static bool IsIntercepting(Player player) => !_settling && OpenArmOf(player) is not null;
 
-    /// <summary>本回合是否已经开过窗口（"不可叠加"：同回合第二次延宕不再开新窗口）。</summary>
-    public static bool IsArmedThisTurn(Player player) => IsIntercepting(player);
+    /// <summary>本回合还有开着的窗口吗（寿命判定用；"不可叠加"指的是同一笔伤害不会被二次延宕）。</summary>
+    public static bool IsArmedThisTurn(Player player) => OpenArmOf(player) is not null;
 
-    /// <summary>开一个延宕窗口：从这一刻起，到本回合（含随后的敌人回合）结束为止，受到的伤害都寄到 <paramref name="turns" /> 回合后。</summary>
+    /// <summary>还有没结算完的实例吗（延宕能力是否该继续留在场上）。</summary>
+    public static bool HasUnsettledInstance(Player player)
+    {
+        if (Combat is not { } combat || !Arms.TryGetValue(player, out var arms))
+        {
+            return false;
+        }
+
+        var turn = TurnOf(player);
+        arms.RemoveAll(arm => !ReferenceEquals(arm.Combat, combat) || arm.DueTurn < turn);
+        return arms.Any(arm => arm.DueTurn > turn);
+    }
+
+    /// <summary>
+    /// <b>新增一个延宕实例</b>：从这一刻起，到本回合（含随后的敌人回合）结束为止，受到的伤害寄到
+    /// <paramref name="turns" /> 回合后。多次获得 ＝ 多条实例，各自独立结算（规则 5c）。
+    /// </summary>
     public static void Arm(Player player, int turns)
     {
         if (turns <= 0 || Combat is not { } combat)
@@ -59,16 +76,25 @@ internal static class DeferralLedger
             return;
         }
 
+        if (!Arms.TryGetValue(player, out var arms))
+        {
+            arms = [];
+            Arms[player] = arms;
+        }
+
+        arms.RemoveAll(arm => !ReferenceEquals(arm.Combat, combat));
+
         var turn = TurnOf(player);
-        Arms[player] = (combat, turn, turn + turns, turns);
+        arms.Add(new ArmInstance(combat, turn, turn + turns, turns));
         Const.Logger.Info(
-            $"[{Const.ModId}] 延宕：窗口开启（第 {turn} 回合，{turns} 回合后 = 第 {turn + turns} 回合结算）");
+            $"[{Const.ModId}] 延宕：新增实例 #{arms.Count}（第 {turn} 回合获得，"
+            + $"{turns} 回合后 = 第 {turn + turns} 回合结算）");
     }
 
     /// <summary>把一笔"本该掉的血"记成欠账。</summary>
     public static void Record(Player player, decimal amount, string source)
     {
-        if (amount <= 0m || Combat is not { } combat || !Arms.TryGetValue(player, out var arm))
+        if (amount <= 0m || Combat is not { } combat || OpenArmOf(player) is not { } arm)
         {
             return;
         }
@@ -84,6 +110,12 @@ internal static class DeferralLedger
             $"[{Const.ModId}] 延宕：{amount} 点伤害记入欠账（{source}）⇒ 第 {arm.DueTurn} 回合结算"
             + $"（累计 {PendingOf(player)}）");
     }
+
+    /// <summary>本回合最新打开的那个实例（同一笔伤害只记进它，不会被二次延宕）。</summary>
+    private static ArmInstance? OpenArmOf(Player player)
+        => Combat is { } combat && Arms.TryGetValue(player, out var arms)
+            ? arms.LastOrDefault(arm => ReferenceEquals(arm.Combat, combat) && arm.ArmedTurn == TurnOf(player))
+            : null;
 
     /// <summary>该玩家还没结清的总欠账（本场战斗内）。</summary>
     public static decimal PendingOf(Player player)
@@ -154,18 +186,25 @@ internal static class DeferralLedger
     /// <summary>一行状态（调试面板 / 日志）。</summary>
     public static string Describe(Player player)
     {
-        var armed = Arms.TryGetValue(player, out var arm) && ReferenceEquals(arm.Combat, Combat)
-            ? $"窗口开在第 {arm.ArmedTurn} 回合（{arm.Turns} 回合后 → 第 {arm.DueTurn} 回合）"
-            : "窗口关闭";
-        return $"延宕：{armed}｜未结清 {PendingOf(player)}";
+        var live = Arms.TryGetValue(player, out var arms) && Combat is { } combat
+            ? arms.Where(arm => ReferenceEquals(arm.Combat, combat)).ToList()
+            : [];
+
+        var instances = live.Count == 0
+            ? "无实例"
+            : string.Join(
+                " + ",
+                live.Select(arm => $"#{arm.ArmedTurn}→第 {arm.DueTurn} 回合"));
+
+        return $"延宕：{instances}｜未结清 {PendingOf(player)}";
     }
 
     // ============================ 快照（M4 回溯：延宕是玩家侧状态，规则 6 要求一并回退）============================
 
     /// <summary>拍快照：每个玩家的（欠账、窗口）。</summary>
-    public static Dictionary<ulong, (List<(int DueTurn, decimal Amount, string Source)> Debts, (int ArmedTurn, int DueTurn, int Turns)? Arm)> Snapshot()
+    public static Dictionary<ulong, (List<(int DueTurn, decimal Amount, string Source)> Debts, List<(int ArmedTurn, int DueTurn, int Turns)> Arms)> Snapshot()
     {
-        var result = new Dictionary<ulong, (List<(int, decimal, string)>, (int, int, int)?)>();
+        var result = new Dictionary<ulong, (List<(int, decimal, string)>, List<(int, int, int)>)>();
         foreach (var player in Players())
         {
             var debts = Debts.TryGetValue(player, out var list)
@@ -174,11 +213,13 @@ internal static class DeferralLedger
                     .ToList()
                 : [];
 
-            (int, int, int)? arm = Arms.TryGetValue(player, out var a) && ReferenceEquals(a.Combat, Combat)
-                ? (a.ArmedTurn, a.DueTurn, a.Turns)
-                : null;
+            var arms = Arms.TryGetValue(player, out var list2)
+                ? list2.Where(arm => ReferenceEquals(arm.Combat, Combat))
+                    .Select(arm => (arm.ArmedTurn, arm.DueTurn, arm.Turns))
+                    .ToList()
+                : [];
 
-            result[player.NetId] = (debts, arm);
+            result[player.NetId] = (debts, arms);
         }
 
         return result;
@@ -186,7 +227,7 @@ internal static class DeferralLedger
 
     /// <summary>回档：把欠账与窗口写回去（战斗引用用"当前这一场"重建）。</summary>
     public static void Restore(
-        Dictionary<ulong, (List<(int DueTurn, decimal Amount, string Source)> Debts, (int ArmedTurn, int DueTurn, int Turns)? Arm)> snapshot)
+        Dictionary<ulong, (List<(int DueTurn, decimal Amount, string Source)> Debts, List<(int ArmedTurn, int DueTurn, int Turns)> Arms)> snapshot)
     {
         if (Combat is not { } combat)
         {
@@ -206,14 +247,9 @@ internal static class DeferralLedger
                 .Select(d => new Debt(combat, d.DueTurn, d.Amount, d.Source))
                 .ToList();
 
-            if (entry.Arm is { } arm)
-            {
-                Arms[player] = (combat, arm.ArmedTurn, arm.DueTurn, arm.Turns);
-            }
-            else
-            {
-                Arms.Remove(player);
-            }
+            Arms[player] = entry.Arms
+                .Select(arm => new ArmInstance(combat, arm.ArmedTurn, arm.DueTurn, arm.Turns))
+                .ToList();
         }
     }
 

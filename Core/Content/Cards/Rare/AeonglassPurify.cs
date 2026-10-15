@@ -52,7 +52,7 @@ public sealed class AeonglassPurify() : ModCardTemplate(1, CardType.Attack, Card
         // ③ 对所有敌人造成 count × 6。
         var damage = count * DynamicVars["PerWither"].BaseValue;
         Const.Logger.Info(
-            $"[{Const.ModId}] 净化：凋萎 {count} 张（怪 {monsterWithers} + 自己 {playerWithers}），清掉 {purged} 张"
+            $"[{Const.ModId}] {Const.Prefix.Wither} 净化：凋萎 {count} 张（怪 {monsterWithers} + 自己 {playerWithers}），清掉 {purged} 张"
             + $" ⇒ 对所有敌人 {damage} 伤");
 
         if (damage <= 0m || Owner.Creature.CombatState is not { } combatState)

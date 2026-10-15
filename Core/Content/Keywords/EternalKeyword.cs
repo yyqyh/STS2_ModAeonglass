@@ -29,12 +29,12 @@ internal static class EternalKeyword
                     includeInCardHoverTip: true);
 
             Const.Logger.Info(
-                $"[{Const.ModId}] 关键词「永恒」已注册：id={definition.Id}"
+                $"[{Const.ModId}] {Const.Prefix.Host} 关键词「永恒」已注册：id={definition.Id}"
                 + $"（文案 {definition.TitleTable}/{definition.TitleKey}）");
         }
         catch (Exception ex)
         {
-            Const.Logger.Warn($"[{Const.ModId}] 关键词「永恒」注册失败（不影响机制）：{ex.GetType().Name}: {ex.Message}");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Host} 关键词「永恒」注册失败（不影响机制）：{ex.GetType().Name}: {ex.Message}");
         }
     }
 }

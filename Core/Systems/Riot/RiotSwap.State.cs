@@ -11,7 +11,6 @@ using STS2RitsuLib;
 using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Content.Cards.Curse;
 
-
 namespace STS2_Aeonglass.Core.Systems.Riot;
 
 /// <summary>

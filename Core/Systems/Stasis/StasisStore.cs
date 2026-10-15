@@ -38,7 +38,7 @@ internal static class StasisStore
         _zoneId = definition.Id;
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [搁浅] 搁浅牌堆已注册：{definition.Id}"
+            $"[{Const.ModId}] {Const.Prefix.Stasis} 搁浅牌堆已注册：{definition.Id}"
             + $"（type=0x{(int)definition.PileType:X8}，scope={definition.Scope}）");
     }
 

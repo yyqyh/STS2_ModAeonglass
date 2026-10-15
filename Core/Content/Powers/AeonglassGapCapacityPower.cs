@@ -36,7 +36,7 @@ public sealed class AeonglassGapCapacityPower : ModPowerTemplate, IGapCapacitySo
             return;
         }
 
-        Const.Logger.Info($"[{Const.ModId}] 深隙（升级档）：坍缩 {copies} 张 ⇒ 额外抽 1 张");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 深隙（升级档）：坍缩 {copies} 张 ⇒ 额外抽 1 张");
         await CardPileCmd.Draw(
             new MegaCrit.Sts2.Core.GameActions.Multiplayer.BlockingPlayerChoiceContext(), 1, player);
     }

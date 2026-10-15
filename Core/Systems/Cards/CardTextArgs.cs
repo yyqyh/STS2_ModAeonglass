@@ -52,7 +52,7 @@ internal static class CardTextArgs
             // 这时**原样返回**：卡面 description 的格式化会带着这张卡自己的变量再解析一遍，
             // 那些占位符在那边是能解析的（这也是本体自己的卡面路径）。
             Const.Logger.Info(
-                $"[{Const.ModId}] 占位符解析跳过（{ex.GetType().Name}）⇒ 交回本体的卡面格式化");
+                $"[{Const.ModId}] {Const.Prefix.Host} 占位符解析跳过（{ex.GetType().Name}）⇒ 交回本体的卡面格式化");
         }
 
         return text;
@@ -79,7 +79,7 @@ internal static class CardTextArgs
             catch (Exception ex)
             {
                 Const.Logger.Warn(
-                    $"[{Const.ModId}] 升级追加句取不到（{key}）：{ex.GetType().Name}: {ex.Message}");
+                    $"[{Const.ModId}] {Const.Prefix.Host} 升级追加句取不到（{key}）：{ex.GetType().Name}: {ex.Message}");
             }
         }
 

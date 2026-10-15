@@ -44,7 +44,7 @@ public sealed class AeonglassSowing()
         if (IsVariantB)
         {
             var wither = (int)DynamicVars["WitherB"].BaseValue;
-            Const.Logger.Info($"[{Const.ModId}] 播种（消逝副）：{WitherEffects.Inject(cardPlay.Target, wither)}");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 播种（消逝副）：{WitherEffects.Inject(cardPlay.Target, wither)}");
             return;
         }
 
@@ -54,7 +54,7 @@ public sealed class AeonglassSowing()
             .WithHitFx("vfx/vfx_attack_blunt")
             .Execute(choiceContext);
 
-        Const.Logger.Info($"[{Const.ModId}] 播种（永时副）：{DynamicVars.Damage.BaseValue} 伤");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 播种（永时副）：{DynamicVars.Damage.BaseValue} 伤");
     }
 
     /// <summary>升级：两副各自那半边都抬（伤害 +6 / 凋萎 +2）。</summary>

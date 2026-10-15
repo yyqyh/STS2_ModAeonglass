@@ -33,7 +33,7 @@ public sealed class AeonglassDoubleSplit() : AeonglassVariantBlockTemplate(0, Ca
         var draw = hit ? 2 : 1;
 
         Const.Logger.Info(
-            $"[{Const.ModId}] 双分（{(IsVariantB ? "消逝副" : "永时副")}）："
+            $"[{Const.ModId}] {Const.Prefix.Sand} 双分（{(IsVariantB ? "消逝副" : "永时副")}）："
             + $"{(IsVariantB ? "本回合消耗过沙砾" : $"沙砾 {SecondaryResourceCmd.Get(Owner, SandResourceRegistry.SandId)}")}"
             + $" ⇒ 抽 {draw}");
 

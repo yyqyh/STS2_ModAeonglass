@@ -9,7 +9,6 @@ using STS2RitsuLib.CardPiles;
 using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Systems.Persistence;
 
-
 namespace STS2_Aeonglass.Core.Systems.Stasis;
 
 /// <summary>
@@ -33,7 +32,7 @@ internal static class StasisReturn
         var zone = StasisStore.Zone(player);
         if (zone is null)
         {
-            Const.Logger.Warn($"[{Const.ModId}] [搁浅] 搁浅牌堆不可用，取消滞留：{master.Id.Entry}");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Stasis} 搁浅牌堆不可用，取消滞留：{master.Id.Entry}");
             return false;
         }
 
@@ -42,7 +41,7 @@ internal static class StasisReturn
         if (zone.Cards.Contains(master))
         {
             Const.Logger.Info(
-                $"[{Const.ModId}] [搁浅] {master.Id.Entry} 已在搁浅，拒绝重复入堆（唯一性）");
+                $"[{Const.ModId}] {Const.Prefix.Stasis} {master.Id.Entry} 已在搁浅，拒绝重复入堆（唯一性）");
             return false;
         }
 
@@ -52,7 +51,7 @@ internal static class StasisReturn
         if (zone.Cards.Count >= cap)
         {
             Const.Logger.Info(
-                $"[{Const.ModId}] [搁浅] 搁浅已满（{zone.Cards.Count}/{cap}），拒绝 {master.Id.Entry} 入堆");
+                $"[{Const.ModId}] {Const.Prefix.Stasis} 搁浅已满（{zone.Cards.Count}/{cap}），拒绝 {master.Id.Entry} 入堆");
             return false;
         }
 
@@ -76,7 +75,7 @@ internal static class StasisReturn
         Core.Presentation.Combat.CombatUiRefresh.RefreshAll(player);
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [搁浅] 滞留 {master.Id.Entry} → 搁浅"
+            $"[{Const.ModId}] {Const.Prefix.Stasis} 滞留 {master.Id.Entry} → 搁浅"
             + $"（X={x}，存 {x + 1}，所在牌堆={StasisStore.PileName(master.Pile?.Type)}）");
 
         // 搁浅通知（STA 通道的收益线读它；例：压舱 = 每搁浅一张 +6 挡）。
@@ -98,7 +97,7 @@ internal static class StasisReturn
             catch (Exception ex)
             {
                 Const.Logger.Warn(
-                    $"[{Const.ModId}] [搁浅] 搁浅通知失败（{listener.GetType().Name}）：{ex.GetType().Name}: {ex.Message}");
+                    $"[{Const.ModId}] {Const.Prefix.Stasis} 搁浅通知失败（{listener.GetType().Name}）：{ex.GetType().Name}: {ex.Message}");
             }
         }
     }
@@ -120,7 +119,7 @@ internal static class StasisReturn
         if (deck.Cards.Contains(master))
         {
             Const.Logger.Info(
-                $"[{Const.ModId}] [搁浅] {master.Id.Entry} 已在牌组里，只从搁浅摘掉（不重复放回）");
+                $"[{Const.ModId}] {Const.Prefix.Stasis} {master.Id.Entry} 已在牌组里，只从搁浅摘掉（不重复放回）");
             return true;
         }
 
@@ -130,7 +129,7 @@ internal static class StasisReturn
         Core.Presentation.Combat.CombatUiRefresh.RefreshAll(player);
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [搁浅] 归队 {master.Id.Entry} → {ActiveDeckProvider.DescribeActiveDeck(player)}"
+            $"[{Const.ModId}] {Const.Prefix.Stasis} 归队 {master.Id.Entry} → {ActiveDeckProvider.DescribeActiveDeck(player)}"
             + $"（成功={ok}）");
         return ok;
     }
@@ -152,12 +151,12 @@ internal static class StasisReturn
             {
                 if (master is not IStasisCard stasis)
                 {
-                    Const.Logger.Warn($"[{Const.ModId}] [搁浅] {master.Id.Entry} 在搁浅里但不是滞留卡，跳过倒计时。");
+                    Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Stasis} {master.Id.Entry} 在搁浅里但不是滞留卡，跳过倒计时。");
                     continue;
                 }
 
                 stasis.CombatsLeft -= 1;
-                Const.Logger.Info($"[{Const.ModId}] [搁浅] 倒计时 {master.Id.Entry} → {stasis.CombatsLeft}");
+                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Stasis} 倒计时 {master.Id.Entry} → {stasis.CombatsLeft}");
 
                 if (stasis.CombatsLeft <= 0)
                 {

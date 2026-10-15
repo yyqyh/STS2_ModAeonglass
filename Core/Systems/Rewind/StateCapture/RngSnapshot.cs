@@ -8,7 +8,6 @@ using STS2RitsuLib;
 
 using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
-
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>

@@ -92,7 +92,7 @@ internal static class GapStore
         _zoneId = definition.Id;
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [间隙] 间隙牌堆就绪：{definition.Id}"
+            $"[{Const.ModId}] {Const.Prefix.Gap} 间隙牌堆就绪：{definition.Id}"
             + $"（type=0x{(int)definition.PileType:X8}，scope={definition.Scope}）");
     }
 

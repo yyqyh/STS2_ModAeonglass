@@ -27,11 +27,11 @@ public sealed class AeonglassConfusion() : ModCardTemplate(1, CardType.Skill, Ca
     {
         if (cardPlay.Target is not { } target)
         {
-            Const.Logger.Info($"[{Const.ModId}] 精神错乱：没有目标怪");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 精神错乱：没有目标怪");
             return Task.CompletedTask;
         }
 
-        Const.Logger.Info($"[{Const.ModId}] {IntentMoves.Scramble(target)}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} {IntentMoves.Scramble(target)}");
         return Task.CompletedTask;
     }
 

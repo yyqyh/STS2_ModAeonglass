@@ -46,6 +46,6 @@ public sealed class StasisRunHook : HookedSingletonModel
         }
 
         await StasisReturn.TickAfterCombatEnd(runState);
-        Const.Logger.Info($"[{Const.ModId}] [搁浅] 归队走的是**旧口径**（轮换之前，回退开关已开）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Stasis} 归队走的是**旧口径**（轮换之前，回退开关已开）");
     }
 }

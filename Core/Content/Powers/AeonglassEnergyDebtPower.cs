@@ -28,7 +28,7 @@ public sealed class AeonglassEnergyDebtPower : ModPowerTemplate
         }
 
         var debt = Amount;
-        Const.Logger.Info($"[{Const.ModId}] 透支：下回合扣 {debt} 点能量");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 透支：下回合扣 {debt} 点能量");
         await PlayerCmd.LoseEnergy(debt, player);
         await PowerCmd.Apply<AeonglassEnergyDebtPower>(choiceContext, Owner, -debt, Owner, null);
     }

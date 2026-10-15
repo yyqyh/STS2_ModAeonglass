@@ -8,7 +8,6 @@ using MegaCrit.Sts2.Core.Nodes.Combat;
 using STS2_Aeonglass.Core.Presentation.Support;
 using STS2_Aeonglass.Core.Systems.Intent;
 
-
 namespace STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
 /// <summary>「拆解」用的<b>顶上选牌面板</b>（<c>AeonglassIntentBelt</c> 的 partial 部分）。</summary>
 /// <remarks>

@@ -59,7 +59,7 @@ public sealed class AeonglassTide() : AeonglassVariantAttackTemplate(1, CardRari
                 $"wither+{count}",
                 _ =>
                 {
-                    Const.Logger.Info($"[{Const.ModId}] 潮汐（永时副）：{WitherEffects.Inject(target, count)}");
+                    Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 潮汐（永时副）：{WitherEffects.Inject(target, count)}");
                     return Task.CompletedTask;
                 }),
         ];

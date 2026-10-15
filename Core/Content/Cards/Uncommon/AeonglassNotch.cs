@@ -44,7 +44,7 @@ public sealed class AeonglassNotch() : ModCardTemplate(1, CardType.Attack, CardR
         var bonus = played * DynamicVars["PerAttack"].BaseValue;
         var damage = DynamicVars.Damage.BaseValue + bonus;
 
-        Const.Logger.Info($"[{Const.ModId}] 刻痕：上回合打出 {played} 张 ⇒ +{bonus}（合计 {damage}，v2：无上限）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 刻痕：上回合打出 {played} 张 ⇒ +{bonus}（合计 {damage}，v2：无上限）");
         await DamageCmd.Attack(damage)
             .FromCard(this, cardPlay)
             .Targeting(cardPlay.Target)

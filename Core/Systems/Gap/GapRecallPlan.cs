@@ -13,9 +13,6 @@ using STS2_Aeonglass.Core.Systems.AlphaBeta;
 using STS2_Aeonglass.Core.Systems.Sand;
 using STS2_Aeonglass.Core.Systems.Decks;
 
-
-
-
 namespace STS2_Aeonglass.Core.Systems.Gap;
 
 /// <summary>

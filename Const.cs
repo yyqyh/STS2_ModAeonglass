@@ -74,6 +74,12 @@ internal static class Const
 
         public const string Stasis = "[搁浅]";
 
+        public const string Riot = "[乱流]";
+
+        public const string Deferral = "[延宕]";
+
+        public const string AlphaBeta = "[α or β]";
+
         /// <summary>引擎 / 宿主级消息（对应 Lab B 的 <c>[LabB]</c>）。</summary>
         public const string Host = "[HOST]";
     }

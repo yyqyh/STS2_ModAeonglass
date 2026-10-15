@@ -43,10 +43,10 @@ public sealed class AeonglassMutualRuin()
 
         if (cardPlay.Target is { } target)
         {
-            Const.Logger.Info($"[{Const.ModId}] 玉石俱焚：{WitherEffects.Inject(target, toEnemy)}");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 玉石俱焚：{WitherEffects.Inject(target, toEnemy)}");
         }
 
-        Const.Logger.Info($"[{Const.ModId}] 玉石俱焚：自己弃牌堆 +{await PutIntoOwnDiscardAsync(Owner, toSelf)} 张凋萎");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 玉石俱焚：自己弃牌堆 +{await PutIntoOwnDiscardAsync(Owner, toSelf)} 张凋萎");
     }
 
     protected override void OnUpgrade()
@@ -76,7 +76,7 @@ public sealed class AeonglassMutualRuin()
             catch (Exception ex)
             {
                 Const.Logger.Warn(
-                    $"[{Const.ModId}] 玉石俱焚：自己这侧第 {i + 1} 张凋萎创建失败（{ex.GetType().Name}: {ex.Message}）");
+                    $"[{Const.ModId}] {Const.Prefix.Wither} 玉石俱焚：自己这侧第 {i + 1} 张凋萎创建失败（{ex.GetType().Name}: {ex.Message}）");
                 break;
             }
         }

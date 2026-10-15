@@ -39,7 +39,7 @@ internal static class SilentCardPoolBorrowPatch
         }
         catch (Exception ex)
         {
-            Const.Logger.Warn($"[{Const.ModId}] [调试] 卡池借用失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Host} [调试] 卡池借用失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
         }
     }
 }

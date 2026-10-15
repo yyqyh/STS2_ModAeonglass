@@ -2,7 +2,6 @@ using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Models;
 
-
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
 /// <summary>

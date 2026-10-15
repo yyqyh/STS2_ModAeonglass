@@ -55,7 +55,7 @@ internal sealed partial class GapControlPage : ControlPage
         if (!_loggedCombatStart)
         {
             _loggedCombatStart = true;
-            Const.Logger.Info($"[{Const.ModId}] [间隙] 进场：{GapStore.Describe(player)}");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 进场：{GapStore.Describe(player)}");
         }
 
         var last = GapAlternation.LastAction(player) switch
@@ -96,7 +96,7 @@ internal sealed partial class GapControlPage : ControlPage
         catch (Exception ex)
         {
             Const.Logger.Error(
-                $"[{Const.ModId}] [间隙] 面板动作抛异常：{ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+                $"[{Const.ModId}] {Const.Prefix.Gap} 面板动作抛异常：{ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
             Show($"error: {ex.GetType().Name}: {ex.Message}", true);
         }
     }
@@ -120,7 +120,7 @@ internal sealed partial class GapControlPage : ControlPage
 
         var player = Player();
         var text = player is null ? "不在战斗" : GapStore.Describe(player);
-        Const.Logger.Info($"[{Const.ModId}] [间隙] 面板状态：{text}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 面板状态：{text}");
         Show(text);
     }
 

@@ -76,7 +76,7 @@ internal static class DeferralLedger
         var turn = TurnOf(player);
         arms.Add(new ArmInstance(combat, turn, turn + turns, turns));
         Const.Logger.Info(
-            $"[{Const.ModId}] 延宕：新增实例 #{arms.Count}（第 {turn} 回合获得，"
+            $"[{Const.ModId}] {Const.Prefix.Deferral} 延宕：新增实例 #{arms.Count}（第 {turn} 回合获得，"
             + $"{turns} 回合后 = 第 {turn + turns} 回合结算）");
     }
 
@@ -96,7 +96,7 @@ internal static class DeferralLedger
 
         debts.Add(new Debt(combat, arm.DueTurn, amount, source));
         Const.Logger.Info(
-            $"[{Const.ModId}] 延宕：{amount} 点伤害记入欠账（{source}）⇒ 第 {arm.DueTurn} 回合结算"
+            $"[{Const.ModId}] {Const.Prefix.Deferral} 延宕：{amount} 点伤害记入欠账（{source}）⇒ 第 {arm.DueTurn} 回合结算"
             + $"（累计 {PendingOf(player)}）");
     }
 

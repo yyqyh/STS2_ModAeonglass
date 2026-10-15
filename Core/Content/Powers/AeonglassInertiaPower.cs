@@ -40,7 +40,7 @@ public sealed class AeonglassInertiaPower : ModPowerTemplate, ISandInvertListene
         }
 
         _usedThisTurn = true;
-        Const.Logger.Info($"[{Const.ModId}] 惯性：翻转触发 ⇒ 抽 {Amount} 张");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Sand} 惯性：翻转触发 ⇒ 抽 {Amount} 张");
         await CardPileCmd.Draw(choiceContext, (int)Amount, player);
     }
 }

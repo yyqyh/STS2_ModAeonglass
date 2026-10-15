@@ -32,6 +32,6 @@ public sealed class AeonglassTimeHubPower : AeonglassHandLimitPower
         }
 
         await PlayerCmd.GainEnergy(Amount, player);
-        Const.Logger.Info($"[{Const.ModId}] 时枢：每回合 +{Amount} 能量（手牌上限 {HandLimitPenalty}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 时枢：每回合 +{Amount} 能量（手牌上限 {HandLimitPenalty}）");
     }
 }

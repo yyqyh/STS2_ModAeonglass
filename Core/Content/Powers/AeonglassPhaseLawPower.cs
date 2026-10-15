@@ -74,7 +74,7 @@ public sealed class AeonglassPhaseLawPower : ModPowerTemplate
                 break;
         }
 
-        Const.Logger.Info($"[{Const.ModId}] 相位律（{(mirrored ? "消逝副" : "永时副")} · {phase}）：{what}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Sand} 相位律（{(mirrored ? "消逝副" : "永时副")} · {phase}）：{what}");
     }
 
     /// <summary>当前生效副（拿不到牌时按 A 副算）。</summary>

@@ -73,11 +73,11 @@ public sealed class AeonglassDeadEnd : ModCardTemplate, IStasisCard
         RewindCombatLimit.GrantExtra(Owner, 1);
         if (!RewindModule.TryRequest(Owner, out var message))
         {
-            Const.Logger.Warn($"[{Const.ModId}] 穷途陌路：回溯没发起（{message}）");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Rewind} 穷途陌路：回溯没发起（{message}）");
             return;
         }
 
-        Const.Logger.Info($"[{Const.ModId}] 穷途陌路：{message}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Rewind} 穷途陌路：{message}");
     }
 
     /// <summary>v2：升级是费用 −1（原版现成 API，本体一堆先例）。</summary>

@@ -21,7 +21,6 @@ using STS2_Aeonglass.Core.Systems.Bootstrap;
 
 using STS2_Aeonglass.Core.Presentation.Support;
 
-
 using STS2_Aeonglass.Core.Systems.Gap;
 namespace STS2_Aeonglass.Core.Presentation.Combat.Gap;
 /// <summary>回归（唤回）那半条流水线的<b>分册</b>（<c>AeonglassGapSequence</c> 的 partial 部分）。</summary>
@@ -69,7 +68,7 @@ internal static partial class AeonglassGapSequence
             return await GapRecallActions.Recall(player);
         }
 
-        using var barrier = OperationBarrier.Enter("M2回归");
+        using var barrier = OperationBarrier.Enter("间隙换回");
         try
         {
             // ③④⑤ 的落点：手牌上方那条线（卡面 / 粒子 / 卡牌都在战斗 UI 这一层里飘，用全局坐标最省事）

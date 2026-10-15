@@ -20,7 +20,7 @@ internal static class Hysteresis
     {
         if (Marked.Add(card))
         {
-            Const.Logger.Info($"[{Const.ModId}] 迟滞：{card.Id.Entry} 已打标（共 {Marked.Count} 张）");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 迟滞：{card.Id.Entry} 已打标（共 {Marked.Count} 张）");
         }
     }
 
@@ -41,7 +41,7 @@ internal static class Hysteresis
     {
         var count = Marked.Count;
         Marked.Clear();
-        Const.Logger.Info($"[{Const.ModId}] 迟滞：已清空 {count} 张标记");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 迟滞：已清空 {count} 张标记");
     }
 
     /// <summary>一行状态（面板 / 日志用）。</summary>

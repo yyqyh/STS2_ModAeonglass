@@ -44,7 +44,7 @@ public sealed class AeonglassOvergrow() : ModCardTemplate(-1, CardType.Skill, Ca
 
         var x = ResolveEnergyXValue() + (IsUpgraded ? UpgradeEnergyBonus : 0);
         var count = x * (int)DynamicVars["PerEnergy"].BaseValue;
-        Const.Logger.Info($"[{Const.ModId}] 蔓生：X={x} ⇒ {WitherEffects.Inject(cardPlay.Target, count)}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 蔓生：X={x} ⇒ {WitherEffects.Inject(cardPlay.Target, count)}");
         return Task.CompletedTask;
     }
 

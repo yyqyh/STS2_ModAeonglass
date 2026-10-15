@@ -36,7 +36,7 @@ public sealed class AeonglassGamble() : ModCardTemplate(0, CardType.Skill, CardR
         await CreatureCmd.Stun(cardPlay.Target, IntentOps.FallbackNextMoveId(cardPlay.Target));
         var stunned = cardPlay.Target.IsStunned;
         Const.Logger.Info(
-            $"[{Const.ModId}] 豪赌：眩晕 {MonsterAccess.IdOf(cardPlay.Target)} = {stunned}"
+            $"[{Const.ModId}] {Const.Prefix.Host} 豪赌：眩晕 {MonsterAccess.IdOf(cardPlay.Target)} = {stunned}"
             + (stunned ? string.Empty : "（被免疫/招牌招式挡住 ⇒ 这一半没生效）"));
 
         // ② 代价：跳过你的下一个回合（与眩晕是否落地无关）。

@@ -108,7 +108,7 @@ public sealed class AeonglassDeferralPower : ModPowerTemplate
         }
 
         var left = Amount;
-        Const.Logger.Info($"[{Const.ModId}] 延宕：账已结清 ⇒ 能力离场（-{left}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Deferral} 延宕：账已结清 ⇒ 能力离场（-{left}）");
         await PowerCmd.Apply<AeonglassDeferralPower>(choiceContext, Owner, -left, Owner, null);
     }
 }

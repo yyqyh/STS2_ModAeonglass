@@ -54,7 +54,7 @@ internal static class SandInvertCmd
         var energy = player.PlayerCombatState?.Energy ?? 0;
         if (energy < EnergyCost)
         {
-            Const.Logger.Info($"[{Const.ModId}] [沙砾] 倒置被拒（能量不足：{energy} < {EnergyCost}）");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Sand} 倒置被拒（能量不足：{energy} < {EnergyCost}）");
 
             // 用户口径：按下但倒不了 → 计数器宝珠变红 1 秒（反馈放在计数器里，命令这边只管通知）。
             AeonglassSandCounterUi.Current?.NotifyInvertRejected();
@@ -80,7 +80,7 @@ internal static class SandInvertCmd
 
         var source = sourceCard is null ? "计数器" : sourceCard.Id.Entry;
         Const.Logger.Info(
-            $"[{Const.ModId}] [沙砾] 倒置（来自 {source}）：沙砾 {sand}→{gap}、空隙 {gap}→{sand}（付 {EnergyCost} 费）"
+            $"[{Const.ModId}] {Const.Prefix.Sand} 倒置（来自 {source}）：沙砾 {sand}→{gap}、空隙 {gap}→{sand}（付 {EnergyCost} 费）"
             + $"｜本回合第 {SandTurnCounters.InvertsThisTurn(player)} 次");
 
         // 交换后"沙砾"就是原来的空隙值 ⇒ 计数器该落到的档位 = gap。
@@ -108,7 +108,7 @@ internal static class SandInvertCmd
             catch (Exception ex)
             {
                 Const.Logger.Warn(
-                    $"[{Const.ModId}] [沙砾] 翻转通知失败（{power.GetType().Name}）：{ex.GetType().Name}: {ex.Message}");
+                    $"[{Const.ModId}] {Const.Prefix.Sand} 翻转通知失败（{power.GetType().Name}）：{ex.GetType().Name}: {ex.Message}");
             }
         }
     }

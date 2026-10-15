@@ -29,7 +29,7 @@ public sealed class AeonglassDesertification()
     protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         var upgraded = UpgradeEnemySide() + UpgradeOwnSide();
-        Const.Logger.Info($"[{Const.ModId}] 荒漠化：升级了 {upgraded} 张凋萎（敌人侧 + 自己侧）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 荒漠化：升级了 {upgraded} 张凋萎（敌人侧 + 自己侧）");
         return Task.CompletedTask;
     }
 
@@ -106,7 +106,7 @@ public sealed class AeonglassDesertification()
         }
         catch (Exception ex)
         {
-            Const.Logger.Warn($"[{Const.ModId}] 荒漠化：升级 {card.Id.Entry} 失败（{ex.GetType().Name}）");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Wither} 荒漠化：升级 {card.Id.Entry} 失败（{ex.GetType().Name}）");
             return false;
         }
     }

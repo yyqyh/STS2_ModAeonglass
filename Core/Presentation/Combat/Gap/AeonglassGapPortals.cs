@@ -197,7 +197,6 @@ public partial class AeonglassGapPortals : Control
     private static MegaCrit.Sts2.Core.Nodes.Rooms.NCombatRoom? NCombatRoomOf() =>
         MegaCrit.Sts2.Core.Nodes.Rooms.NCombatRoom.Instance;
 
-
     /// <summary>创建左右两道门（幂等）。</summary>
     private void EnsurePortals()
     {

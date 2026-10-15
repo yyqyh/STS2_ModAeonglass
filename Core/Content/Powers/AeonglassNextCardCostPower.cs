@@ -62,7 +62,7 @@ public sealed class AeonglassNextCardCostPower : ModPowerTemplate
 
         _discounted = null;
         var spent = Amount;
-        Const.Logger.Info($"[{Const.ModId}] 省钟：{cardPlay.Card.Id.Entry} 吃到减费，能力用掉（-{spent}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 省钟：{cardPlay.Card.Id.Entry} 吃到减费，能力用掉（-{spent}）");
         await PowerCmd.Apply<AeonglassNextCardCostPower>(choiceContext, Owner, -spent, Owner, cardPlay.Card);
     }
 
@@ -79,7 +79,7 @@ public sealed class AeonglassNextCardCostPower : ModPowerTemplate
 
         _discounted = null;
         var expired = Amount;
-        Const.Logger.Info($"[{Const.ModId}] 省钟：本回合没用掉 ⇒ 作废（-{expired}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 省钟：本回合没用掉 ⇒ 作废（-{expired}）");
         await PowerCmd.Apply<AeonglassNextCardCostPower>(choiceContext, Owner, -expired, Owner, null);
     }
 }

@@ -125,7 +125,7 @@ internal static class SandResourceRegistry
         SandCounterUiWiring.RegisterSandCardCostUi(registry);
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [沙砾] 次级资源注册完成：{SandId} / {VoidId}"
+            $"[{Const.ModId}] {Const.Prefix.Sand} 次级资源注册完成：{SandId} / {VoidId}"
             + $"（容量 {Capacity}，初始 {InitialSand}/{InitialVoid}）");
     }
 

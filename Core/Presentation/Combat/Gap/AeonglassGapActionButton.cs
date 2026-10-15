@@ -15,7 +15,6 @@ using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Presentation.Character;
 using STS2_Aeonglass.Core.Systems.Bootstrap;
 
-
 namespace STS2_Aeonglass.Core.Presentation.Combat.Gap;
 /// <summary>时空裂隙 按键本体（原版 <c>NButton</c> 派生：悬停 / 按下 / 禁用 / 点击音效都是原版那套）。</summary>
 /// <remarks>

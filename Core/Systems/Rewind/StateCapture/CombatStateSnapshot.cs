@@ -122,7 +122,4 @@ internal sealed partial class CombatStateSnapshot : ISnapshot
         return snapshot;
     }
 
-
-
-
 }

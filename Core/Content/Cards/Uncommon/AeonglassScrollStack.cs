@@ -38,7 +38,7 @@ public sealed class AeonglassScrollStack() : ModCardTemplate(1, CardType.Skill, 
         var baseDraw = (int)DynamicVars["Draw"].BaseValue;
         var total = baseDraw + extra;
 
-        Const.Logger.Info($"[{Const.ModId}] 积卷：本场翻转 {inverts} 次 ⇒ 抽 {total}（基础 {baseDraw} + {extra}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Sand} 积卷：本场翻转 {inverts} 次 ⇒ 抽 {total}（基础 {baseDraw} + {extra}）");
         await CardPileCmd.Draw(choiceContext, total, Owner);
     }
 

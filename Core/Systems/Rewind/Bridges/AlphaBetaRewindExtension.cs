@@ -82,7 +82,7 @@ internal sealed class AlphaBetaRewindExtension : IRewindExtension
             if (handHasIt)
             {
                 Const.Logger.Info(
-                    $"[{Const.ModId}] α or β：回溯后手上已有一张（未使用的那张留在卡组）⇒ 不再叠第二张");
+                    $"[{Const.ModId}] {Const.Prefix.AlphaBeta} α or β：回溯后手上已有一张（未使用的那张留在卡组）⇒ 不再叠第二张");
                 continue;
             }
 
@@ -90,7 +90,7 @@ internal sealed class AlphaBetaRewindExtension : IRewindExtension
             combat.Hand.AddInternal(copy);
             combat.Hand.InvokeContentsChanged();
             Const.Logger.Info(
-                $"[{Const.ModId}] α or β：回溯后进入手牌（卡组仍保留一份；收回散落实例 {returned} 张）");
+                $"[{Const.ModId}] {Const.Prefix.AlphaBeta} α or β：回溯后进入手牌（卡组仍保留一份；收回散落实例 {returned} 张）");
         }
     }
 

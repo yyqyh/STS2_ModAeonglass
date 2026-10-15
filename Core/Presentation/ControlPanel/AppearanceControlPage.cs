@@ -89,7 +89,7 @@ internal sealed partial class AppearanceControlPage : ControlPage
         var more = Grid(1);
         more.AddChild(Btn("把完整清单打进日志", () =>
         {
-            Const.Logger.Info($"[{Const.ModId}] {PlaceholderAssetRegistry.Summary}");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} {PlaceholderAssetRegistry.Summary}");
             Show("已写入 godot.log");
         }));
     }

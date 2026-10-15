@@ -2,7 +2,6 @@ using System.Collections;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-
 namespace STS2_Aeonglass.Core.Systems.Rewind.Graph;
 
 /// <summary>

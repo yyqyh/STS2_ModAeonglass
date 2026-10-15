@@ -87,13 +87,13 @@ internal static class GapViewPile
 
                 if (!result.success)
                 {
-                    Const.Logger.Warn($"[{Const.ModId}] [间隙] 镜像 {card.Id.Entry} 失败（success=false）");
+                    Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Gap} 镜像 {card.Id.Entry} 失败（success=false）");
                 }
             }
             catch (Exception ex)
             {
                 Const.Logger.Warn(
-                    $"[{Const.ModId}] [间隙] 镜像 {card.Id.Entry} 抛异常：{ex.GetType().Name}: {ex.Message}");
+                    $"[{Const.ModId}] {Const.Prefix.Gap} 镜像 {card.Id.Entry} 抛异常：{ex.GetType().Name}: {ex.Message}");
             }
         }
 
@@ -113,11 +113,11 @@ internal static class GapViewPile
             catch (Exception ex)
             {
                 Const.Logger.Warn(
-                    $"[{Const.ModId}] [间隙] 撤下镜像 {clone.Id.Entry} 抛异常：{ex.GetType().Name}: {ex.Message}");
+                    $"[{Const.ModId}] {Const.Prefix.Gap} 撤下镜像 {clone.Id.Entry} 抛异常：{ex.GetType().Name}: {ex.Message}");
             }
         }
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [间隙] 间隙镜像已同步：存储 {stored.Cards.Count} 张 → 显示 {view.Cards.Count} 张");
+            $"[{Const.ModId}] {Const.Prefix.Gap} 间隙镜像已同步：存储 {stored.Cards.Count} 张 → 显示 {view.Cards.Count} 张");
     }
 }

@@ -62,7 +62,7 @@ public partial class AeonglassDomainLayer : Control
 
         if (_material is null)
         {
-            Const.Logger.Warn($"[{Const.ModId}] [领域] 找不到 Layer 上的蒙版材质，擦除动画会没有效果。");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Host} [领域] 找不到 Layer 上的蒙版材质，擦除动画会没有效果。");
         }
 
         // 起始 = 圆心在背景右上角（当前极性下 = 整层不可见）。
@@ -100,7 +100,7 @@ public partial class AeonglassDomainLayer : Control
     {
         if (_anim is null)
         {
-            Const.Logger.Warn($"[{Const.ModId}] [领域] 场景里没有 AnimationPlayer，擦除动画播不了。");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Host} [领域] 场景里没有 AnimationPlayer，擦除动画播不了。");
             return;
         }
 
@@ -125,7 +125,7 @@ public partial class AeonglassDomainLayer : Control
     {
         if (_anim is null)
         {
-            Const.Logger.Warn($"[{Const.ModId}] [领域] 场景里没有 AnimationPlayer。");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Host} [领域] 场景里没有 AnimationPlayer。");
             return;
         }
 

@@ -12,7 +12,6 @@ using STS2RitsuLib.Scaffolding.Godot.NodeAttachments;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Presentation.SecondaryResource;
 
-
 namespace STS2_Aeonglass.Core.Systems.Sand;
 
 /// <summary>

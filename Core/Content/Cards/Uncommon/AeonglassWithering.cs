@@ -44,7 +44,7 @@ public sealed class AeonglassWithering() : ModCardTemplate(1, CardType.Skill, Ca
 
         var damage = withers * DynamicVars["PerWither"].BaseValue;
         Const.Logger.Info(
-            $"[{Const.ModId}] 枯萎：{MonsterAccess.IdOf(cardPlay.Target)} 凋萎 {withers} 张（升级={IsUpgraded}）"
+            $"[{Const.ModId}] {Const.Prefix.Wither} 枯萎：{MonsterAccess.IdOf(cardPlay.Target)} 凋萎 {withers} 张（升级={IsUpgraded}）"
             + $" ⇒ {damage} 伤");
 
         if (damage <= 0m)

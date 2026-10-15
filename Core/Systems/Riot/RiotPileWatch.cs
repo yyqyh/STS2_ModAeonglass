@@ -11,7 +11,6 @@ using STS2RitsuLib;
 using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Content.Cards.Curse;
 
-
 namespace STS2_Aeonglass.Core.Systems.Riot;
 
 /// <summary>
@@ -72,7 +71,7 @@ internal static class RiotPileWatch
         });
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [乱流] 已就绪（总开关={RiotSwap.Enabled}，调试强制互换="
+            $"[{Const.ModId}] {Const.Prefix.Riot} 已就绪（总开关={RiotSwap.Enabled}，调试强制互换="
             + $"{AeonglassSettingStore.Current.RiotForceSwap}）"
             + $"｜收口=属性字段对调（{RiotSwap.DrawField?.Name ?? "未找到"} / {RiotSwap.DiscardField?.Name ?? "未找到"}）"
             + "｜口径：乱流在弃牌堆里 ⇒ 抽/弃/洗牌等全部对调；离开即失效");
@@ -90,7 +89,7 @@ internal static class RiotPileWatch
         {
             if (card is AeonglassRiot)
             {
-                Const.Logger.Info($"[{Const.ModId}] [乱流] 乱流进入弃牌堆 ⇒ 立即生效");
+                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Riot} 乱流进入弃牌堆 ⇒ 立即生效");
             }
 
             RiotSwap.SyncSwap(state, pair);
@@ -108,7 +107,7 @@ internal static class RiotPileWatch
         pair.Draw.CardRemoved += card => NoteMove(state, "抽牌堆(物理)", card);
         pair.Discard.CardRemoved += card => NoteMove(state, "弃牌堆(物理)", card);
 
-        Const.Logger.Info($"[{Const.ModId}] [乱流] 已盯住 {player.NetId} 的抽/弃牌堆（进/出都记一行）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Riot} 已盯住 {player.NetId} 的抽/弃牌堆（进/出都记一行）");
     }
 
     /// <summary>战斗开始 / 回合开始：核对状态并报一次物理堆快照。</summary>
@@ -123,7 +122,7 @@ internal static class RiotPileWatch
         RiotSwap.SyncSwap(state, pair);
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [乱流] {why}：状态={(pair.Swapped ? "对调中" : "原版")}"
+            $"[{Const.ModId}] {Const.Prefix.Riot} {why}：状态={(pair.Swapped ? "对调中" : "原版")}"
             + $"｜抽牌堆(物理) {pair.Draw.Cards.Count} / 弃牌堆(物理) {pair.Discard.Cards.Count}"
             + $"（游戏看到的：抽 {state.DrawPile.Cards.Count} / 弃 {state.DiscardPile.Cards.Count}）");
     }
@@ -137,7 +136,7 @@ internal static class RiotPileWatch
 
         RiotSwap.MoveLogCount++;
         Const.Logger.Info(
-            $"[{Const.ModId}] [乱流] 从 {pileName} 取走 {card.Id.Entry}"
+            $"[{Const.ModId}] {Const.Prefix.Riot} 从 {pileName} 取走 {card.Id.Entry}"
             + $"（现 抽牌堆(物理) {pair.Draw.Cards.Count} / 弃牌堆(物理) {pair.Discard.Cards.Count}）");
     }
 }

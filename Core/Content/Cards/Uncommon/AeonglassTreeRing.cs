@@ -38,7 +38,7 @@ public sealed class AeonglassTreeRing() : ModCardTemplate(0, CardType.Skill, Car
         // v2：把上限去掉了（只由"上回合实际打了几张"决定）⇒ 想改成有上限就必须回来加 cap。
         var block = played * DynamicVars["BlockPerCard"].BaseValue;
 
-        Const.Logger.Info($"[{Const.ModId}] 年轮：上回合打出 {played} 张 ⇒ {block} 挡（v2：无上限）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 年轮：上回合打出 {played} 张 ⇒ {block} 挡（v2：无上限）");
         if (block > 0m)
         {
             await CreatureCmd.GainBlock(Owner.Creature, block, ValueProp.Move, cardPlay);

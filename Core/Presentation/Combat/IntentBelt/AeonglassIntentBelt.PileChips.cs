@@ -8,7 +8,6 @@ using MegaCrit.Sts2.Core.Nodes.Combat;
 using STS2_Aeonglass.Core.Presentation.Support;
 using STS2_Aeonglass.Core.Systems.Intent;
 
-
 namespace STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
 /// <summary>卡带下方的「抽 / 弃牌堆」小卡与悬停 popup（<c>AeonglassIntentBelt</c> 的 partial 部分）。</summary>
 /// <remarks>
@@ -265,24 +264,6 @@ public partial class AeonglassIntentBelt : Control
               + string.Join(", ", pile.Take(12).Select(c => c.IsVoid ? "虚无" : c.MoveId))
               + (pile.Count > 12 ? " …" : string.Empty);
 
-    /// <summary>
-    /// "抽 / 弃"牌堆也做成**一张卡**（用户 2026-10-12）：卡图 = 堆顶那张意图的图，卡面数字 = 这一堆的张数；
-    /// 空堆就只有 0、并且灰掉。位置本身就把两堆区分开了（左抽 / 右弃）。
-    /// </summary>
-    /// <remarks>节点由 <see cref="AeonglassIntentCardView.Create" /> 直接挂进 <c>_row</c>，所以这里不返回值、调用方也不要再 AddChild。</remarks>
-    private void BuildPileCard(IReadOnlyList<IntentCard> pile, Creature owner)
-    {
-        var view = AeonglassIntentCardView.Create(_row, new Vector2(SlotWidth, SlotHeight));
-        if (view is null)
-        {
-            return;
-        }
-
-        var top = pile.Count == 0 ? null : pile[0];
-        view.Bind(top, owner, pile.Count.ToString());
-        view.SetDim(pile.Count == 0);
-    }
-
     /// <summary>一个牌堆小标（"抽 3" / "弃 2"），悬浮看内容。</summary>
     private static Control BuildPileChip(string title, IReadOnlyList<IntentCard> pile)
     {
@@ -316,15 +297,11 @@ public partial class AeonglassIntentBelt : Control
         label.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 0.8f));
         chip.AddChild(label);
 
-        chip.TooltipText = pile.Count == 0
-            ? $"{title}牌堆：空"
-            : $"{title}牌堆（{pile.Count}）："
-              + string.Join(", ", pile.Take(12).Select(c => c.IsVoid ? "虚无" : c.MoveId))
-              + (pile.Count > 12 ? " …" : string.Empty);
+        chip.TooltipText = PileTooltip(title, pile);
         return chip;
     }
 
-    /// <summary>一张意图卡：空槽卡框 + 图标 + 角标（条件✗ / 强制 / 消耗 / 被吃）。</summary>
+    /// <summary>卡带尾部的一行说明文字（如 <c>+2</c>：这一版多出来的张数）。</summary>
     private static Control BuildLabelSlot(string text)
     {
         var label = new Label

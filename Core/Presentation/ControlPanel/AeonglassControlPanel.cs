@@ -179,6 +179,4 @@ internal partial class AeonglassControlPanel : PanelContainer
         Position = new Vector2(12f, 20f);
     }
 
-
-
 }

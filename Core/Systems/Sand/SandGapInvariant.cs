@@ -87,7 +87,7 @@ internal sealed class SandGapInvariant : ISecondaryResourceHookListener
         var voidAfter = SecondaryResourceCmd.Get(context.Player, SandResourceRegistry.VoidId);
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [沙砾] 支付 {amount} 沙砾 → 生成空隙"
+            $"[{Const.ModId}] {Const.Prefix.Sand} 支付 {amount} 沙砾 → 生成空隙"
             + $"（沙砾 {sandBefore}→{sandAfter}，空隙 {voidBefore}→{voidAfter}）");
 
         CheckInvariant(context.Player, sandAfter, voidAfter);
@@ -142,7 +142,7 @@ internal sealed class SandGapInvariant : ISecondaryResourceHookListener
         }
 
         Const.Logger.Warn(
-            $"[{Const.ModId}] [沙砾] 不变式被破坏：沙砾 {sand} + 空隙 {gap} = {sand + gap}"
+            $"[{Const.ModId}] {Const.Prefix.Sand} 不变式被破坏：沙砾 {sand} + 空隙 {gap} = {sand + gap}"
             + $"，应为 {SandResourceRegistry.Capacity}。"
             + "（检查是不是有入口在凭空增减其中一个池子）");
     }
@@ -163,7 +163,7 @@ internal sealed class SandGapInvariant : ISecondaryResourceHookListener
             catch (Exception ex)
             {
                 Const.Logger.Warn(
-                    $"[{Const.ModId}] [沙砾] 消耗通知失败（{listener.GetType().Name}）：{ex.GetType().Name}: {ex.Message}");
+                    $"[{Const.ModId}] {Const.Prefix.Sand} 消耗通知失败（{listener.GetType().Name}）：{ex.GetType().Name}: {ex.Message}");
             }
         }
     }

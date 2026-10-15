@@ -36,7 +36,7 @@ public sealed class AeonglassGapPulsePower : ModPowerTemplate
             return;
         }
 
-        Const.Logger.Info($"[{Const.ModId}] 蓄隙：间隙 {gap} 张 ⇒ +{Amount} 格挡");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 蓄隙：间隙 {gap} 张 ⇒ +{Amount} 格挡");
         await CreatureCmd.GainBlock(Owner, Amount, ValueProp.Move, null);
     }
 }

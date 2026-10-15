@@ -13,8 +13,6 @@ using STS2_Aeonglass.Core.Systems.AlphaBeta;
 using STS2_Aeonglass.Core.Systems.Sand;
 using STS2_Aeonglass.Core.Systems.Decks;
 
-
-
 namespace STS2_Aeonglass.Core.Systems.Gap;
 
 /// <summary>
@@ -28,7 +26,6 @@ namespace STS2_Aeonglass.Core.Systems.Gap;
 /// </remarks>
 internal static class GapRecallActions
 {
-
 
     /// <summary>
     /// 激活：<b>先付代价 → 丢弃当前手牌（进弃牌堆）→ 把间隙里的卡牌实例搬进手牌 → 清空间隙记录</b>。
@@ -55,14 +52,14 @@ internal static class GapRecallActions
     {
         if (player.PlayerCombatState is not { } combatPiles || player.Creature.CombatState is not CombatState combat)
         {
-            Const.Logger.Info($"[{Const.ModId}] [间隙] 激活被拒：不在战斗中");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 激活被拒：不在战斗中");
             return GapResult.Fail("不在战斗中");
         }
 
         var gap = GapStore.Zone(player);
         if (gap is null)
         {
-            Const.Logger.Warn($"[{Const.ModId}] [间隙] 激活被拒：时空裂隙 未启用（间隙牌堆没注册）");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Gap} 激活被拒：时空裂隙 未启用（间隙牌堆没注册）");
             return GapResult.Fail("时空裂隙 未启用（间隙牌堆没注册）");
         }
 
@@ -79,12 +76,12 @@ internal static class GapRecallActions
         if (gap.Cards.Count == 0)
         {
             // 这条以前是"静默失败"（不打日志），实测时最难判断 —— 现在必须留痕。
-            Const.Logger.Info($"[{Const.ModId}] [间隙] 激活被拒：间隙是空的（{GapStore.Describe(player)}）");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 激活被拒：间隙是空的（{GapStore.Describe(player)}）");
             return GapResult.Fail("间隙是空的");
         }
 
         var copies = gap.Cards.ToList();
-        Const.Logger.Info($"[{Const.ModId}] [间隙] 激活开始：{GapStore.Describe(player)}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 激活开始：{GapStore.Describe(player)}");
 
         // ① 先付代价：不足就整次不动（与坍缩同一笔：统一 2 沙砾）。
         var cost = GapStore.ActionCost;
@@ -92,7 +89,7 @@ internal static class GapRecallActions
         {
             var have = SecondaryResourceCmd.Get(player, SandResourceRegistry.SandId);
             var blocked = $"激活被拒（沙砾不足：需要 {cost}，现有 {have}）";
-            Const.Logger.Info($"[{Const.ModId}] [间隙] {blocked}");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} {blocked}");
             return GapResult.Fail(blocked);
         }
 
@@ -102,7 +99,7 @@ internal static class GapRecallActions
         var (keepHand, drawAfterRecall) = GapRecallGuard.Evaluate(player, copies.Count);
         if (keepHand)
         {
-            Const.Logger.Info($"[{Const.ModId}] [间隙] 缓收生效：间隙 {copies.Count} 张 ⇒ 本次回归不丢手牌");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 缓收生效：间隙 {copies.Count} 张 ⇒ 本次回归不丢手牌");
         }
 
         foreach (var card in keepHand ? [] : hand.Cards.ToList())
@@ -162,12 +159,12 @@ internal static class GapRecallActions
                     continue;
                 }
 
-                Const.Logger.Warn($"[{Const.ModId}] [间隙] {card.Id.Entry} 搬回手牌失败（success=false）→ 放回间隙");
+                Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Gap} {card.Id.Entry} 搬回手牌失败（success=false）→ 放回间隙");
             }
             catch (Exception ex)
             {
                 Const.Logger.Error(
-                    $"[{Const.ModId}] [间隙] {card.Id.Entry} 搬回手牌抛异常（已放回间隙）："
+                    $"[{Const.ModId}] {Const.Prefix.Gap} {card.Id.Entry} 搬回手牌抛异常（已放回间隙）："
                     + $"{ex.GetType().Name}: {ex.Message}");
             }
 
@@ -187,7 +184,7 @@ internal static class GapRecallActions
             }
             catch (Exception ex)
             {
-                Const.Logger.Warn($"[{Const.ModId}] [间隙] {card.Id.Entry} 回填战斗登记失败：{ex.Message}");
+                Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Gap} {card.Id.Entry} 回填战斗登记失败：{ex.Message}");
             }
         }
 
@@ -197,7 +194,7 @@ internal static class GapRecallActions
         if (keepHand && drawAfterRecall > 0)
         {
             var drawn = (await CardPileCmd.Draw(new BlockingPlayerChoiceContext(), drawAfterRecall, player)).Count();
-            Const.Logger.Info($"[{Const.ModId}] [间隙] 缓收：回归后补抽 {drawn}/{drawAfterRecall}");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 缓收：回归后补抽 {drawn}/{drawAfterRecall}");
         }
 
         // 存储搬空了 ⇒ 同步显示层（撤掉那些克隆）。
@@ -211,7 +208,7 @@ internal static class GapRecallActions
         var leftover = gap.Cards.Count;
         if (leftover > 0)
         {
-            Const.Logger.Warn($"[{Const.ModId}] [间隙] 激活后间隙仍有 {leftover} 张（搬回手牌失败，已留在间隙里）");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Gap} 激活后间隙仍有 {leftover} 张（搬回手牌失败，已留在间隙里）");
         }
 
         // 闸门记账：走到这里 = 代价已付、牌也搬过 ⇒ **这一次激活确实发生了**（哪怕个别牌没搬回），
@@ -220,7 +217,7 @@ internal static class GapRecallActions
 
         var text = $"激活：花 {cost} 沙砾，弃掉手牌 {discarded} 张，间隙 {copies.Count} 张 → 手牌 {moved} 张"
                    + $"，间隙清空（剩 {leftover}）";
-        Const.Logger.Info($"[{Const.ModId}] [间隙] {text} ｜ 现在 {GapStore.Describe(player)}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} {text} ｜ 现在 {GapStore.Describe(player)}");
         return new GapResult(moved > 0, text);
     }
 }

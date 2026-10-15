@@ -55,7 +55,7 @@ public sealed class AeonglassNextDefensePower : ModPowerTemplate
         }
 
         _appliedThisBlock = true;
-        Const.Logger.Info($"[{Const.ModId}] 垒壁：防御牌 {cardSource.Id.Entry} 额外 +{Amount} 格挡");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 垒壁：防御牌 {cardSource.Id.Entry} 额外 +{Amount} 格挡");
         return block + Amount;
     }
 
@@ -76,7 +76,7 @@ public sealed class AeonglassNextDefensePower : ModPowerTemplate
 
         _appliedThisBlock = false;
         var spent = Amount;
-        Const.Logger.Info($"[{Const.ModId}] 垒壁：加成已用掉（-{spent}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 垒壁：加成已用掉（-{spent}）");
         return PowerCmd.Apply<AeonglassNextDefensePower>(
             new BlockingPlayerChoiceContext(), Owner, -spent, Owner, cardSource);
     }

@@ -90,7 +90,7 @@ internal sealed partial class RewindFacade
         RewindInProgress = true;
 
         // 回溯也进"操作屏障"：这段时间里点结束回合会被拒（用户 2026-10-12：「回溯、坍缩等操作都要加屏障」）。
-        using var barrier = OperationBarrier.Enter("M4回溯");
+        using var barrier = OperationBarrier.Enter("回溯");
 
         try
         {
@@ -125,7 +125,7 @@ internal sealed partial class RewindFacade
         var ok = false;
 
         // 同上：回溯全程进操作屏障。
-        using var barrier = OperationBarrier.Enter("M4回溯");
+        using var barrier = OperationBarrier.Enter("回溯");
 
         try
         {

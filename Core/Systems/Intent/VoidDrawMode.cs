@@ -1,6 +1,5 @@
 using STS2_Aeonglass.Core.Config;
 
-
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>

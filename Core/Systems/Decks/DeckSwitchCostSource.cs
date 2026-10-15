@@ -5,7 +5,6 @@ using STS2RitsuLib.Combat.SecondaryResources;
 using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Systems.Sand;
 
-
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
 /// <summary>

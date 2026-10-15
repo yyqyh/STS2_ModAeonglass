@@ -1,6 +1,5 @@
 using MegaCrit.Sts2.Core.Entities.Players;
 
-
 namespace STS2_Aeonglass.Core.Systems.Rewind.Policy;
 
 /// <summary>次级资源接缝的占位实现：永远"未接入"，调用方据此跳过并写日志。</summary>

@@ -30,7 +30,7 @@ public sealed class AeonglassCrustPower : ModPowerTemplate, ISandSpendListener
         }
 
         _usedThisTurn = true;
-        Const.Logger.Info($"[{Const.ModId}] 结壳：消耗 {amount} 沙砾 ⇒ +{Amount} 格挡");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Sand} 结壳：消耗 {amount} 沙砾 ⇒ +{Amount} 格挡");
         await CreatureCmd.GainBlock(Owner, Amount, ValueProp.Move, null);
     }
 

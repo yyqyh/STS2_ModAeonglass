@@ -35,7 +35,7 @@ public sealed class AeonglassDrawDebtPower : ModPowerTemplate
 
         _applied = true;
         var modified = Math.Max(0m, count - Amount);
-        Const.Logger.Info($"[{Const.ModId}] 预支：本回合抽牌 {count} → {modified}（挂账 -{Amount}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 预支：本回合抽牌 {count} → {modified}（挂账 -{Amount}）");
         return modified;
     }
 
@@ -54,6 +54,6 @@ public sealed class AeonglassDrawDebtPower : ModPowerTemplate
             -debt,
             Owner,
             null);
-        Const.Logger.Info($"[{Const.ModId}] 预支：挂账已还清（-{debt}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 预支：挂账已还清（-{debt}）");
     }
 }

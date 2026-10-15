@@ -32,7 +32,7 @@ public sealed class AeonglassBallastPower : ModPowerTemplate, IStasisReturnListe
         }
 
         _usedThisTurn = true;
-        Const.Logger.Info($"[{Const.ModId}] 压舱：{card.Id.Entry} 被搁浅 ⇒ +{Amount} 格挡");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Stasis} 压舱：{card.Id.Entry} 被搁浅 ⇒ +{Amount} 格挡");
         await CreatureCmd.GainBlock(Owner, Amount, ValueProp.Move, null);
     }
 

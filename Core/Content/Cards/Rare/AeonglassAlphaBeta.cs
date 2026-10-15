@@ -31,7 +31,7 @@ public sealed class AeonglassAlphaBeta()
     protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         Const.Logger.Info(
-            $"[{Const.ModId}] α or β：打出（被动照旧由 α/β 台账判定；回溯接缝见风险清单）");
+            $"[{Const.ModId}] {Const.Prefix.AlphaBeta} α or β：打出（被动照旧由 α/β 台账判定；回溯接缝见风险清单）");
         return Task.CompletedTask;
     }
 

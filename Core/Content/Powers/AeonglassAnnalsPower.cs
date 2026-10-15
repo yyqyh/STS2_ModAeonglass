@@ -32,7 +32,7 @@ public sealed class AeonglassAnnalsPower : ModPowerTemplate
             return;
         }
 
-        Const.Logger.Info($"[{Const.ModId}] 编年：上回合只打出 {played} 张 ⇒ +{Amount} 格挡");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 编年：上回合只打出 {played} 张 ⇒ +{Amount} 格挡");
         await CreatureCmd.GainBlock(Owner, Amount, ValueProp.Move, null);
     }
 }

@@ -17,11 +17,11 @@
 | `AeonglassVariantAttackTemplate` | 差分 + 攻击件（潮汐） | `cost, rarity, damage, upgradeDelta` | 覆写 `VariantBlocks` 给当前副的额外效果；条件改数值覆写 `DamageThisPlay` |
 | `AeonglassVariantBlockTemplate` | 差分 + 格挡件（堤岸） | `cost, rarity, block, upgradeDelta` | 同上（`BlockThisPlay` / `VariantBlocks`） |
 
-**模板不覆盖的情况**（别硬塞进模板）：诅咒/状态卡、Token 卡、指向意图卡（M3）、X 费卡、带自定义关键词的卡 ——
+**模板不覆盖的情况**（别硬塞进模板）：诅咒/状态卡、Token 卡、指向意图卡（操作时间）、X 费卡、带自定义关键词的卡 ——
 这些各写各的类，但**注释骨架照抄**（见第二节）。差分卡不要各写各的，用下面那三个差分模板。
 
 > 差分三兄弟已经把"`a`/`b` 文案 stem + 卡面差分文本注入 + 此刻在哪一副"收进模板；
-> **判定单点**仍是 `DoubleDeckService.DeckIndexOf`（经 `DeckVariants.SideOf`），卡里只准用 `Side` / `IsVariantB`。
+> **判定单点**仍是 `DeckPiles.DeckIndexOf`（经 `DeckVariants.SideOf`），卡里只准用 `Side` / `IsVariantB`。
 > 已知缺口：**技能 + 搁浅**目前只有「穷途陌路」一张，仍手写搁浅样板（凑到第二张再抽第四个模板）。
 
 ---
@@ -35,7 +35,7 @@
 /// <remarks>
 /// ① 效果：基础档做什么；升级档改哪一项。
 /// ② 差分：永时副 / 消逝副 各走什么（无差分就写"无差分"）。
-/// ③ 依赖：读哪套数据 / 挂哪个钩子 / 与哪条机制联动（例：本场翻转次数、M3 意图手牌、M4 回溯接缝、搁浅区）。
+/// ③ 依赖：读哪套数据 / 挂哪个钩子 / 与哪条机制联动（例：本场翻转次数、意图手牌、回溯接缝、搁浅区）。
 /// ④ ⚠️ 口径与风险：每次改动带日期写清改了哪一项（例：2026-10-15 delta：16→30，×2.7 超模待盯）。
 /// </remarks>
 ```

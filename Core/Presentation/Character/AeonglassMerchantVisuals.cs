@@ -21,7 +21,7 @@ public partial class AeonglassMerchantVisuals : NMerchantCharacter
     {
         if (GetChildCount() == 0)
         {
-            Const.Logger.Warn($"[{Const.ModId}] 商店场景没有子节点，无法播动画。");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Host} 商店场景没有子节点，无法播动画。");
             return;
         }
 

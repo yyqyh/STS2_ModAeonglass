@@ -27,7 +27,7 @@ public sealed class AeonglassMindDeprive() : ModCardTemplate(1, CardType.Skill, 
     {
         if (cardPlay.Target is not { } target)
         {
-            Const.Logger.Info($"[{Const.ModId}] 思维剥夺：没有目标怪");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 思维剥夺：没有目标怪");
             return Task.CompletedTask;
         }
 
@@ -35,12 +35,12 @@ public sealed class AeonglassMindDeprive() : ModCardTemplate(1, CardType.Skill, 
         var actionable = state.Hand.Where(card => card.Playable).ToList();
         if (actionable.Count == 0)
         {
-            Const.Logger.Info($"[{Const.ModId}] 思维剥夺：{MonsterAccess.IdOf(target)} 手牌里没有可行动的意图");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 思维剥夺：{MonsterAccess.IdOf(target)} 手牌里没有可行动的意图");
             return Task.CompletedTask;
         }
 
         var index = target.Monster?.RunRng.MonsterAi is { } rng ? rng.NextInt(actionable.Count) : 0;
-        Const.Logger.Info($"[{Const.ModId}] 思维剥夺（随机）：{IntentMoves.Deprive(target, actionable[index])}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 思维剥夺（随机）：{IntentMoves.Deprive(target, actionable[index])}");
         return Task.CompletedTask;
     }
 

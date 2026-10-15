@@ -44,7 +44,7 @@ internal static class AeonglassStasisPileFlash
             if (button is null)
             {
                 Const.Logger.Info(
-                    $"[{Const.ModId}] [搁浅] 归队 {returned} 张，但没找到「搁浅」顶栏按钮 ⇒ 本次不闪（不影响机制）");
+                    $"[{Const.ModId}] {Const.Prefix.Stasis} 归队 {returned} 张，但没找到「搁浅」顶栏按钮 ⇒ 本次不闪（不影响机制）");
                 return;
             }
 
@@ -53,11 +53,11 @@ internal static class AeonglassStasisPileFlash
             tween.TweenProperty(button, "modulate", FlashColor, HalfPeriod);
             tween.TweenProperty(button, "modulate", Colors.White, HalfPeriod);
 
-            Const.Logger.Info($"[{Const.ModId}] [搁浅] 归队 {returned} 张 → 「搁浅」按钮闪烁 {Loops} 次");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Stasis} 归队 {returned} 张 → 「搁浅」按钮闪烁 {Loops} 次");
         }
         catch (Exception ex)
         {
-            Const.Logger.Warn($"[{Const.ModId}] [搁浅] 闪烁提示失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Stasis} 闪烁提示失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
         }
     }
 

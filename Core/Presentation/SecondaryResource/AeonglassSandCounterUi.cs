@@ -99,7 +99,7 @@ public partial class AeonglassSandCounterUi : NSecondaryResourceCounterRow
             {
                 _warnedMissingIcon = true;
                 Const.Logger.Warn(
-                    $"[{Const.ModId}] [沙砾] 找不到框架的次级资源图标槽，5 层沙漏艺术没挂上（计数器数字仍可用）。");
+                    $"[{Const.ModId}] {Const.Prefix.Sand} 找不到框架的次级资源图标槽，5 层沙漏艺术没挂上（计数器数字仍可用）。");
             }
 
             return;

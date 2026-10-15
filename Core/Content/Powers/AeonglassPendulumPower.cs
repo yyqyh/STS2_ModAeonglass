@@ -31,7 +31,7 @@ public sealed class AeonglassPendulumPower : ModPowerTemplate
         var count = (int)Amount;
         await CardPileCmd.Draw(choiceContext, count, player);
         await DiscardRandomAsync(choiceContext, player, count);
-        Const.Logger.Info($"[{Const.ModId}] 摆钟：抽 {count} 弃 {count}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 摆钟：抽 {count} 弃 {count}");
     }
 
     /// <summary>随机弃若干张（用跑局自带的洗牌随机流 ⇒ 可复现、被回档快照覆盖）。</summary>

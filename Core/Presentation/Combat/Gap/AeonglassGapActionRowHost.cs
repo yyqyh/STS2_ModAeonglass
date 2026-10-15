@@ -15,7 +15,6 @@ using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Presentation.Character;
 using STS2_Aeonglass.Core.Systems.Bootstrap;
 
-
 namespace STS2_Aeonglass.Core.Presentation.Combat.Gap;
 /// <summary>把 时空裂隙 按键挂进战斗房间（<b>能量计数器正下方</b>）。</summary>
 /// <remarks>

@@ -29,12 +29,12 @@ internal static class SandSpend
 
         if (!CanAfford(player, amount))
         {
-            Const.Logger.Info($"[{Const.ModId}] 沙砾不足（需要 {amount}）⇒ 按基础效果结算");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Sand} 沙砾不足（需要 {amount}）⇒ 按基础效果结算");
             return false;
         }
 
         var paid = await SecondaryResourceCmd.Spend(player, SandResourceRegistry.SandId, amount);
-        Const.Logger.Info($"[{Const.ModId}] 消耗 {amount} 沙砾 ⇒ 强化本次效果（success={paid}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Sand} 消耗 {amount} 沙砾 ⇒ 强化本次效果（success={paid}）");
         return paid;
     }
 }

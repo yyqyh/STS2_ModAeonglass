@@ -11,7 +11,6 @@ using STS2RitsuLib;
 using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Content.Cards.Curse;
 
-
 namespace STS2_Aeonglass.Core.Systems.Riot;
 
 /// <summary>
@@ -81,7 +80,7 @@ internal static class RiotDrawWindow
         }
 
         pair.PendingSync = false;
-        Const.Logger.Info($"[{Const.ModId}] [乱流] 抽取结束 ⇒ 结算冻结期间的状态");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Riot} 抽取结束 ⇒ 结算冻结期间的状态");
         RiotSwap.SyncSwap(state, pair);
     }
 

@@ -26,7 +26,7 @@ internal sealed class DeferralRewindExtension : IRewindExtension
         var snapshot = DeferralLedger.Snapshot();
         draft.Put(DraftKey, snapshot);
         Const.Logger.Info(
-            $"[{Const.ModId}] 延宕：回溯 capture（欠账 / 窗口已入快照）"
+            $"[{Const.ModId}] {Const.Prefix.Deferral} 延宕：回溯 capture（欠账 / 窗口已入快照）"
             + $"｜{string.Join(" / ", Players().Select(DeferralLedger.Describe))}");
     }
 
@@ -39,13 +39,13 @@ internal sealed class DeferralRewindExtension : IRewindExtension
     {
         if (ctx.Parts.GetValueOrDefault(DraftKey) is not Dictionary<ulong, (List<(int DueTurn, decimal Amount, string Source)> Debts, List<(int ArmedTurn, int DueTurn, int Turns)> Arms)> snapshot)
         {
-            Const.Logger.Warn($"[{Const.ModId}] 延宕：回溯 afterRestore 拿不到片段 ⇒ 本次不回档（只记日志）");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Deferral} 延宕：回溯 afterRestore 拿不到片段 ⇒ 本次不回档（只记日志）");
             return;
         }
 
         DeferralLedger.Restore(snapshot);
         Const.Logger.Info(
-            $"[{Const.ModId}] 延宕：回溯 afterRestore（欠账 / 窗口已回退）"
+            $"[{Const.ModId}] {Const.Prefix.Deferral} 延宕：回溯 afterRestore（欠账 / 窗口已回退）"
             + $"｜{string.Join(" / ", Players().Select(DeferralLedger.Describe))}");
     }
 

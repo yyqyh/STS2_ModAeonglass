@@ -5,7 +5,7 @@
 | 目录 | 放什么 |
 |---|---|
 | `Support/` | 跨文件小工具：`NodeSearch`（找后代节点）/ `UiFactory`（Label·扁平按钮）/ `GodotWait`（等待）/ `NodeLifetime`（判活）/ `UiGeometry`（缩放换算） |
-| `Combat/` | 战斗内表现：领域层、意图卡带（`IntentBelt/`）、M2 按键与动画（`Gap/`）、能量计数器（`EnergyCounter/`）、刷新入口（`CombatUiRefresh` / `ExtraHandRefresh` / `DeckButtonIcons` / `AeonglassStasisPileFlash`） |
+| `Combat/` | 战斗内表现：领域层、意图卡带（`IntentBelt/`）、时空裂隙按键与动画（`Gap/`）、能量计数器（`EnergyCounter/`）、刷新入口（`CombatUiRefresh` / `ExtraHandRefresh` / `DeckButtonIcons` / `AeonglassStasisPileFlash`） |
 | `SecondaryResource/` | 沙砾计数器 / 5 层沙漏艺术 / 卡面沙砾费用 |
 | `ControlPanel/` | 战斗内调试面板（外壳 + `ControlPage` 基类 + 按机制分页） |
 | `Character/` | 角色外观：战斗 / 商店 / 火堆 / 选人背景 / 骨架特效驱动 |
@@ -35,7 +35,7 @@
 
 ## 待办（从代码注释里搬出来的 ⚠️ 条目，信息不丢）
 
-- **M2 坍缩 / 唤回按键**（用户 2026-10-13 记录）：① 补按钮**图标**；② 加**按下特效**；③ 加**"可用态"特效**
+- **坍缩 / 唤回按键（时空裂隙）**（用户 2026-10-13 记录）：① 补按钮**图标**；② 加**按下特效**；③ 加**"可用态"特效**
   （现在只有原版"禁用 / 可用"两档）。调参入口：`Combat/Gap/AeonglassGapActionTexts.cs`。
 - **领域层**：贴图现在是透明空槽（与第三章背景同画布），出图后同名覆盖。
 - **沙砾计数器 / 卡框 / 各场景空槽图**：一律"透明空槽 + 同名覆盖"，不需要改代码。

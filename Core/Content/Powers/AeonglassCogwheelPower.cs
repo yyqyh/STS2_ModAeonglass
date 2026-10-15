@@ -32,7 +32,7 @@ public sealed class AeonglassCogwheelPower : ModPowerTemplate
 
         _usedThisTurn = true;
         await PlayerCmd.GainEnergy(Amount, owner);
-        Const.Logger.Info($"[{Const.ModId}] 齿车：打出 0 费牌 {cardPlay.Card.Id.Entry} ⇒ +{Amount} 能量");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 齿车：打出 0 费牌 {cardPlay.Card.Id.Entry} ⇒ +{Amount} 能量");
     }
 
     public override Task AfterPlayerTurnStartEarly(PlayerChoiceContext choiceContext, MegaCrit.Sts2.Core.Entities.Players.Player player)

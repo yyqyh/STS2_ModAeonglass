@@ -4,7 +4,6 @@ using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.ValueProps;
 
-
 namespace STS2_Aeonglass.Core.Systems.Deferral;
 
 /// <summary>
@@ -47,7 +46,7 @@ internal static class DeferralSettlement
             debts.Remove(debt);
         }
 
-        Const.Logger.Info($"[{Const.ModId}] 延宕：到期结算 {total} 点（{sources}）⇒ 走普通伤害，可被格挡");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Deferral} 延宕：到期结算 {total} 点（{sources}）⇒ 走普通伤害，可被格挡");
 
         DeferralLedger.Settling = true;
         try
@@ -56,7 +55,7 @@ internal static class DeferralSettlement
         }
         catch (Exception ex)
         {
-            Const.Logger.Error($"[{Const.ModId}] 延宕：结算失败（{ex.GetType().Name}: {ex.Message}）");
+            Const.Logger.Error($"[{Const.ModId}] {Const.Prefix.Deferral} 延宕：结算失败（{ex.GetType().Name}: {ex.Message}）");
         }
         finally
         {

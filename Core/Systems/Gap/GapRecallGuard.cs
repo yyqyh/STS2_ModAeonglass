@@ -19,7 +19,7 @@ internal static class GapRecallGuard
     {
         var draw = Armed.TryGetValue(player, out var old) && ReferenceEquals(old.Combat, CurrentCombat) ? old.DrawOnReturn : 0;
         Armed[player] = (CurrentCombat, TurnOf(player), Math.Max(1, threshold), draw);
-        Const.Logger.Info($"[{Const.ModId}] 缓收：本回合回归时若间隙 ≥{threshold} 张则不丢手牌");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 缓收：本回合回归时若间隙 ≥{threshold} 张则不丢手牌");
     }
 
     /// <summary>附加项：回归成功后再抽几张（缓收的升级档用）。</summary>
@@ -31,7 +31,7 @@ internal static class GapRecallGuard
         }
 
         Armed[player] = (armed.Combat, armed.Turn, armed.Threshold, Math.Max(0, count));
-        Const.Logger.Info($"[{Const.ModId}] 缓收：回归后再抽 {count} 张");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 缓收：回归后再抽 {count} 张");
     }
 
     /// <summary>这一下回归要不要跳过"丢手牌"（以及回归后抽几张）。</summary>

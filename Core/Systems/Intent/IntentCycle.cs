@@ -3,7 +3,6 @@ using MegaCrit.Sts2.Core.MonsterMoves.MonsterMoveStateMachine;
 
 using STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
-
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>

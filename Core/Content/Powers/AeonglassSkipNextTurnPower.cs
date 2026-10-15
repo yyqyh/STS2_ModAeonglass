@@ -54,7 +54,7 @@ public sealed class AeonglassSkipNextTurnPower : ModPowerTemplate
             await PlayerCmd.LoseEnergy(energy, player);
         }
 
-        Const.Logger.Info($"[{Const.ModId}] 跳过回合：收干能量 {energy}，本回合不抽牌");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 跳过回合：收干能量 {energy}，本回合不抽牌");
     }
 
     /// <summary>③ 本回合直接走完 + 自毁。</summary>
@@ -68,7 +68,7 @@ public sealed class AeonglassSkipNextTurnPower : ModPowerTemplate
         var left = Amount;
         await PowerCmd.Apply<AeonglassSkipNextTurnPower>(choiceContext, Owner, -left, Owner, null);
 
-        Const.Logger.Info($"[{Const.ModId}] 跳过回合：本回合直接结束（-{left}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 跳过回合：本回合直接结束（-{left}）");
         _ = TaskHelper.RunSafely(EndTurnSoonAsync(player));
     }
 
@@ -81,7 +81,7 @@ public sealed class AeonglassSkipNextTurnPower : ModPowerTemplate
         }
         catch (Exception ex)
         {
-            Const.Logger.Warn($"[{Const.ModId}] 跳过回合：结束回合失败（{ex.GetType().Name}: {ex.Message}）");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Host} 跳过回合：结束回合失败（{ex.GetType().Name}: {ex.Message}）");
         }
     }
 }

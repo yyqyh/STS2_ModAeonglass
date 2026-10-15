@@ -37,6 +37,6 @@ public sealed class AeonglassHighObserve() : AeonglassPowerCardTemplate(2, CardR
             power.EnergyVariant = variantB;
         }
 
-        Const.Logger.Info($"[{Const.ModId}] 高维观测：挂上（{(variantB ? "消逝副 ⇒ 给能量" : "永时副 ⇒ 抽牌")}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 高维观测：挂上（{(variantB ? "消逝副 ⇒ 给能量" : "永时副 ⇒ 抽牌")}）");
     }
 }

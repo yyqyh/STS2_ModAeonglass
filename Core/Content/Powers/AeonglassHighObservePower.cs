@@ -44,11 +44,11 @@ public sealed class AeonglassHighObservePower : ModPowerTemplate
         if (EnergyVariant)
         {
             await PlayerCmd.GainEnergy(Amount, player);
-            Const.Logger.Info($"[{Const.ModId}] 高维观测（消逝副）：上回合操作过 {manipulated} 次意图 ⇒ +{Amount} 能量");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 高维观测（消逝副）：上回合操作过 {manipulated} 次意图 ⇒ +{Amount} 能量");
             return;
         }
 
         await CardPileCmd.Draw(choiceContext, (int)Amount, player);
-        Const.Logger.Info($"[{Const.ModId}] 高维观测（永恒副）：上回合操作过 {manipulated} 次意图 ⇒ 抽 {Amount}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 高维观测（永恒副）：上回合操作过 {manipulated} 次意图 ⇒ 抽 {Amount}");
     }
 }

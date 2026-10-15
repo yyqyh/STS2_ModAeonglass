@@ -50,7 +50,7 @@ public sealed class AeonglassStillFieldPower : ModPowerTemplate, IIntentHysteres
             return;
         }
 
-        Const.Logger.Info($"[{Const.ModId}] 静域：钉住 {spent} 张意图（额度 −{spent}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 静域：钉住 {spent} 张意图（额度 −{spent}）");
 
         // 标记发生在解析器里（同步流程）⇒ 扣额度只能"发了不管"，异常自己吞掉打日志。
         MegaCrit.Sts2.Core.Helpers.TaskHelper.RunSafely(ConsumeAsync(spent));
@@ -66,7 +66,7 @@ public sealed class AeonglassStillFieldPower : ModPowerTemplate, IIntentHysteres
         catch (Exception ex)
         {
             Const.Logger.Warn(
-                $"[{Const.ModId}] 静域：扣额度失败（{ex.GetType().Name}: {ex.Message}）");
+                $"[{Const.ModId}] {Const.Prefix.Intent} 静域：扣额度失败（{ex.GetType().Name}: {ex.Message}）");
         }
     }
 }

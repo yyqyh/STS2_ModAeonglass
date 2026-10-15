@@ -13,8 +13,6 @@ using STS2_Aeonglass.Core.Systems.AlphaBeta;
 using STS2_Aeonglass.Core.Systems.Sand;
 using STS2_Aeonglass.Core.Systems.Decks;
 
-
-
 namespace STS2_Aeonglass.Core.Systems.Gap;
 
 /// <summary>
@@ -86,21 +84,21 @@ internal static class GapCollapseActions
     {
         if (player.PlayerCombatState is not { } combatPiles || player.Creature.CombatState is not CombatState combat)
         {
-            Const.Logger.Info($"[{Const.ModId}] [间隙] 复制被拒：不在战斗中");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 复制被拒：不在战斗中");
             return GapResult.Fail("不在战斗中");
         }
 
         var gap = GapStore.Zone(player);
         if (gap is null)
         {
-            Const.Logger.Warn($"[{Const.ModId}] [间隙] 复制被拒：时空裂隙 未启用（间隙牌堆没注册）");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Gap} 复制被拒：时空裂隙 未启用（间隙牌堆没注册）");
             return GapResult.Fail("时空裂隙 未启用（间隙牌堆没注册）");
         }
 
         // 空手牌 ⇒ 整次不动（**必须在付代价之前**：否则会"扣了 2 沙砾却什么都没搬"）。
         if (combatPiles.Hand.Cards.Count == 0)
         {
-            Const.Logger.Info($"[{Const.ModId}] [间隙] 复制被拒：手牌为空（没有可复制的牌）");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 复制被拒：手牌为空（没有可复制的牌）");
             return GapResult.Fail("手牌为空，没有可复制的牌");
         }
 
@@ -130,7 +128,7 @@ internal static class GapCollapseActions
         var cleared = GapStore.ClearStore(gap);
         if (cleared > 0)
         {
-            Const.Logger.Info($"[{Const.ModId}] [间隙] 坍缩：先清空间隙（原有 {cleared} 张）");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 坍缩：先清空间隙（原有 {cleared} 张）");
         }
 
         var room = GapStore.Capacity;
@@ -193,7 +191,7 @@ internal static class GapCollapseActions
                    + (AeonglassSettingStore.Current.GapRefillDraw ? $" → 补抽 {drawn}/{drawCount}" : " → 不补抽");
         var fromB = planSides.Count(side => side == DeckSide.B);
         text += $"｜来源副：A {copied - fromB} / B {fromB}";
-        Const.Logger.Info($"[{Const.ModId}] [间隙] {text}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} {text}");
         return GapResult.Success(text);
     }
 

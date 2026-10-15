@@ -8,7 +8,6 @@ using STS2_Aeonglass.Core.Systems.Rewind.Graph;
 using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 using STS2_Aeonglass.Core.Systems.Rewind.Policy;
 
-
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>

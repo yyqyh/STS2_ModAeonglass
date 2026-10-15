@@ -10,7 +10,6 @@ using MegaCrit.Sts2.Core.Nodes.Combat;
 using STS2_Aeonglass.Core.Content.Cards.Token;
 using STS2_Aeonglass.Core.Systems.Intent;
 
-
 namespace STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
 /// <summary>意图卡的高光档位。</summary>
 /// <remarks>

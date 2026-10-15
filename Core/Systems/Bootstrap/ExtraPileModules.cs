@@ -111,9 +111,9 @@ internal static class ExtraPileModules
                     DisabledTransitionDuration = 0.2,
                     // 卡面挂载后 / 入场动画到位后：先只记账（下一步的传送门与飞行特效把动画挂在这两个点上）。
                     OnCardVisualCreated = ctx => Const.Logger.Info(
-                        $"[{Const.ModId}] [间隙] 额外手牌：卡面已挂载 {ctx.Card?.Id.Entry ?? "-"}"),
+                        $"[{Const.ModId}] {Const.Prefix.Gap} 额外手牌：卡面已挂载 {ctx.Card?.Id.Entry ?? "-"}"),
                     OnCardArrived = ctx => Const.Logger.Info(
-                        $"[{Const.ModId}] [间隙] 额外手牌：入场到位 {ctx.Card?.Id.Entry ?? "-"}"),
+                        $"[{Const.ModId}] {Const.Prefix.Gap} 额外手牌：入场到位 {ctx.Card?.Id.Entry ?? "-"}"),
                 },
                 IconPath = Const.Paths.Ui.PileIcon(Const.Paths.CardPiles.TimeGapStem),
                 VisibleWhen = ctx => ctx.Player != null && Systems.Bootstrap.CharacterGate.IsActive,
@@ -123,7 +123,7 @@ internal static class ExtraPileModules
         GapStore.Configure(gap);
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [间隙] 间隙牌堆已注册：存储 {gap.Id}（Headless+RunPersistent）"
+            $"[{Const.ModId}] {Const.Prefix.Gap} 间隙牌堆已注册：存储 {gap.Id}（Headless+RunPersistent）"
             + $" → 显示 {view.Id}（ExtraHand@手牌下方+CombatOnly，可见卡面=是，可打出=否）");
 
         // ③ 每场战斗开始时把显示重建一次（CombatOnly 牌堆每场都是空的）。
@@ -140,7 +140,7 @@ internal static class ExtraPileModules
             }
             catch (Exception ex)
             {
-                Const.Logger.Warn($"[{Const.ModId}] [间隙] 战斗开始同步镜像失败（已忽略）：{ex.GetType().Name}");
+                Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Gap} 战斗开始同步镜像失败（已忽略）：{ex.GetType().Name}");
             }
         });
     }

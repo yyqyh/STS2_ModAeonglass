@@ -45,7 +45,7 @@ public sealed class AeonglassSand() : ModCardTemplate(1, CardType.Skill, CardRar
         }
 
         Const.Logger.Info(
-            $"[{Const.ModId}] 沙：沙砾 +{take}（从空隙划；现有 沙砾 "
+            $"[{Const.ModId}] {Const.Prefix.Sand} 沙：沙砾 +{take}（从空隙划；现有 沙砾 "
             + $"{SecondaryResourceCmd.Get(Owner, SandResourceRegistry.SandId)}"
             + $" / 空隙 {SecondaryResourceCmd.Get(Owner, SandResourceRegistry.VoidId)}）");
 

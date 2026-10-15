@@ -40,7 +40,7 @@ public sealed class AeonglassCausality() : ModCardTemplate(1, CardType.Attack, C
         var bonus = rewinds * DynamicVars["PerRewind"].BaseValue;
         var damage = DynamicVars.Damage.BaseValue + bonus;
 
-        Const.Logger.Info($"[{Const.ModId}] 因果：本局回溯 {rewinds} 次 ⇒ +{bonus}（合计 {damage}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Rewind} 因果：本局回溯 {rewinds} 次 ⇒ +{bonus}（合计 {damage}）");
 
         await DamageCmd.Attack(damage)
             .FromCard(this, cardPlay)

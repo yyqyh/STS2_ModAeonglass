@@ -46,7 +46,7 @@ internal static class RewindCombatLimit
         }
 
         ExtraIn[player] = (state, Extra(player) + count);
-        Const.Logger.Info($"[{Const.ModId}] [回溯] 本场额外回溯额度 +{count}（现共 {Extra(player)} 次）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Rewind} 本场额外回溯额度 +{count}（现共 {Extra(player)} 次）");
     }
 
     /// <summary>占掉本场的那一次（先占位，避免连点重复触发）。</summary>

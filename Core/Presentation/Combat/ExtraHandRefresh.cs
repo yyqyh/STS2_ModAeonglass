@@ -125,7 +125,7 @@ internal static class ExtraHandRefresh
         {
             if (NCombatRoom.Instance?.Ui is not { } combatUi)
             {
-                Const.Logger.Info($"[{Const.ModId}] [间隙] 额外手牌刷新：拿不到战斗 UI（跳过）");
+                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 额外手牌刷新：拿不到战斗 UI（跳过）");
                 return;
             }
 
@@ -146,18 +146,18 @@ internal static class ExtraHandRefresh
 
                 hand.Initialize(player);
                 Const.Logger.Info(
-                    $"[{Const.ModId}] [间隙] 额外手牌刷新：已找到容器并重新同步（id={target}，z={hand.ZIndex}）");
+                    $"[{Const.ModId}] {Const.Prefix.Gap} 额外手牌刷新：已找到容器并重新同步（id={target}，z={hand.ZIndex}）");
                 return;
             }
 
             // 找不到也要留痕：否则"没刷新"和"没执行"从日志上无法区分（实测踩过）。
             Const.Logger.Info(
-                $"[{Const.ModId}] [间隙] 额外手牌刷新：**没找到容器**（扫了 {scanned} 个节点，目标 id={target}）");
+                $"[{Const.ModId}] {Const.Prefix.Gap} 额外手牌刷新：**没找到容器**（扫了 {scanned} 个节点，目标 id={target}）");
         }
         catch (Exception ex)
         {
             Const.Logger.Warn(
-                $"[{Const.ModId}] [间隙] 额外手牌主动刷新失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
+                $"[{Const.ModId}] {Const.Prefix.Gap} 额外手牌主动刷新失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
         }
     }
 

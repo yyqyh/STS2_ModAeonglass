@@ -104,7 +104,7 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
         if (stuck.Count == cards.Count)
         {
             Const.Logger.Warn(
-                $"[{Const.ModId}] 迟滞：本次要洗的 {stuck.Count} 张全是迟滞牌 ⇒ 忽略迟滞以避免死锁");
+                $"[{Const.ModId}] {Const.Prefix.Host} 迟滞：本次要洗的 {stuck.Count} 张全是迟滞牌 ⇒ 忽略迟滞以避免死锁");
             return;
         }
 
@@ -114,7 +114,7 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
         }
 
         Const.Logger.Info(
-            $"[{Const.ModId}] 迟滞：{stuck.Count} 张不参与本次洗牌（留在弃牌堆）："
+            $"[{Const.ModId}] {Const.Prefix.Host} 迟滞：{stuck.Count} 张不参与本次洗牌（留在弃牌堆）："
             + string.Join(", ", stuck.Select(card => card.Id.Entry)));
     }
 

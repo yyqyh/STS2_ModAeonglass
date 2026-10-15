@@ -34,7 +34,7 @@ public partial class AeonglassCreatureVisuals : NCreatureVisuals
         catch (Exception ex)
         {
             // 播不出来只打一条警告：绝不能因为表现层问题把战斗搞崩。
-            Const.Logger.Warn($"[{Const.ModId}] 轨道 1 环旋转启动失败：{ex.Message}");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Host} 轨道 1 环旋转启动失败：{ex.Message}");
         }
     }
 
@@ -55,7 +55,7 @@ public partial class AeonglassCreatureVisuals : NCreatureVisuals
         if (!spine.HasAnimation(AeonglassAnimNames.RingsNormal))
         {
             Const.Logger.Warn(
-                $"[{Const.ModId}] 骨架里找不到 '{AeonglassAnimNames.RingsNormal}' —— 外环不会转。");
+                $"[{Const.ModId}] {Const.Prefix.Host} 骨架里找不到 '{AeonglassAnimNames.RingsNormal}' —— 外环不会转。");
             return;
         }
 

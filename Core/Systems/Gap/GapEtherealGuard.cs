@@ -17,7 +17,7 @@ internal static class GapEtherealGuard
     public static void Arm(Player player)
     {
         Armed[player] = (CurrentCombat, TurnOf(player));
-        Const.Logger.Info($"[{Const.ModId}] 存真：本回合回归的副本不带虚无");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 存真：本回合回归的副本不带虚无");
     }
 
     /// <summary>现在这一下回归要不要跳过"给副本挂虚无"？</summary>

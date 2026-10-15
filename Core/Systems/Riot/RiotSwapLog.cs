@@ -11,7 +11,6 @@ using STS2RitsuLib;
 using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Content.Cards.Curse;
 
-
 namespace STS2_Aeonglass.Core.Systems.Riot;
 
 /// <summary>
@@ -36,7 +35,7 @@ internal static class RiotSwapLog
         {
             RiotSwap.LastRedirectLogMs = now;
             Const.Logger.Info(
-                $"[{Const.ModId}] [乱流] getter 替换生效：{original.Type} → {redirected.Type}（累计 {RiotSwap.RedirectHits} 次）");
+                $"[{Const.ModId}] {Const.Prefix.Riot} getter 替换生效：{original.Type} → {redirected.Type}（累计 {RiotSwap.RedirectHits} 次）");
         }
 
         return redirected;
@@ -61,7 +60,7 @@ internal static class RiotSwapLog
 
         Const.Logger.Info(
             active
-                ? $"[{Const.ModId}] [乱流] 生效（乱流在弃牌堆里）：抽/弃/洗牌等全部对调"
-                : $"[{Const.ModId}] [乱流] 失效（乱流不在弃牌堆里）：恢复原版");
+                ? $"[{Const.ModId}] {Const.Prefix.Riot} 生效（乱流在弃牌堆里）：抽/弃/洗牌等全部对调"
+                : $"[{Const.ModId}] {Const.Prefix.Riot} 失效（乱流不在弃牌堆里）：恢复原版");
     }
 }

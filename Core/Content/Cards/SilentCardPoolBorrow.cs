@@ -72,7 +72,7 @@ internal static class SilentCardPoolBorrow
         Merged.Add(pool, merged);
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [调试] 卡池借用：{pool.Title} 原 {own} 张 + 静默猎手 {borrowed} 张 = {merged.Count} 张"
+            $"[{Const.ModId}] {Const.Prefix.Host} [调试] 卡池借用：{pool.Title} 原 {own} 张 + 静默猎手 {borrowed} 张 = {merged.Count} 张"
             + "（关掉设置页的「借用静默猎手卡池」并重启游戏即可断开）");
 
         return merged;

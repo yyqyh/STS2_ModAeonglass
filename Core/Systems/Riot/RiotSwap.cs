@@ -137,9 +137,6 @@ internal static partial class RiotSwap
         };
     }
 
-
-
-
     // ============================ 接线 ============================
 
     // ============================ 内部 ============================
@@ -158,6 +155,5 @@ internal static partial class RiotSwap
 
         return pair.Discard.Cards.Any(card => card is AeonglassRiot);
     }
-
 
 }

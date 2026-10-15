@@ -90,7 +90,7 @@ public partial class AeonglassVfx : Node
         if (missing.Count > 0)
         {
             Const.Logger.Warn(
-                $"[{Const.ModId}] 特效节点缺失（其余特效照常）：{string.Join(" / ", missing)}");
+                $"[{Const.ModId}] {Const.Prefix.Host} 特效节点缺失（其余特效照常）：{string.Join(" / ", missing)}");
         }
 
         ResetVfx();

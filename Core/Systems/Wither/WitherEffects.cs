@@ -39,7 +39,7 @@ internal static class WitherEffects
         if (passiveOwner is not null && AlphaBetaPassive.WitherBonus(passiveOwner))
         {
             count += 1;
-            Const.Logger.Info($"[{Const.ModId}] α or β（永时副）：给予凋萎额外 +1 张");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.AlphaBeta} α or β（永时副）：给予凋萎额外 +1 张");
         }
 
         // 凋萎要做成**真卡实例**（用户 2026-10-12）：拿不到玩家（不在战斗里）就退回纯元数据，

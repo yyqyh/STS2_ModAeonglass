@@ -9,8 +9,8 @@
 | `Bootstrap/` | 总线与横切件：`MechanismBootstrap`（逐条注册机制）、`CharacterGate`（角色门）、`OperationBarrier`（演出期间挡操作）、`EndOfCombatSequencer`（战斗结束顺序链）、`ExtraPileModules`（额外牌堆注册） |
 | `Sand/` | 时之沙：`SandResourceRegistry`（次级资源 + UI 注册）、`SandGapInvariant`（花沙砾必生空隙）、`SandInvertCmd`（倒置）、`SandPhase(s)`、`SandSpend`、`SandTurnCounters` |
 | `Gap/` | 时空裂隙：`GapStore`（存储/容量/读数）、`GapCollapseActions`/`GapRecallActions`（坍缩 / 回归动作）、`GapViewPile`（显示镜像）、`GapAlternation`（必须交替的闸）、`GapRecallGuard`/`GapEtherealGuard`/`GapCopyRestore` |
-| `Stasis/` | 搁浅：`StasisStore`（存储）、`StasisReturn`（滞留 / 归队）、`StasisRunHook`、`StasisRewindHooks`、`IStasisCard`、`IStasisReturnListener` |
-| `Intent/` | 操作时间（意图）：`IntentDeck`（工厂 / 状态查找）、`EnemyIntentState`（三堆状态）、`IntentCycle`/`IntentHandCycle`（洗牌建堆 / 手牌循环）、`IntentTurnFlow`/`IntentDecision`/`IntentMoves`（回合流程 / 判定 / 动作）、`IntentOps`（状态机唯一写入口）、`IntentCard(Binder)`、`IntentTargeting`/`IntentTargetRegistry`、`IntentBeltBridge`（→表现层接缝）、`IntentSelector`、`MonsterAccess`、`IntentModule` |
+| `Stasis/` | 搁浅：`StasisStore`（存储）、`StasisReturn`（滞留 / 归队）、`StasisRunHook`、`IStasisCard`、`IStasisReturnListener`（回溯接缝在 `Rewind/Bridges/StasisRewindExtension.cs`） |
+| `Intent/` | 操作时间（意图）：`IntentDeck`（工厂 / 状态查找）、`EnemyIntentState`（三堆状态）、`IntentCycle`/`IntentHandCycle`（洗牌建堆 / 手牌循环）、`IntentTurnFlow`/`IntentDecision`/`IntentMoves`（回合流程 / 判定 / 动作）、`IntentOps`（状态机唯一写入口）、`IntentCard(Binder)`、`IntentTargeting`/`IntentTargetRegistry`、`IntentBeltBridge`（→表现层接缝）、`MonsterAccess`、`IntentModule` |
 | `Wither/` | 凋萎：`WitherPool`（注入 / 计数 / 清除） |
 | `Rewind/` | 回溯引擎：`Kernel/`（事务与快照环）、`StateCapture/`（模型/牌堆/RNG/UI 的抓取与恢复，含 `Guards/` 八个前置闸）、`Graph/`（字段图策略）、`Policy/`（扩展点）、`Bridges/`（搁浅/间隙/延宕/α or β 接缝）、`Host/`（门面与补丁） |
 | `Decks/` | 双卡组：`DeckModule`、`DeckState`、`DeckPiles`（堆访问）+ `DeckSwitchService`（切换）、`DeckTwins`、`DeckBSeed`、`DeckVariant(s)`、`DeckSwitchLimit`/`DeckSwitchCost`、`DeckAddHooks`/`DeckRunHooks` |

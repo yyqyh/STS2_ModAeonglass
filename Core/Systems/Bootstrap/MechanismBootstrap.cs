@@ -15,7 +15,7 @@ internal static class MechanismBootstrap
     /// <summary>在 <c>Main.Initialize()</c> 里调用一次。</summary>
     public static void RegisterAll()
     {
-        // 顺序 = 依赖顺序。后续：Zones（搁浅/时空裂隙）→ Rewind（回溯）→ EnemyTime（意图/凋萎）。
+        // 顺序 = 依赖顺序：Sand（时之沙）→ Stasis / Gap（搁浅 / 时空裂隙）→ Rewind（回溯）→ Intent / Wither（操作时间 / 凋萎）。
         Register(
             Systems.Sand.SandResourceModule.DisplayName,
             Systems.Sand.SandResourceModule.Enabled,
@@ -48,7 +48,7 @@ internal static class MechanismBootstrap
     {
         if (!enabled)
         {
-            Const.Logger.Info($"[{Const.ModId}] 机制「{name}」已关闭（设置页里可开）→ 跳过注册。");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 机制「{name}」已关闭（设置页里可开）→ 跳过注册。");
             return;
         }
 
@@ -58,7 +58,7 @@ internal static class MechanismBootstrap
         }
         catch (Exception ex)
         {
-            Const.Logger.Error($"[{Const.ModId}] 机制「{name}」注册失败：{ex.GetType().Name}: {ex.Message}");
+            Const.Logger.Error($"[{Const.ModId}] {Const.Prefix.Host} 机制「{name}」注册失败：{ex.GetType().Name}: {ex.Message}");
         }
     }
 }

@@ -192,9 +192,6 @@ internal static class RngOps
         return $"run[{RngCounter(run)}] {string.Join(" ", monsters)} {string.Join(" ", mod)}";
     }
 
-
-
-
     private static int RngCounter(SerializableRunRngSet set) =>
         set.Rngs.TryGetValue(RunRngType.CombatTargets, out var rng)
             ? rng.counter

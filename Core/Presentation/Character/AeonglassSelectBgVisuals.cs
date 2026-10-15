@@ -50,14 +50,14 @@ public partial class AeonglassSelectBgVisuals : Control
 
                 // 自证日志：编辑器预览看不到轨道 1，实机里看这一行就能确认两条轨道真的落地了。
                 Const.Logger.Info(
-                    $"[{Const.ModId}] 选人人物动画已下发：轨道0='{state.GetCurrentAnimationName(0) ?? "(无)"}'，"
+                    $"[{Const.ModId}] {Const.Prefix.Host} 选人人物动画已下发：轨道0='{state.GetCurrentAnimationName(0) ?? "(无)"}'，"
                     + $"轨道1='{state.GetCurrentAnimationName(1) ?? "(无)"}'");
             });
         }
 
         if (found == 0)
         {
-            Const.Logger.Warn($"[{Const.ModId}] 选人场景里没有 SpineSprite，人物不会动。");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Host} 选人场景里没有 SpineSprite，人物不会动。");
         }
     }
 
@@ -75,7 +75,7 @@ public partial class AeonglassSelectBgVisuals : Control
             return;
         }
 
-        Const.Logger.Warn($"[{Const.ModId}] 骨架里没有动画 '{animation}'（轨道 {trackId}）。");
+        Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Host} 骨架里没有动画 '{animation}'（轨道 {trackId}）。");
 
         if (fallback is not null && sprite.HasAnimation(fallback))
         {

@@ -15,7 +15,6 @@ using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Presentation.Character;
 using STS2_Aeonglass.Core.Systems.Bootstrap;
 
-
 using STS2_Aeonglass.Core.Systems.Gap;
 namespace STS2_Aeonglass.Core.Presentation.Combat.Gap;
 /// <summary>间隙的<b>一个</b>按键行：按"当前合法动作"切换文案与悬停说明。</summary>

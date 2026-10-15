@@ -135,7 +135,7 @@ internal static partial class AeonglassGapSequence
             return await GapCollapseActions.Activate(player);
         }
 
-        using var barrier = OperationBarrier.Enter("M2坍缩");
+        using var barrier = OperationBarrier.Enter("间隙坍缩");
         try
         {
             // ⓪ 用户口径：坍缩**先清间隙** —— 先把旧的间隙卡面淡出（存储层由机制端清），
@@ -159,7 +159,7 @@ internal static partial class AeonglassGapSequence
             }
 
             // ④ 演出（登记进 VFX 屏障：动画期间 回溯会等它 —— 否则会和正在飞的卡节点抢）
-            await VfxBarrier.Track("m2Collapse", PlayAnimAsync(player, portals, staged, portalCenter));
+            await VfxBarrier.Track("gapCollapse", PlayAnimAsync(player, portals, staged, portalCenter));
             return result;
         }
         catch (Exception ex)

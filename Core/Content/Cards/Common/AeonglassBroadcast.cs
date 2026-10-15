@@ -34,12 +34,12 @@ public sealed class AeonglassBroadcast() : ModCardTemplate(0, CardType.Skill, Ca
     {
         if (cardPlay.Target is not { } target)
         {
-            Const.Logger.Info($"[{Const.ModId}] 撒播：没有目标怪");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 撒播：没有目标怪");
             return Task.CompletedTask;
         }
 
         var count = (int)DynamicVars["Wither"].BaseValue;
-        Const.Logger.Info($"[{Const.ModId}] 撒播：{WitherEffects.Inject(target, count)}");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 撒播：{WitherEffects.Inject(target, count)}");
         return Task.CompletedTask;
     }
 

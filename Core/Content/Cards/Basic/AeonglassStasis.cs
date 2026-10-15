@@ -80,7 +80,7 @@ public sealed class AeonglassStasis : ModCardTemplate, IStasisCard
 
         if (DeckVersion is null)
         {
-            Const.Logger.Warn($"[{Const.ModId}] [搁浅] {Id.Entry} 没有 DeckVersion，无法从牌组移除。");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Stasis} {Id.Entry} 没有 DeckVersion，无法从牌组移除。");
             return;
         }
 

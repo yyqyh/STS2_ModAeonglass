@@ -36,7 +36,7 @@ public sealed class AeonglassHourglassPour() : ModCardTemplate(1, CardType.Skill
         var discard = PileType.Discard.GetPile(Owner);
         if (discard.Cards.Count == 0)
         {
-            Const.Logger.Info($"[{Const.ModId}] 沙漏倾倒：弃牌堆是空的");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Riot} 沙漏倾倒：弃牌堆是空的");
             return;
         }
 
@@ -49,13 +49,13 @@ public sealed class AeonglassHourglassPour() : ModCardTemplate(1, CardType.Skill
 
         if (picked.Count == 0)
         {
-            Const.Logger.Info($"[{Const.ModId}] 沙漏倾倒：没有选牌");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Riot} 沙漏倾倒：没有选牌");
             return;
         }
 
         await CardPileCmd.Add(picked, PileType.Draw, CardPilePosition.Top);
         Const.Logger.Info(
-            $"[{Const.ModId}] 沙漏倾倒：{picked.Count} 张 → 抽牌堆顶"
+            $"[{Const.ModId}] {Const.Prefix.Riot} 沙漏倾倒：{picked.Count} 张 → 抽牌堆顶"
             + $"（{string.Join(",", picked.Select(card => card.Id.Entry))}）");
     }
 

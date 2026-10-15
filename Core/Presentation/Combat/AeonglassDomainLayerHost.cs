@@ -3,7 +3,6 @@ using Godot;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Nodes.Rooms;
 
-
 namespace STS2_Aeonglass.Core.Presentation.Combat;
 /// <summary>把「领域」层插进战斗房间（<c>CombatSceneContainer</c> 的第 1 位）。</summary>
 /// <remarks>
@@ -22,7 +21,7 @@ internal static class AeonglassDomainLayerHost
     {
         if (room.GetNodeOrNull<Control>("CombatSceneContainer") is not { } sceneContainer)
         {
-            Const.Logger.Warn($"[{Const.ModId}] 找不到 CombatSceneContainer ⇒「领域」层没挂上。");
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Host} 找不到 CombatSceneContainer ⇒「领域」层没挂上。");
             return;
         }
 
@@ -44,7 +43,7 @@ internal static class AeonglassDomainLayerHost
         layer.PlayWipe();
 
         Const.Logger.Info(
-            $"[{Const.ModId}] [领域] 特效层已挂入 CombatSceneContainer 第 {InsertIndex} 位"
+            $"[{Const.ModId}] {Const.Prefix.Host} [领域] 特效层已挂入 CombatSceneContainer 第 {InsertIndex} 位"
             + "（BgContainer 之后、BackCombatVfxContainer / 人物之前）；已自动播 wipe → breathe 循环");
     }
 }

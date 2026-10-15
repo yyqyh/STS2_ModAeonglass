@@ -51,7 +51,7 @@ public sealed class AeonglassLoanTimePower : ModPowerTemplate
             var owed = _pendingDebt;
             _pendingDebt = 0;
             await PlayerCmd.LoseEnergy(owed, player);
-            Const.Logger.Info($"[{Const.ModId}] 贷时：还上一回合的 {owed} 点能量");
+            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 贷时：还上一回合的 {owed} 点能量");
         }
 
         // 借 = 你这个回合的能量上限（"不限点数上限" ⇒ 不是固定 1 点，而是把下个回合的整份提前用）。
@@ -63,6 +63,6 @@ public sealed class AeonglassLoanTimePower : ModPowerTemplate
 
         await PlayerCmd.GainEnergy(amount, player);
         _pendingDebt = amount;
-        Const.Logger.Info($"[{Const.ModId}] 贷时：把下回合的 {amount} 点能量提前到本回合（下回合 −{amount}）");
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Host} 贷时：把下回合的 {amount} 点能量提前到本回合（下回合 −{amount}）");
     }
 }

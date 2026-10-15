@@ -11,7 +11,6 @@ using STS2RitsuLib;
 using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Content.Cards.Curse;
 
-
 namespace STS2_Aeonglass.Core.Systems.Riot;
 
 /// <summary>
@@ -56,7 +55,7 @@ internal static partial class RiotSwap
                 pair.DeferredLogged = true;
                 DeferLogCount++;
                 Const.Logger.Info(
-                    $"[{Const.ModId}] [乱流] 抽取中 ⇒ 冻结状态（本次抽牌期间不切换，抽完再判定）");
+                    $"[{Const.ModId}] {Const.Prefix.Riot} 抽取中 ⇒ 冻结状态（本次抽牌期间不切换，抽完再判定）");
             }
 
             return;
@@ -78,7 +77,7 @@ internal static partial class RiotSwap
                 {
                     SwapModeLogged = true;
                     Const.Logger.Info(
-                        $"[{Const.ModId}] [乱流] 收口方式：属性字段对调（{DrawField.Name} ⇄ {DiscardField.Name}，内联调用点也生效）");
+                        $"[{Const.ModId}] {Const.Prefix.Riot} 收口方式：属性字段对调（{DrawField.Name} ⇄ {DiscardField.Name}，内联调用点也生效）");
                 }
             }
             catch (Exception ex)
@@ -88,7 +87,7 @@ internal static partial class RiotSwap
                 pair.Swapped = false;
                 RestoreFields(state, pair);
                 Const.Logger.Warn(
-                    $"[{Const.ModId}] [乱流] 属性字段写不进去，改用 getter 替换兜底：{ex.GetType().Name}: {ex.Message}");
+                    $"[{Const.ModId}] {Const.Prefix.Riot} 属性字段写不进去，改用 getter 替换兜底：{ex.GetType().Name}: {ex.Message}");
             }
         }
 

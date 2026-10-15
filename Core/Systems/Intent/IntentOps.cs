@@ -16,6 +16,21 @@ namespace STS2_Aeonglass.Core.Systems.Intent;
 internal static class IntentOps
 {
     /// <summary>
+    /// 告诉状态"它变过了"（表现层靠 <see cref="EnemyIntentState.Revision" /> 决定要不要重画）。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 粗粒度口径：**一个 public 写方法末尾调一次**，不是逐行改。它只自增一个整数，
+    /// 不碰守恒 / 判定 / 随机任何口径；多调一次只是让版本多走一格，无副作用。
+    /// </para>
+    /// <para>
+    /// 注意本类自己的几个方法改的是<b>本体的招式状态机</b>（<c>SetMoveImmediate</c>），不直接动
+    /// <see cref="EnemyIntentState" /> —— 那种情况由调用方（<c>IntentDecision.Apply</c>）负责 Touch。
+    /// </para>
+    /// </remarks>
+    public static void Touch(EnemyIntentState? state) => state?.BumpRevision();
+
+    /// <summary>
     /// 改写当前意图（C1/C2 的核心）。
     /// </summary>
     /// <remarks>

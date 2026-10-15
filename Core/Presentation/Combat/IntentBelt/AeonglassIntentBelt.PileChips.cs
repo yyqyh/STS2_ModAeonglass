@@ -7,6 +7,7 @@ using MegaCrit.Sts2.Core.Nodes.Combat;
 
 using STS2_Aeonglass.Core.Presentation.Support;
 using STS2_Aeonglass.Core.Systems.Intent;
+using STS2_Aeonglass.Core.Config;
 
 namespace STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
 /// <summary>卡带下方的「抽 / 弃牌堆」小卡与悬停 popup（<c>AeonglassIntentBelt</c> 的 partial 部分）。</summary>
@@ -315,91 +316,95 @@ public partial class AeonglassIntentBelt : Control
         return label;
     }
 
-    private static string PileSignature(string tag, IReadOnlyList<IntentCard> pile) =>
-        tag + ":" + string.Join(",", pile.Select(c => c.MoveId));
-
-    private void ApplySignature(string signature, EnemyIntentState? state = null)
+    /// <summary>
+    /// 增量更新整条卡带（2026-10-15 改造）：**按 identity 复用真卡视图**，节点只在"从无到有"时创建。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 旧版是"整条 QueueFree + 逐张 Create"（每次状态变化都付一遍 NCard 绑定 + 隐藏 chrome + 字号换算的成本）；
+    /// 现在：同一张意图 ⇒ 只刷卡面数字；换了牌 ⇒ 借一个空槽视图 <c>Rebind</c>（重设模型）；只有槽位不够时才新建。
+    /// 手牌只是**换顺序**时，连 Rebind 都不需要，只把槽位节点的兄弟序排一遍。
+    /// </para>
+    /// <para>
+    /// 调用前已经由 <c>FingerprintChanged</c> 判定过"确实需要刷"，所以这里不做二次判定。
+    /// </para>
+    /// </remarks>
+    private void UpdateRow(EnemyIntentState? state)
     {
-        if (signature == _signature)
-        {
-            return;
-        }
-
-        _signature = signature;
-
-        // ⚠️ 关键：把旧卡**还给对象池之前**先收掉高光/灰化/放大 —— 否则池里那张卡带着
-        // `CardHighlight` 亮着就被下一格复用，表现就是"青色高光赖着不消"（用户 2026-10-12 报的）。
-        foreach (var view in _views)
-        {
-            view.SetHighlight(IntentHighlight.None);
-            view.SetDim(false);
-        }
-
-        _views.Clear();
-        IntentTargetRegistry.Clear();
-
-        foreach (var child in _row.GetChildren())
-        {
-            child.QueueFree();
-        }
-
-        foreach (var child in _pileRow.GetChildren())
-        {
-            child.QueueFree();
-        }
-
         if (state is null)
         {
+            foreach (var view in _views)
+            {
+                view.SetBaseHighlight(IntentHighlight.None);
+                view.Park();
+            }
+
+            _views.Clear();
+            IntentTargetRegistry.Clear();
+            ClearPileRow();
             Visible = false;
+            _rowWidthDirty = true;
             return;
         }
 
         Visible = true;
+        IntentTargetRegistry.Clear();
+        var openKind = _popupIsDrawPile;
+        ClearPileRow();
 
-        var targets = MonsterAccess.Combat?.PlayerCreatures ?? [];
-        var shown = 0;
-
-        // 牌堆行（第一张卡正下方）：抽 / 弃 两格，用**玩家牌堆那种**样式。
-        // 诊断（用户 2026-10-12：「改变意图没有『显示』将要打出的那张牌」）：
-        // 把这一轮重建时认定的 pending、手牌顺序、判定原文一起打出来，跟卡面高光一对就能定位。
-        Const.Logger.Info(
-            $"[{Const.ModId}] {Const.Prefix.Intent} 卡带重建：手牌 {state.Hand.Count} 张 "
-            + $"[{string.Join(",", state.Hand.Select(c => c.MoveId))}]｜"
-            + $"pending={(state.Pending?.MoveId ?? "-")}｜判定={state.Decision}");
-
-        AddPileIndicator(isDraw: true, "抽", state.Deck);
-        AddPileIndicator(isDraw: false, "弃", state.Discard);
-
-        // 预览面板如果开着 ⇒ 用**当前**内容重建一次。
-        // 这既修"自动修改后没刷新"，也修"关掉再点还是旧内容"（每次重建时面板都跟着重算）。
-        if (_popupIsDrawPile is { } openKind)
+        if (AeonglassSettingStore.Current.DebugIntentBeltLog)
         {
-            ShowPilePopup(openKind ? "抽" : "弃", openKind ? state.Deck : state.Discard, _pileRow);
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 卡带更新：手牌 {state.Hand.Count} 张 "
+                + $"[{string.Join(",", state.Hand.Select(c => c.MoveId))}]｜"
+                + $"pending={(state.Pending?.MoveId ?? "-")}｜判定={state.Decision}");
         }
 
-        foreach (var card in state.Hand)
+        var player = PlayerOf();
+        var limit = Math.Min(state.Hand.Count, MaxSlots);
+        var slots = new List<AeonglassIntentCardView>(limit);
+        var spare = new List<AeonglassIntentCardView>(_views);
+
+        for (var i = 0; i < limit; i++)
         {
-            if (shown >= MaxSlots)
-            {
-                break;
-            }
-
-            // 真卡外壳（用户 2026-10-12 口径：卡图用意图的、文字只有动态伤害数字）。
-            // 模型驱动：卡图由"这张意图对应的真卡实例"给出（计划 1/2 口）。
-            var view = AeonglassIntentCardView.Create(
-                _row, new Vector2(SlotWidth, SlotHeight),
-                PlayerOf() is { } player ? IntentCardBinder.InstanceFor(player, _creature!, card) : null);
-            if (view is null)
-            {
-                // 自绘 UI 已按用户要求删除 ⇒ 拿不到真卡就跳过这一格（日志会从 AeonglassIntentCardView 里报原因）。
-                continue;
-            }
-
+            var card = state.Hand[i];
             // 凋萎那一项：没有对应的 MoveState（拿不到意图图/数字）⇒ 直接把"凋萎 X"写在卡面数字位上。
-            view.Bind(card, _creature!, card.IsVoid ? $"凋萎 {card.HitPointsOf()}" : null);
+            var numberOverride = card.IsVoid ? $"凋萎 {card.HitPointsOf()}" : null;
+
+            // ① 同一张意图的视图：直接复用（只刷卡面）。
+            var view = spare.FirstOrDefault(v => !slots.Contains(v) && ReferenceEquals(v.Identity, card));
+            if (view is not null && view.IsAlive)
+            {
+                view.RefreshFace(card, _creature!, numberOverride);
+            }
+            else
+            {
+                // ② 换一张：借一个空槽视图换绑；没有可借的才新建（顺序无关，所以"只是换位"不会触发 Rebind）。
+                var reusable = spare.FirstOrDefault(v => !slots.Contains(v) && v.IsAlive);
+                var model = player is not null ? IntentCardBinder.InstanceFor(player, _creature!, card) : null;
+                if (reusable is not null)
+                {
+                    reusable.Rebind(card, _creature!, model, numberOverride);
+                    view = reusable;
+                }
+                else
+                {
+                    view = AeonglassIntentCardView.Create(_row, new Vector2(SlotWidth, SlotHeight), model);
+                    if (view is null)
+                    {
+                        // 拿不到真卡就跳过这一格（日志由 AeonglassIntentCardView 自己报）。
+                        continue;
+                    }
+
+                    view.Bind(card, _creature!, numberOverride);
+                }
+            }
+
+            slots.Add(view);
+            view.SetSlot(i, limit);
             view.SetDim(!card.Playable);
             view.SetBaseHighlight(HighlightFor(card, state));
-            _views.Add(view);
+
             // 登记"这个节点是哪张意图卡"（原版卡牌指向的侧通道）。
             if (view.Card is { } node)
             {
@@ -408,9 +413,9 @@ public partial class AeonglassIntentBelt : Control
 
             if (TargetingActive && card.Playable)
             {
-                // 指向模式：可行动的那几张可点，点中即结算（悬停给青色高光）。
+                // 指向模式：可行动的那几张可点，点中即结算。
                 var target = card;
-                var index = shown;
+                var index = i;
                 view.SetTargeting(() =>
                 {
                     // 诊断日志：点的是第几张、哪一张 —— "效果作用到别的牌上"这类问题靠它一眼定位。
@@ -419,15 +424,105 @@ public partial class AeonglassIntentBelt : Control
                     IntentTargeting.TrySubmit(_creature!, target);
                 });
             }
-
-            shown++;
+            else
+            {
+                // 不在指向模式（或这张不可行动）：撤掉点击回调，免得"随手点一下"也提交意图操作。
+                view.ClearTargeting();
+            }
         }
 
-        var extra = state.Hand.Count - shown;
+        // 归位：按手牌顺序把槽位排一遍（MoveChild 到同一位置是空操作，代价可忽略）。
+        for (var i = 0; i < slots.Count; i++)
+        {
+            slots[i].AttachTo(_row);
+            _row.MoveChild(slots[i].Wrapper, i);
+        }
+
+        // 这次没用上的视图：收掉悬停/高光后从行里撤下来（留着下次复用，不 QueueFree）。
+        foreach (var old in _views)
+        {
+            if (slots.Contains(old))
+            {
+                continue;
+            }
+
+            old.SetBaseHighlight(IntentHighlight.None);
+            old.Park();
+        }
+
+        _views.Clear();
+        _views.AddRange(slots);
+
+        // 溢出提示（+N）：复用同一个节点，永远排在卡面之后。
+        var extra = state.Hand.Count - slots.Count;
         if (extra > 0)
         {
-            _row.AddChild(BuildLabelSlot($"+{extra}"));
+            if (_overflowLabel is null || !GodotObject.IsInstanceValid(_overflowLabel))
+            {
+                _overflowLabel = BuildLabelSlot($"+{extra}");
+            }
+
+            ((Label)_overflowLabel).Text = $"+{extra}";
+            _row.AddChildSafely(_overflowLabel);
+            _row.MoveChild(_overflowLabel, -1);
+        }
+        else if (_overflowLabel is { } label && GodotObject.IsInstanceValid(label))
+        {
+            label.GetParent()?.RemoveChildSafely(label);
         }
 
+        // 牌堆行（第一张卡正下方）：抽 / 弃 两格，用**玩家牌堆那种**样式（只有两个小节点，照旧重建）。
+        AddPileIndicator(isDraw: true, "抽", state.Deck);
+        AddPileIndicator(isDraw: false, "弃", state.Discard);
+
+        // 预览面板如果开着 ⇒ 用**当前**内容重建一次。
+        // 这既修"自动修改后没刷新"，也修"关掉再点还是旧内容"（每次刷新时面板都跟着重算）。
+        if (openKind is { } wasDraw)
+        {
+            ShowPilePopup(wasDraw ? "抽" : "弃", wasDraw ? state.Deck : state.Discard, _pileRow);
+        }
+
+        _rowWidthDirty = true;
+    }
+
+    /// <summary>清掉牌堆行与它的 popup（增量更新前先收干净）。</summary>
+    private void ClearPileRow()
+    {
+        foreach (var child in _pileRow.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        _pilePopup?.QueueFree();
+        _pilePopup = null;
+        _popupIsDrawPile = null;
+    }
+
+    /// <summary>
+    /// 只重算可见卡面的数字（不动结构、不动高光）。
+    /// </summary>
+    /// <remarks>
+    /// 给"力量 / 易伤这类加成改了数字，但意图状态没变"的情况兜底：内部走 <c>RefreshFace</c>，
+    /// 文本没变就什么都不做，所以稳态下几乎零成本。
+    /// </remarks>
+    private void RefreshFacesOnly(EnemyIntentState state)
+    {
+        if (_creature is null)
+        {
+            return;
+        }
+
+        var limit = Math.Min(state.Hand.Count, _views.Count);
+        for (var i = 0; i < limit; i++)
+        {
+            var card = state.Hand[i];
+            var view = _views[i];
+            if (!ReferenceEquals(view.Identity, card) || !view.IsAlive)
+            {
+                continue;
+            }
+
+            view.RefreshFace(card, _creature, card.IsVoid ? $"凋萎 {card.HitPointsOf()}" : null);
+        }
     }
 }

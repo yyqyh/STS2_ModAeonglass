@@ -177,6 +177,8 @@ internal static class IntentTurnFlow
                 return $"第一张 {card.Describe()}｜{ReResolve(creature)}";
             case "consume":
                 card.Consume = !card.Consume;
+                // 这一支不重解析（不动 NextMove），所以要自己补一次版本号，卡带才会重画。
+                IntentOps.Touch(state);
                 return $"第一张 {card.Describe()}";
             default:
                 return $"skip: 未知标记 {which}";

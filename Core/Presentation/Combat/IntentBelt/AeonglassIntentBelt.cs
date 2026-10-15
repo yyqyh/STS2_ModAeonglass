@@ -22,6 +22,16 @@ public partial class AeonglassIntentBelt : Control
 {
     private const int MaxSlots = 5;
     private const float RefreshInterval = 0.2f;
+
+    /// <summary>
+    /// "只刷数字"的兜底节奏（秒）。
+    /// </summary>
+    /// <remarks>
+    /// 力量 / 易伤这类加成会让卡面数字变，但意图状态本身没变 ⇒ <c>Revision</c> 与指纹都抓不到。
+    /// 所以每 1 s 让可见的几张卡各自重算一次数字（<c>RefreshFace</c> 内部"文本没变就什么都不做"），
+    /// 代价是每只怪每秒 ≤5 次小字符串比较。
+    /// </remarks>
+    private const float NumberRefreshInterval = 1f;
     // 用户 2026-10-12：卡牌再大 20%（30×44 → 36×52.8）。
     private const float SlotWidth = 36f;
     private const float SlotHeight = 52.8f;
@@ -53,8 +63,31 @@ public partial class AeonglassIntentBelt : Control
     private bool? _popupIsDrawPile;
     private Control? _picker;
     private readonly List<AeonglassIntentCardView> _views = [];
-    private string _signature = string.Empty;
+    private Control? _overflowLabel;
     private float _timer;
+    private float _numberTimer;
+
+    // ==================== 刷新判定：Revision + 廉价指纹（零字符串、零分配）====================
+    //
+    // 旧版每 0.2 s 拼一遍"牌堆 + 手牌 + 判定原文"的字符串签名，一变就整条重建。
+    // 现在改成：系统层 Revision（每次写状态 +1）+ 这里的整数/引用指纹（漏 bump 时的兜底），
+    // 两者任一变化才进入"增量更新"。全部是整数比较与一次 ≤5 项的哈希累加，无字符串、无 LINQ。
+    private int _lastRevision = -1;
+    private int _lastCounts;
+    private int _lastHandHash;
+    private object? _lastPendingRef;
+    private object? _lastSelectedRef;
+    private bool _lastTargeting;
+    private bool _lastHadState;
+
+    /// <summary>行宽缓存（只在行内容变化后重算一次，不再每帧问容器的最小尺寸）。</summary>
+    private float _rowWidth;
+    private bool _rowWidthDirty = true;
+
+    /// <summary>锚点（怪身上的意图行）上次的位置/尺寸，用来跳过"没动就不写"的那一帧。</summary>
+    private Vector2 _anchorPos;
+    private Vector2 _anchorSize;
+    private bool _anchorCached;
 
     /// <summary>
     /// "我们选中的"那张意图（青色高光）—— 动作卡进入**指向模式**时由它填上，平时是 null。
@@ -133,6 +166,10 @@ public partial class AeonglassIntentBelt : Control
         _pileRow = new HBoxContainer();
         _pileRow.AddThemeConstantOverride("separation", (int)SlotGap);
         AddChild(_pileRow);
+
+        // 牌堆行的位置是常量 ⇒ 建好就摆一次，之后不再每帧写。
+        _pileRow.Position = PileRowOffset;
+        _rowWidthDirty = true;
     }
 
     public override void _Process(double delta)
@@ -149,9 +186,27 @@ public partial class AeonglassIntentBelt : Control
             return;
         }
 
+        // 卡带不可见（战斗 UI 隐藏 / 自己被隐藏）时不做任何定位与刷新 —— 省掉整条每帧开销。
+        if (!IsVisibleInTree())
+        {
+            return;
+        }
+
         SyncPosition();
 
         _timer += (float)delta;
+        _numberTimer += (float)delta;
+
+        if (_numberTimer >= NumberRefreshInterval)
+        {
+            _numberTimer = 0f;
+
+            if (IntentDeck.TryGet(_creature, out var state) && state.Hand.Count > 0)
+            {
+                RefreshFacesOnly(state);
+            }
+        }
+
         if (_timer < RefreshInterval)
         {
             return;
@@ -169,19 +224,74 @@ public partial class AeonglassIntentBelt : Control
             return;
         }
 
-        var width = _row.GetCombinedMinimumSize().X;
-        if (width <= 0f)
+        // 锚点没动就直接返回（一帧只做两次 Vector2 比较，不再问容器最小尺寸）。
+        if (_anchorCached
+            && _anchorPos == _anchor.Position
+            && _anchorSize == _anchor.Size
+            && !_rowWidthDirty)
         {
-            width = SlotWidth;
+            return;
         }
 
-        var x = _anchor.Position.X + (_anchor.Size.X - width) * 0.5f;
+        _anchorPos = _anchor.Position;
+        _anchorSize = _anchor.Size;
+        _anchorCached = true;
+
+        if (_rowWidthDirty || _rowWidth <= 0f)
+        {
+            // 行宽只在内容变化后算一次（容器最小尺寸查询要过子节点与字体度量，别每帧做）。
+            var width = _row.GetCombinedMinimumSize().X;
+            _rowWidth = width > 0f ? width : SlotWidth;
+            _rowWidthDirty = false;
+        }
+
+        var x = _anchor.Position.X + (_anchor.Size.X - _rowWidth) * 0.5f;
         var y = _anchor.Position.Y - SlotHeight - RowGap;
         Position = new Vector2(x, y);
+    }
 
-        // 牌堆行贴在卡片行正下方、与第一张左对齐。
-        // 牌堆行：直接挂在卡带上的固定坐标（不再随卡牌尺寸移动）。
-        _pileRow.Position = PileRowOffset;
+    /// <summary>
+    /// 指纹：把"会影响这一条卡带显示"的东西压成几个整数/引用比较。
+    /// </summary>
+    /// <remarks>
+    /// <c>Revision</c> 覆盖系统层的每一次写入；这里的计数与手牌哈希是**兜底**（万一某处漏了 Touch）。
+    /// 两者任一变化 ⇒ 需要刷新。
+    /// </remarks>
+    private bool FingerprintChanged(EnemyIntentState? state)
+    {
+        if (state is null)
+        {
+            var wasShowing = _lastHadState;
+            _lastHadState = false;
+            _lastRevision = -1;
+            return wasShowing;
+        }
+
+        var handHash = 17;
+        foreach (var card in state.Hand)
+        {
+            handHash = unchecked((handHash * 31) + (card.MoveId?.GetHashCode() ?? 0));
+        }
+
+        var counts = HashCode.Combine(
+            state.Hand.Count, state.Deck.Count, state.Discard.Count, state.Consumed.Count, state.VoidsSpent, state.Reshuffles);
+
+        var changed = !_lastHadState
+                      || _lastRevision != state.Revision
+                      || _lastCounts != counts
+                      || _lastHandHash != handHash
+                      || !ReferenceEquals(_lastPendingRef, state.Pending)
+                      || !ReferenceEquals(_lastSelectedRef, SelectedCard)
+                      || _lastTargeting != TargetingActive;
+
+        _lastHadState = true;
+        _lastRevision = state.Revision;
+        _lastCounts = counts;
+        _lastHandHash = handHash;
+        _lastPendingRef = state.Pending;
+        _lastSelectedRef = SelectedCard;
+        _lastTargeting = TargetingActive;
+        return changed;
     }
 
     private void Refresh()
@@ -191,23 +301,13 @@ public partial class AeonglassIntentBelt : Control
             return;
         }
 
-        if (!IntentDeck.TryGet(_creature, out var state) || state.Hand.Count == 0)
+        var hasState = IntentDeck.TryGet(_creature, out var state) && state.Hand.Count > 0;
+        if (!FingerprintChanged(hasState ? state : null))
         {
-            ApplySignature("-");
             return;
         }
 
-        var signature = PileSignature("deck", state.Deck) + "|"
-                        + string.Join("|", state.Hand.Select(c => $"{c.Describe()}#{c.TimesDrawn}")) + "|"
-                        + PileSignature("discard", state.Discard) + "|"
-                        // 高光是跟着"怪物将要打出的那张"走的，所以它变了也得重建。
-                        + "pending:" + (state.Pending?.MoveId ?? "-")
-                        + "|selected:" + (SelectedCard?.MoveId ?? "-")
-                        + "|targeting:" + TargetingActive
-                        // 用户 2026-10-12：「怪物意图改变也要刷新 UI（重新给予高光）」——
-                        // 把判定原文也纳入签名：判定一变就重建整条卡带 ⇒ 高光/灰化都会重新算一遍。
-                        + "|decision:" + state.Decision;
-        ApplySignature(signature, state);
+        UpdateRow(hasState ? state : null);
     }
 
 }

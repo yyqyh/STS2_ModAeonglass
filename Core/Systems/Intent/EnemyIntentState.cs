@@ -11,6 +11,18 @@ internal sealed class EnemyIntentState(string monsterId)
 {
     public string MonsterId { get; } = monsterId;
 
+    /// <summary>
+    /// 状态版本号：任何一次写操作之后由 <c>IntentOps.Touch</c> 自增。
+    /// </summary>
+    /// <remarks>
+    /// <b>只给表现层用</b>：卡带靠"整数比较"决定要不要重画（代替原来每 0.2 s 拼一遍字符串签名）。
+    /// 它**不参与**守恒 / 判定 / 随机等任何机制口径，加的时候只管自增。
+    /// </remarks>
+    public int Revision { get; private set; }
+
+    /// <summary>标记"这个状态变过了"（只自增，不做别的）。</summary>
+    internal void BumpRevision() => Revision++;
+
     /// <summary>抽牌堆：队首 = 下一个被抽到。</summary>
     public List<IntentCard> Deck { get; } = [];
 

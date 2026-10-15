@@ -81,6 +81,9 @@ internal static class IntentDeck
         States[creature] = state;
         _builds++;
 
+        // 建堆也是一次"状态变化"（卡带第一次画出来要靠它）。
+        IntentOps.Touch(state);
+
         Const.Logger.Info(
             $"[{Const.ModId}] {Const.Prefix.Intent} 意图牌堆构建 #{_builds}（惰性）monster={state.MonsterId} "
             + $"卡组 {state.IntentCount}/{DeckSizeX} 张 [{string.Join(",", state.Deck.Select(c => c.MoveId))}]"

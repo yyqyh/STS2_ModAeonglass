@@ -70,6 +70,7 @@ internal static class WitherEffects
 
         state.Total += count;
         state.VoidsInjected += count;
+        IntentOps.Touch(state);
 
         var text = $"塞虚无 ×{count} → 弃牌堆｜{state.Counts()}｜discard[{WitherPool.DescribePile(state.Discard)}]";
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} {text}");
@@ -108,6 +109,7 @@ internal static class WitherEffects
                 + $"｜{state.Counts()}");
         }
 
+        IntentOps.Touch(state);
         return purged;
     }
 
@@ -144,6 +146,7 @@ internal static class WitherEffects
                 + $" / discard {WitherPool.WithersInDiscard(creature)}）");
         }
 
+        IntentOps.Touch(state);
         return taken;
     }
 
@@ -172,6 +175,7 @@ internal static class WitherEffects
                 $"[{Const.ModId}] {Const.Prefix.Wither} 净化：从弃牌堆清掉 {purged} 张凋萎｜{state.Counts()}");
         }
 
+        IntentOps.Touch(state);
         return purged;
     }
 
@@ -212,6 +216,8 @@ internal static class WitherEffects
             parts.Add("无惩戒（设置里都关了）");
         }
 
+        // 这一笔可能改过"吃掉意图"（state.Hand 的 Eaten 标记）⇒ 记一次版本号。
+        IntentOps.Touch(state);
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} {string.Join(" / ", parts)}");
     }
 

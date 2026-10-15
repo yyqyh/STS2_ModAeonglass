@@ -78,6 +78,15 @@ internal static class IntentDecision
 
     internal static void Apply(Creature creature, EnemyIntentState state, Decision decision)
     {
+        ApplyCore(creature, state, decision);
+
+        // 版本 +1：卡带靠它判断"要不要重画"（写入口在这里收口，所以只此一处）。
+        IntentOps.Touch(state);
+    }
+
+    /// <summary>落地的本体（不改版本号，版本由 <see cref="Apply" /> 统一加）。</summary>
+    private static void ApplyCore(Creature creature, EnemyIntentState state, Decision decision)
+    {
         state.Decision = $"{decision.Kind}：{decision.Reason}";
 
         switch (decision.Kind)

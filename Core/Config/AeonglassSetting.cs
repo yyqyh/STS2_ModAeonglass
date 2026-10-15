@@ -367,4 +367,13 @@ public sealed class AeonglassSetting
     /// </para>
     /// </remarks>
     public bool DebugUnlimitedPerCombat { get; set; } = true;
+
+    /// <summary>
+    /// 【调试】意图卡带每次刷新时打一行日志（默认<b>关</b>）。
+    /// </summary>
+    /// <remarks>
+    /// 卡带现在走"增量更新"，正常情况下不该刷日志；排查"高光/卡面没跟着变"时再打开它
+    /// （设置页目前只留了「关于」，要改就直接编辑设置 json）。
+    /// </remarks>
+    public bool DebugIntentBeltLog { get; set; }
 }

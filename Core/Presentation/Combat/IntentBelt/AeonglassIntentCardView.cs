@@ -6,6 +6,7 @@ using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.MonsterMoves.Intents;
 using MegaCrit.Sts2.Core.Nodes.Cards;
 using MegaCrit.Sts2.Core.Nodes.Combat;
+using MegaCrit.Sts2.Core.Nodes.HoverTips;
 
 using STS2_Aeonglass.Core.Content.Cards.Token;
 using STS2_Aeonglass.Core.Systems.Intent;
@@ -47,6 +48,27 @@ internal sealed class AeonglassIntentCardView
     /// <summary>高光那张（怪物将要打出的 / 我们选中的）比别人**大 20%**（用户 2026-10-12）。</summary>
     private const float EmphasisScale = 1.2f;
 
+    // ==================== 悬停表现（2026-10-15 用户口径：全套真卡式）====================
+
+    /// <summary>悬停时的放大倍率（本体手牌口径是 1.1）。</summary>
+    private const float HoverFactor = 1.1f;
+
+    /// <summary>"强调（红=将打出 / 青=选中）"与"悬停"同时命中时的倍率。</summary>
+    private const float HoverPlusEmphasisFactor = 1.25f;
+
+    /// <summary>悬停时上抬多少（卡带局部单位；与 <see cref="ApplyScale" /> 同一口径）。</summary>
+    private const float HoverLift = 6f;
+
+    /// <summary>悬停时的倾角（度）—— 按槽位左右分正负，做出手牌扇形的错觉。</summary>
+    private const float HoverTiltDeg = 3f;
+
+    /// <summary>进入 / 退出时长（秒）：进得快、出得慢（0.5 s Expo-out 照本体手牌口径）。</summary>
+    private const float HoverInSeconds = 0.08f;
+    private const float HoverOutSeconds = 0.5f;
+
+    /// <summary>悬停时抬到最前，避免被右邻卡遮住。</summary>
+    private const int HoverZIndex = 10;
+
     /// <summary>
     /// 卡面上那个数字**希望显示成多大**（屏幕像素；用户 2026-10-12：原来太小）。
     /// </summary>
@@ -58,6 +80,27 @@ internal sealed class AeonglassIntentCardView
 
     private IntentHighlight _highlight = IntentHighlight.None;
     private IntentHighlight _baseHighlight = IntentHighlight.None;
+
+    /// <summary>这张槽位当前绑的是哪张意图（槽位复用靠它比较；null = 空槽）。</summary>
+    private IntentCard? _identity;
+
+    /// <summary>槽位序号 / 本行槽位数（决定悬停倾斜的方向）。</summary>
+    private int _slotIndex;
+    private int _slotCount = 1;
+
+    private bool _hovered;
+    private Tween? _visualTween;
+
+    /// <summary>悬停用的**金色背光**（第二层 <c>%Highlight</c>；材质是深拷贝，和原层互不干扰）。</summary>
+    private NCardHighlight? _hoverLayer;
+
+    /// <summary>指向模式的点击回调（只接一次线 ⇒ 反复调 <see cref="SetTargeting" /> 不会叠加 handler）。</summary>
+    private Action? _onClicked;
+    private bool _clickWired;
+
+    private bool? _lastDim;
+    private string? _lastNumber;
+    private bool? _lastInteractable;
     private bool _loggedMissingNumber;
     /// <summary>字号那行日志**整个进程只打一次**（原来是每个视图打一次 ⇒ 刷屏）。</summary>
     private static bool _loggedNumberSize;
@@ -124,6 +167,7 @@ internal sealed class AeonglassIntentCardView
             view.ConnectEngineHover();
             view.ResizeTo(slotSize);
             view.SetInteractable(false);
+            view.CreateHoverBacklight();
             return view;
         }
         catch (Exception ex)
@@ -148,6 +192,9 @@ internal sealed class AeonglassIntentCardView
         _baseSize = current * scale;
         _baseScale = new Vector2(scale, scale);
         ApplyScale(1f);
+
+        // 悬停要轻微倾斜：轴心设在卡面中心（不设的话会绕左上角转，像"翻页"而不是"抬手牌"）。
+        _card.PivotOffset = current * 0.5f;
 
         // 字号按缩放反算：目标屏幕像素 ÷ 缩放 ⇒ 看起来就是 TargetNumberPixels 那么大。
         if (_number is not null && scale > 0.0001f)
@@ -182,6 +229,169 @@ internal sealed class AeonglassIntentCardView
         _card.Position = (_slotSize - _baseSize * factor) * 0.5f;
     }
 
+    // ==================== 悬停：金色背光 + 放大 + 抬起 + 轻微倾斜 ====================
+
+    /// <summary>
+    /// 造一层金色背光：**复制本体那个 <c>%Highlight</c> 节点**（自带 shader 与 AnimShow/AnimHide），
+    /// 并把它的 <c>ShaderMaterial</c> 深拷贝一份 —— 否则两层共享同一个材质实例，改一层的宽度会连另一层一起变。
+    /// </summary>
+    private void CreateHoverBacklight()
+    {
+        if (_card.CardHighlight is not { } source || source.GetParent() is not { } parent)
+        {
+            return;
+        }
+
+        try
+        {
+            var layer = (NCardHighlight)source.Duplicate();
+            if (layer.Material is ShaderMaterial shared)
+            {
+                layer.Material = (ShaderMaterial)shared.Duplicate(true);
+            }
+
+            layer.Name = "HoverBacklight";
+            layer.Modulate = NCardHighlight.gold;
+            layer.MouseFilter = Control.MouseFilterEnum.Ignore;
+
+            parent.AddChildSafely(layer);
+            parent.MoveChild(layer, Math.Min(source.GetIndex() + 1, parent.GetChildCount() - 1));
+            layer.AnimHideInstantly();
+
+            _hoverLayer = layer;
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 悬停背光层创建失败（只影响悬停观感）：{ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    /// <summary>槽位序号（每行重排后由卡带告知，用于决定倾斜方向）。</summary>
+    internal void SetSlot(int index, int count)
+    {
+        _slotIndex = index;
+        _slotCount = Math.Max(1, count);
+
+        if (_hovered)
+        {
+            AnimateToTarget();
+        }
+    }
+
+    /// <summary>
+    /// 悬停开 / 关：金色背光（淡入淡出）+ 放大 + 抬起 + 轻微倾斜，全部走**同一条 Tween**。
+    /// </summary>
+    /// <remarks>
+    /// 三档语义互不覆盖：红（将打出）/ 青（我们选中）走本体的 <c>%Highlight</c> 原层，
+    /// 悬停走这里复制出来的金色层 —— 所以"将打出 + 悬停"两处光可以同时亮着。
+    /// </remarks>
+    internal void SetHovered(bool hovered)
+    {
+        if (!IsAlive || _hovered == hovered)
+        {
+            return;
+        }
+
+        _hovered = hovered;
+        _wrapper.ZIndex = hovered ? HoverZIndex : 0;
+
+        if (_hoverLayer is { } layer && GodotObject.IsInstanceValid(layer))
+        {
+            if (hovered)
+            {
+                layer.AnimShow();
+            }
+            else
+            {
+                layer.AnimHide();
+            }
+        }
+
+        if (hovered)
+        {
+            ShowHoverTips();
+        }
+        else
+        {
+            NHoverTipSet.Remove(_wrapper);
+        }
+
+        AnimateToTarget();
+    }
+
+    /// <summary>悬停时弹卡面自带的 tips（模型没有 tips 就不弹；不新增本地化键）。</summary>
+    private void ShowHoverTips()
+    {
+        try
+        {
+            var tips = _card.Model?.HoverTips;
+            if (tips is null || !tips.Any())
+            {
+                return;
+            }
+
+            NHoverTipSet.CreateAndShow(_wrapper, tips);
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Intent} 意图 tips 失败（已忽略）：{ex.GetType().Name}");
+        }
+    }
+
+    /// <summary>当前应有的放大倍率：强调（红/青）与悬停取较大者，两者同时命中再叠一点。</summary>
+    private float CurrentFactor()
+    {
+        var emphasis = _highlight != IntentHighlight.None;
+        return (emphasis, _hovered) switch
+        {
+            (true, true) => HoverPlusEmphasisFactor,
+            (true, false) => EmphasisScale,
+            (false, true) => HoverFactor,
+            _ => 1f,
+        };
+    }
+
+    /// <summary>悬停倾斜：左半往左倒、右半往右倒（像摊开的手牌）。</summary>
+    private float CurrentTiltDeg()
+    {
+        if (!_hovered || _slotCount <= 1)
+        {
+            return 0f;
+        }
+
+        var middle = (_slotCount - 1) * 0.5f;
+        var offset = _slotIndex - middle;
+        return Mathf.Sign(offset) * HoverTiltDeg;
+    }
+
+    /// <summary>把"缩放 / 抬起 / 倾斜"三个目标值一次性补间过去（进快出慢）。</summary>
+    private void AnimateToTarget()
+    {
+        if (!IsAlive)
+        {
+            return;
+        }
+
+        var factor = CurrentFactor();
+        var targetScale = _baseScale * factor;
+        var targetPosition = (_slotSize - _baseSize * factor) * 0.5f + new Vector2(0f, _hovered ? -HoverLift : 0f);
+        var targetRotation = Mathf.DegToRad(CurrentTiltDeg());
+        var seconds = _hovered ? HoverInSeconds : HoverOutSeconds;
+
+        _visualTween?.Kill();
+        _visualTween = _wrapper.CreateTween().SetParallel();
+        _visualTween.TweenProperty(_card, "scale", targetScale, seconds)
+            .SetEase(Tween.EaseType.Out)
+            .SetTrans(Tween.TransitionType.Expo);
+        _visualTween.TweenProperty(_card, "position", targetPosition, seconds)
+            .SetEase(Tween.EaseType.Out)
+            .SetTrans(Tween.TransitionType.Expo);
+        _visualTween.TweenProperty(_card, "rotation", targetRotation, seconds)
+            .SetEase(Tween.EaseType.Out)
+            .SetTrans(Tween.TransitionType.Expo);
+    }
+
     /// <summary>
     /// 绑定一张意图：卡图 = 意图的图，文字 = 只剩数字。
     /// </summary>
@@ -196,9 +406,9 @@ internal sealed class AeonglassIntentCardView
         }
 
         _card.Visible = true;
+        _identity = card;
 
         Texture2D? art = null;
-        var text = numberOverride ?? string.Empty;
 
         if (card is not null)
         {
@@ -206,11 +416,6 @@ internal sealed class AeonglassIntentCardView
             var intents = move?.Intents;
             var targets = MonsterAccess.Combat?.PlayerCreatures?.ToList() ?? [];
             art = FirstTexture(intents, targets, owner);
-
-            if (numberOverride is null)
-            {
-                text = IntentNumbers.Text(intents, targets, owner);
-            }
         }
 
         var portrait = _card.GetNodeOrNull<TextureRect>("%Portrait");
@@ -222,6 +427,109 @@ internal sealed class AeonglassIntentCardView
                 portrait.Texture = art;
             }
         }
+
+        // 数字一律走"变了才写"的那条路（槽位复用后每次刷新都会调它）。
+        _lastNumber = null;
+        RefreshFace(card, owner, numberOverride);
+    }
+
+    /// <summary>这张槽位当前绑的意图（卡带用它判断"要不要换模型"）。</summary>
+    internal IntentCard? Identity => _identity;
+
+    /// <summary>挂进（或挪回）卡带的槽位行 —— 复用同一个视图时按顺序调用它即可。</summary>
+    internal void AttachTo(Node parent)
+    {
+        if (!IsAlive)
+        {
+            return;
+        }
+
+        if (_wrapper.GetParent() != parent)
+        {
+            _wrapper.GetParent()?.RemoveChildSafely(_wrapper);
+            parent.AddChildSafely(_wrapper);
+        }
+
+        // 复用：把占位尺寸与可见性都还原回来。
+        _wrapper.Visible = true;
+        _wrapper.CustomMinimumSize = _slotSize;
+    }
+
+    /// <summary>
+    /// 这次用不到它：收掉悬停/画面、占位清零。
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ **不要**把它从父节点上摘下来 —— 那样它就成了游离节点，卡带销毁时不会被一起释放（等于漏节点）。
+    /// 留在树里 + 最小尺寸归零 ⇒ HBox 不给它留位置，观感与"撤下来"一致，还省掉一次重挂。
+    /// </remarks>
+    internal void Park()
+    {
+        if (!GodotObject.IsInstanceValid(_wrapper))
+        {
+            return;
+        }
+
+        SetHovered(false);
+        Hide();
+        _wrapper.Visible = false;
+        _wrapper.CustomMinimumSize = Vector2.Zero;
+    }
+
+    /// <summary>
+    /// 把同一个槽位**换绑**到另一张意图：重设卡的模型（本体 setter 会发 <c>ModelChanged</c>）后重跑
+    /// <see cref="Bind" />。节点不重建 ⇒ 只有"这一格的牌变了"才付这份成本。
+    /// </summary>
+    internal void Rebind(IntentCard? card, Creature owner, CardModel? model, string? numberOverride = null)
+    {
+        if (!IsAlive)
+        {
+            return;
+        }
+
+        try
+        {
+            if (model is not null && !ReferenceEquals(_card.Model, model))
+            {
+                _card.Model = model;
+            }
+        }
+        catch (Exception ex)
+        {
+            // 换模型失败就沿用旧模型（观感差一点，但绝不影响机制）。
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 换绑卡模型失败（沿用旧模型）：{ex.GetType().Name}: {ex.Message}");
+        }
+
+        // 换了卡 ⇒ 高光与数字都要重算一遍（同一档位也要"重新应用"）。
+        // ⚠️ 视觉也要回零：不能让"上一张的悬停态（放大 + 金色背光 + 倾斜）"带给了下一张。
+        SetHovered(false);
+        _highlight = IntentHighlight.None;
+        _visualTween?.Kill();
+        _visualTween = null;
+        ApplyScale(1f);
+        _card.Rotation = 0f;
+        Bind(card, owner, numberOverride);
+    }
+
+    /// <summary>退出指向模式：撤掉点击回调与手型光标（否则不在指向模式里点卡也会提交一次意图操作）。</summary>
+    internal void ClearTargeting()
+    {
+        _onClicked = null;
+        SetInteractable(false);
+    }
+
+    /// <summary>
+    /// 只刷卡面（同一张意图、只有数字可能变）：文本没变就什么都不做。
+    /// </summary>
+    internal void RefreshFace(IntentCard? card, Creature owner, string? numberOverride = null)
+    {
+        var text = NumberText(card, owner, numberOverride);
+        if (_lastNumber == text)
+        {
+            return;
+        }
+
+        _lastNumber = text;
 
         if (_number is null)
         {
@@ -244,6 +552,24 @@ internal sealed class AeonglassIntentCardView
         _number.Visible = text.Length > 0;
     }
 
+    /// <summary>算这一张该显示的数字文本（覆盖值优先；没有对应意图就是空）。</summary>
+    private static string NumberText(IntentCard? card, Creature owner, string? numberOverride)
+    {
+        if (numberOverride is not null)
+        {
+            return numberOverride;
+        }
+
+        if (card is null)
+        {
+            return string.Empty;
+        }
+
+        var move = IntentCycle.Resolve(owner, card);
+        var targets = MonsterAccess.Combat?.PlayerCreatures?.ToList() ?? [];
+        return IntentNumbers.Text(move?.Intents, targets, owner);
+    }
+
     /// <summary>
     /// 把"鼠标进入/离开这张意图卡"上报给本体的瞄准管理器（`NTargetManager`）。
     /// </summary>
@@ -257,21 +583,22 @@ internal sealed class AeonglassIntentCardView
     {
         _wrapper.MouseEntered += () =>
         {
+            // 悬停表现（金色背光 + 放大 + 抬起 + 倾斜）与"上报给本体瞄准"是两件事，互不依赖。
+            SetHovered(true);
+
             if (NTargetManager.Instance is { IsInSelection: true } manager)
             {
                 manager.OnNodeHovered(_card);
-                // 用户 2026-10-12：「指向高光怎么没有了」——
-                // 换成原版指向后我们自己的悬停链路不再触发，所以在这里补上青色高光（离开时恢复基准高光）。
-                SetHighlight(IntentHighlight.Selected);
             }
         };
 
         _wrapper.MouseExited += () =>
         {
+            SetHovered(false);
+
             if (NTargetManager.Instance is { IsInSelection: true } manager)
             {
                 manager.OnNodeUnhovered(_card);
-                SetHighlight(_baseHighlight);
             }
         };
     }
@@ -281,6 +608,12 @@ internal sealed class AeonglassIntentCardView
     /// </summary>
     internal void SetInteractable(bool on)
     {
+        if (_lastInteractable == on)
+        {
+            return;
+        }
+
+        _lastInteractable = on;
         // 槽位始终 Stop（要靠它收悬停上报给本体瞄准）；这里的开关只影响"点它算不算数"的手感。
         _wrapper.MouseFilter = Control.MouseFilterEnum.Stop;
         _wrapper.MouseDefaultCursorShape = on ? Control.CursorShape.PointingHand : Control.CursorShape.Arrow;
@@ -311,14 +644,19 @@ internal sealed class AeonglassIntentCardView
     internal void SetTargeting(Action onClicked)
     {
         SetInteractable(true);
+        _onClicked = onClicked;
 
-        _wrapper.MouseEntered += () => SetHighlight(IntentHighlight.Selected);
-        _wrapper.MouseExited += () => SetHighlight(_baseHighlight);
+        if (_clickWired)
+        {
+            return;
+        }
+
+        _clickWired = true;
         _wrapper.GuiInput += @event =>
         {
             if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
             {
-                onClicked();
+                _onClicked?.Invoke();
             }
         };
     }
@@ -331,8 +669,16 @@ internal sealed class AeonglassIntentCardView
     }
 
     /// <summary>灰化观感（不可行动 / 被虚无吃掉 / 虚无卡）。</summary>
-    internal void SetDim(bool dim) =>
+    internal void SetDim(bool dim)
+    {
+        if (!IsAlive || _lastDim == dim)
+        {
+            return;
+        }
+
+        _lastDim = dim;
         _card.Modulate = dim ? new Color(0.55f, 0.55f, 0.6f, 1f) : Colors.White;
+    }
 
     /// <summary>
     /// 高光：<b>红</b> = 怪物将要打出的那张，<b>青</b> = 我们选中的那张，其它一律收起来。
@@ -354,8 +700,8 @@ internal sealed class AeonglassIntentCardView
         }
 
         _highlight = highlight;
-        // 高光那张大 20%（青/红都是），鼠标移开后回到基准大小。
-        ApplyScale(highlight == IntentHighlight.None ? 1f : EmphasisScale);
+        // 高光那张大 20%（青/红都是）；悬停与它叠加时走另一档（见 CurrentFactor），两条路都补间。
+        AnimateToTarget();
 
         var glow = _card.CardHighlight;
         if (glow is null)

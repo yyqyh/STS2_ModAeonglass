@@ -8,7 +8,15 @@ using STS2_Aeonglass.Core.Systems.Sand;
 
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
-/// <summary>切换卡组的代价来源。</summary>
+/// <summary>
+/// 切副代价的<b>来源枚举</b>。
+/// </summary>
+/// <remarks>
+/// ① 职责：取值（无 / 沙砾 / 生命 等）。
+/// ② 调用时机：设置与结算。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal enum DeckSwitchCostSource
 {
     /// <summary>免费（测试期默认）。</summary>

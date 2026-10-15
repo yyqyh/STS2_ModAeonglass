@@ -1,8 +1,14 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
 /// <summary>
-/// 一次快照。引擎只认识这个接口，不认识它到底存了什么：具体内容由 L2/L3 决定。
+/// 回溯的<b>一次快照</b>：引擎只认这个接口，内容由各层自己填。
 /// </summary>
+/// <remarks>
+/// ① 职责：<c>TryRestore</c> / <c>Release</c> 的最小契约。
+/// ② 调用时机：抓取时产生、恢复时消费。
+/// ④ ⚠️ 见 README 的命名与注释口径；口径沿革以注释里带日期的那行为准。
+/// </remarks>
+
 public interface ISnapshot
 {
     SnapshotId Id { get; }

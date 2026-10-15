@@ -5,13 +5,18 @@ using HarmonyLib;
 using STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 using STS2_Aeonglass.Core.Systems.Bootstrap;
+
 namespace STS2_Aeonglass.Core.Systems.Rewind.Host.Patches;
 
 /// <summary>
-/// 给异步卡牌 VFX 挂"在飞"计数。
-/// 不用 <c>[HarmonyPatch]</c> 属性扫描：这里逐个目标手动装，单个失败只记日志，
-/// 不会因为一个方法改名就让整组补丁全废。
+/// 给异步卡牌 VFX 挂"在飞"计数（回档门禁要用）。
 /// </summary>
+/// <remarks>
+/// ① 职责：逐个补丁装上/卸下。
+/// ② 调用时机：模块装配。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal static class VfxTrackingPatches
 {
     /// <summary>(类型全名, 方法名, 计数标签)。只收无参重载，避免歧义。</summary>

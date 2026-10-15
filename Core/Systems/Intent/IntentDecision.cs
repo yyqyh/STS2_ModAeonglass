@@ -95,7 +95,7 @@ internal static class IntentDecision
             return;
         }
 
-        var move = IntentDeck.Resolve(creature, card);
+        var move = IntentCycle.Resolve(creature, card);
         if (move is null)
         {
             state.Pending = null;

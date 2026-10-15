@@ -9,20 +9,14 @@ using STS2_Aeonglass.Core.Systems.Intent;
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>
-/// **计划 1 口**：把一张意图绑成"一张真卡"—— 以注册类 <see cref="AeonglassIntentCard" /> 的
-/// 规范实例为模板克隆一份，把**该意图的卡图路径**写进实例字段（模型层 virtual 成员会读它）。
+/// 把一张意图绑成"<b>一张真卡</b>"（供表现层渲成卡面）。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 为什么克隆：卡带上每格必须是**不同的卡**（同一张卡图/同一份内容），而 CardModel 的身份来自注册类。
-/// 靠"一个类 + 实例字段"就能做到（已核 <c>CardModel.PortraitPath</c> 是 virtual ✔），
-/// 于是本体那些"认卡"的地方（将来动作卡的选牌界面）看到的也是同一张卡。
-/// </para>
-/// <para>
-/// 缓存：同一 (怪, 意图卡) 只绑一次并复用 —— 一是省克隆，二是**保持同一张卡的同一性**。
-/// 克隆是战斗级的，所以清空放在 <see cref="Clear" />（战斗结束 / 卡带销毁时调）。
-/// </para>
+/// ① 职责：以注册类外壳承载每张意图的内容。
+/// ② 调用时机：卡带创建卡节点时。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class IntentCardBinder
 {
     private static readonly Dictionary<(Creature Owner, IntentCard Card), AeonglassIntentCard> Cache = [];
@@ -46,7 +40,7 @@ internal static class IntentCardBinder
                 return null;
             }
 
-            var move = IntentDeck.Resolve(owner, card);
+            var move = IntentCycle.Resolve(owner, card);
             var targets = MonsterAccess.Combat?.PlayerCreatures?.ToList() ?? [];
 
             model.IntentKey = card.MoveId;

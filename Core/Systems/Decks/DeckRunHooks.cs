@@ -7,24 +7,17 @@ using STS2_Aeonglass.Core.Config;
 
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
-/// <summary>
-/// 双卡组的 run 级驱动：<b>战斗结束</b>记冷却、<b>战斗胜利</b>自动轮换。
-/// </summary>
+/// <summary>双卡组的 run 级驱动：<b>战斗结束</b>记冷却、<b>战斗胜利</b>自动轮换。</summary>
 /// <remarks>
-/// <para>
-/// 为什么用 singleton 而不是挂在遗物上：它不属于任何一件具体遗物，是"这一局"的机制
-/// （和 搁浅的 <c>StasisRunHook</c> 同一个理由）。
-/// </para>
-/// <para>
-/// <b>为什么轮换放在 <c>AfterCombatVictory</c> 而不是 <c>AfterCombatEnd</c></b>：
-/// 本体的战斗收尾顺序是 <c>Hook.AfterCombatEnd</c> → 各玩家 <c>AfterCombatEnd</c> →
-/// <c>Hook.AfterCombatVictory</c>（<c>CombatManager</c> 里就是这么排的）。
-/// 搁浅的滞留倒计时在 <c>AfterCombatEnd</c> 归队，归队目标是"当时生效的那副" ——
-/// 把轮换放在后面的那个钩子里，**顺序由本体保证**，不需要赌两个 singleton 的注册顺序，
-/// 于是"滞留卡回到它待过的那副"是稳定行为。（堕化拉撒路也是在 <c>AfterCombatVictory</c> 切卡组。）
-/// </para>
+/// ① 职责：把 run 事件接到卡组切换与"主动切换冷却"的计时上。
+/// ② 挂点与时机：<c>[RegisterSingleton]</c> + <c>HookType.Run</c> 的 <c>AfterCombatEnd</c> / <c>AfterCombatVictory</c>。
+/// ③ 依赖：<c>DeckSwitchService</c>、<c>DeckSwitchLimit</c>、设置项。
+/// ④ ⚠️ 轮换放在 <c>AfterCombatVictory</c> 而不是 <c>AfterCombatEnd</c>：本体收尾顺序是 <c>Hook.AfterCombatEnd</c> →
+/// 各玩家 <c>AfterCombatEnd</c> → <c>Hook.AfterCombatVictory</c>，搁浅递减在前、轮换在后 ⇒ "滞留卡回到它待过的那副"由本体顺序保证，
+/// 不赌两个 singleton 的注册顺序（堕化拉撒路也在 <c>AfterCombatVictory</c> 切卡组）。用 singleton 是因为它属于"这一局"而非某件遗物。
 /// </remarks>
 [RegisterSingleton]
+
 public sealed class DeckRunHooks : HookedSingletonModel
 {
     public DeckRunHooks()

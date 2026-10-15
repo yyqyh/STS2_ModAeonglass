@@ -18,21 +18,16 @@ using STS2_Aeonglass.Core.Systems.Rewind.Policy;
 using STS2_Aeonglass.Core.Systems.Sand;
 
 using STS2_Aeonglass.Core.Systems.Bootstrap;
+
 namespace STS2_Aeonglass.Core.Systems.Rewind;
 
-/// <summary>
-/// 回溯模块入口：装配引擎 + 接上三条接缝 + 对外提供唯一触发入口。
-/// </summary>
+/// <summary>回溯模块入口：装配引擎 + 接三条接缝 + 对外唯一触发入口。</summary>
 /// <remarks>
-/// <para>
-/// 引擎代码在 <c>Core/Systems/Rewind/{Kernel,Graph,Binding,Policy,Host}</c>，是从
-/// <c>STS2_AeonglassLabB</c> 原样搬过来的（只改了命名空间），**不要在这里改引擎**。
-/// 宿主相关的东西（接缝、开关、代价、UI）都收在本文件与 <c>Bridges/</c> 里。
-/// </para>
-/// <para>
-/// <b>定档参数</b>：每场战斗 1 次 + 成功后消耗全部沙砾；只做"回上一回合"；
-/// 单人限定（多人单端改状态会让校验和分化）；快照不跨会话。
-/// </para>
+/// ① 职责：<c>Register</c>、<c>CanRequest</c> / <c>TryRequest</c>（含代价支付 <c>RewindCost</c>）、<c>Describe</c>。
+/// ② 挂点与时机：由 <c>MechanismBootstrap</c> 按开关调用；UI / 热键都走这里。
+/// ③ 依赖：<c>Rewind/{Kernel,StateCapture,Graph,Policy,Host}</c> + <c>Bridges/</c> 的接缝。
+/// ④ ⚠️ 引擎代码是从 <c>STS2_AeonglassLabB</c> 原样搬来的（只改命名空间）—— <b>不要在这里改引擎</b>，宿主侧（接缝 / 开关 / 代价 / UI）收在本文件与 <c>Bridges/</c>；
+/// 定档参数：每场战斗 1 次 + 成功后消耗全部沙砾、只回上一回合、单人限定（多人单端改状态会让校验和分化）、快照不跨会话。
 /// </remarks>
 internal static class RewindModule
 {
@@ -234,7 +229,7 @@ internal static class RewindModule
 
             if (charged)
             {
-                TaskHelper.RunSafely(SpendAllSandAsync(player));
+                TaskHelper.RunSafely(RewindCost.SpendAllSandAsync(player));
             }
 
             // 战斗历史：本场回溯次数 +1（RW 通道的卡读它）。
@@ -246,27 +241,4 @@ internal static class RewindModule
         return true;
     }
 
-    /// <summary>收取回溯代价：把此刻的沙砾全部扣掉（定档；设置里可关）。</summary>
-    private static async Task SpendAllSandAsync(Player player)
-    {
-        try
-        {
-            var amount = Math.Max(0, SecondaryResourceCmd.Get(player, SandResourceRegistry.SandId));
-            if (amount == 0)
-            {
-                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Rewind} 回溯代价：本来就没有沙砾，跳过。");
-                return;
-            }
-
-            var spent = await SecondaryResourceCmd.Spend(player, SandResourceRegistry.SandId, amount);
-            Const.Logger.Info(
-                $"[{Const.ModId}] {Const.Prefix.Rewind} 回溯代价：消耗 {amount} 沙砾（成功={spent}）"
-                + $" → 现在 {Describe(player)}");
-        }
-        catch (Exception ex)
-        {
-            Const.Logger.Error(
-                $"[{Const.ModId}] {Const.Prefix.Rewind} 收取回溯代价时抛异常：{ex.GetType().Name}: {ex.Message}");
-        }
-    }
 }

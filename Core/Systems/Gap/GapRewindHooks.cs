@@ -3,17 +3,14 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace STS2_Aeonglass.Core.Systems.Gap;
 
-/// <summary>时空裂隙 × 回溯的<b>接缝（只留位，未接线）</b>——`GapRewindExtension` 的等价物，order 200。</summary>
+/// <summary>时空裂隙 × 回溯的<b>接缝</b>：order 200，只留位、刻意不回档。</summary>
 /// <remarks>
-/// <para>
-/// <b>时空裂隙 刻意不回档</b>：这是定价表 §0 承认的策略收益 —— 恢复战斗牌堆后本体回来，
-/// 而间隙与副本不动 ⇒ 净多出"副本那一份"。所以这里的 <c>BeforeRestore</c> / <c>AfterRestore</c>
-/// **刻意空实现**，只有 <c>Capture</c> 记下"快照那一刻间隙里有什么"（留给以后观察 / 定价统计用）。
-/// </para>
-/// <para>回溯 落地时的接线（照 Lab B）：用 <c>IRewindExtension</c>（order 200）包一层接到三个回调；
-/// 必须同时带上 <c>ExtensionAwareSnapshot</c>（RewindLab 原版把 draft 丢掉、且从不调
-/// <c>OnBeforeRestore</c>/<c>OnAfterRestore</c>，只注册 = 死代码）；扩展数据要随 <c>ISnapshotDraft</c> 走。</para>
-/// <para>与 搁浅的 <see cref="StasisRewindHooks" />（order 100）互不依赖：搁浅 撤销要"母本回牌组"，时空裂隙 明确不回滚。</para>
+/// ① 职责：<c>OnCapture</c> 记下"快照那一刻间隙里有什么"（留给观察 / 定价统计）；<c>OnBeforeRestore</c> / <c>OnAfterRestore</c> 刻意空实现。
+/// ② 挂点与时机：<c>IRewindExtension</c>，由回溯模块注册；只在这条接缝上被调。
+/// ③ 依赖：<c>ISnapshotDraft</c>、<c>GapStore</c>；<c>GapRewindExtension</c>（Lab B 版）是等价物。
+/// ④ ⚠️ <b>时空裂隙刻意不回档</b>—— 定价表 §0 承认的策略收益：恢复战斗牌堆后本体回来、间隙与副本不动 ⇒ 净多出"副本那一份"。
+/// 真正接线时要用 <c>IRewindExtension</c>（order 200）包一层，并同时带上 <c>ExtensionAwareSnapshot</c>
+/// （RewindLab 原版把 draft 丢掉、且从不回调这两个方法，只注册 = 死代码）。与搁浅的 <c>StasisRewindHooks</c>（order 100）互不依赖。
 /// </remarks>
 internal static class GapRewindHooks
 {

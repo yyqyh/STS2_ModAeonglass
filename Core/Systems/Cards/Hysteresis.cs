@@ -4,19 +4,12 @@ namespace STS2_Aeonglass.Core.Systems.Cards;
 
 /// <summary>「迟滞」：带这个关键词的牌<b>不参与洗牌</b>（洗牌时跳过、留在弃牌堆）。</summary>
 /// <remarks>
-/// <para><b>规则层 v1.1 的四条口径</b>：</para>
-/// <list type="number">
-/// <item><description>带迟滞的牌**不参与洗牌**（跳过、留在弃牌堆）—— 由 <c>AeonglassCore.ModifyShuffleOrder</c> 执行。</description></item>
-/// <item><description><b>战斗内限定</b>：洗牌只发生在战斗内，所以效果天然只在战斗内生效。</description></item>
-/// <item><description><b>不拒绝"被指定"</b>：迟滞只挡"随机洗牌"，不挡任何主动捞回（本类不拦任何 targeted 效果）。</description></item>
-/// <item><description><b>无死锁兜底</b>：若这一批要洗的牌**全是**迟滞牌，则这一次忽略迟滞（否则抽牌堆永远是空的）。</description></item>
-/// </list>
-/// <para>
-/// <b>怎么给一张牌打上迟滞</b>（两条路都生效）：
-/// ① **正规路**：卡定义实现标记接口 <see cref="IHysteresisCard" />（词条显示另按"声明 CardKeyword.None"那套做，
-/// 见接口注释里说明的槽位限制）；
-/// ② **测试路**：<see cref="Mark" />，控制面板「卡组」页有对应按钮。
-/// </para>
+/// ① 职责：<c>Mark</c> 打标记 + 判定"洗牌时这张要不要跳过"。
+/// ② 挂点与时机：<c>AeonglassCore.ModifyShuffleOrder</c> 执行；控制面板「卡组」页有测试按钮。
+/// ③ 依赖：<see cref="IHysteresisCard" />（正规路声明）、卡关键词与 <c>static_hover_tips</c> 文案。
+/// ④ ⚠️ 规则层 v1.1 口径：战斗内限定（洗牌只发生在战斗内）；只挡"随机洗牌"、不挡任何主动捞回；
+/// 若这一批要洗的牌<b>全是</b>迟滞牌，则这一次忽略迟滞（无死锁兜底，否则抽牌堆永远是空的）。
+/// 打标记两条路都生效：卡定义实现 <see cref="IHysteresisCard" />（正规，词条槽位限制见接口注释）/ <c>Mark</c>（测试）。
 /// </remarks>
 internal static class Hysteresis
 {

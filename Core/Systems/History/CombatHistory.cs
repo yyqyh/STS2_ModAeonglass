@@ -6,24 +6,14 @@ using MegaCrit.Sts2.Core.Models;
 namespace STS2_Aeonglass.Core.Systems.History;
 
 /// <summary>
-/// <b>战斗历史数据层</b>：给"读已发生的回合 / 读全场统计"这类卡提供计数
-/// （ANN 通道的年轮 / 刻痕 / 积卷 / 编年，RW 通道的"本场回溯过 / 本场累计消耗沙砾"）。
+/// 战斗历史<b>数据层</b>：本回合/上回合的出牌数、翻转数、回溯数等。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>两个粒度</b>：① **上回合**（打出的牌数 / 其中攻击牌数）—— 供"奖励静"或"读上一动作"的卡；
-/// ② **本场累计**（翻转次数 / 回溯次数 / 消耗沙砾总量）。
-/// </para>
-/// <para>
-/// <b>怎么记</b>：不注册任何新钩子实体 —— 由已有的 <c>AeonglassCore</c>（起始遗物，天然的战斗 hook 监听者）
-/// 在 <c>AfterCardPlayed</c> / <c>AfterSideTurnEnd</c> 里喂进来；翻转 / 回溯 / 消耗沙砾分别在各自的
-/// 单一入口里打点。
-/// </para>
-/// <para>
-/// <b>回合切换</b>：与 间隙的闸门同一套写法 —— 每条记录带"(战斗, 回合)"，回合号一变就自动把
-/// "本回合"滚成"上回合"（不需要额外的回合开始钩子）。
-/// </para>
+/// ① 职责：打点与读取（年轮/刻痕/因果等卡读它）。
+/// ② 调用时机：出牌、回合切换、翻转/回溯事件。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class CombatHistory
 {
     private sealed class Record

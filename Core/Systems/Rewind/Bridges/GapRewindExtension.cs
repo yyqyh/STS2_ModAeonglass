@@ -3,26 +3,23 @@ using STS2_Aeonglass.Core.Systems.Rewind.Policy;
 using STS2_Aeonglass.Core.Systems.Bootstrap;
 
 using STS2_Aeonglass.Core.Systems.Gap;
+
 namespace STS2_Aeonglass.Core.Systems.Rewind.Bridges;
 
 /// <summary>
-/// 回溯 ↔ 时空裂隙的接缝（<b>order 200</b>）。
+/// 回溯 ↔ 时空裂隙的接缝（order 200）：回档时把间隙存储/显示一起回退。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>约定：时空裂隙 只在 <c>OnCapture</c> 记数、两个 restore 刻意空实现</b> ——
-/// "本体被快照还原 + 间隙副本仍在"是**刻意的策略收益**（印牌定价的收益对象），不是要修的 bug。
-/// </para>
-/// <para>
-/// 注意间隙牌堆是 <c>RunPersistent</c>，**不在**战斗牌堆的恢复范围内，
-/// 所以引擎恢复牌堆时天然不会碰它 —— 这两个空实现是"把设计写进代码"的显式声明。
-/// </para>
+/// ① 职责：抓取/恢复间隙牌堆与额外手牌区。
+/// ② 调用时机：回溯各阶段回调。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal sealed class GapRewindExtension : IRewindExtension
 {
-    private const string DraftKey = "m2.timeGap";
+    private const string DraftKey = "gap.timeGap";
 
-    public string Name => "aeonglass-m2-gap";
+    public string Name => "aeonglass-gap";
 
     public int Order => 200;
 

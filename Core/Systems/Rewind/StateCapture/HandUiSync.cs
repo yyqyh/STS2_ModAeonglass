@@ -6,9 +6,14 @@ using MegaCrit.Sts2.Core.Nodes.Combat;
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>
-/// 手牌 UI 是"模型 → 节点"的投影：静默改完牌堆后必须重建投影，否则界面还停在旧手牌。
-/// 只处理"多退少补"，不重建已有 holder。
+/// 手牌 UI 是"模型 → 节点"的投影：静默改完牌堆后必须重建投影。
 /// </summary>
+/// <remarks>
+/// ① 职责：按模型重建手牌节点（不发事件那套）。
+/// ② 调用时机：回档恢复完（<c>RewindUiRefresh</c> 之后）。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal static class HandUiSync
 {
     internal static void Sync(Player player)

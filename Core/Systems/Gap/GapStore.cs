@@ -25,24 +25,14 @@ public readonly record struct GapResult(bool Ok, string Message)
     public static GapResult Fail(string message) => new(false, message);
 }
 
-/// <summary>
-/// 时空裂隙本体：<b>复制手牌 → 本体离场 → 补抽</b>；<b>丢弃手牌 → 把间隙里的牌搬回手牌</b>。
-/// </summary>
+/// <summary>时空裂隙的<b>存储侧</b>：牌堆本体 + 容量 / 读数 / 描述 + 动作代价。</summary>
 /// <remarks>
-/// <para>
-/// <b>间隙里放的是「真实卡牌实例」</b>（`CombatState.CloneCard` 造出来的副本，`DeckVersion` 为 null），
-/// 直接躺在一个 `RunPersistent` 牌堆里 —— 所以：① 牌堆界面能看见它们；② 搬回手牌即可直接打出；
-/// ③ 跨战斗保留（牌堆随 run 走 + 随 run 存档）。
-/// </para>
-/// <para>
-/// 之前那版把它做成了"存档数据槽里的 <c>SerializableCard</c> 列表"，结果牌堆界面永远是空的、
-/// 而且补抽前的移除用了 `skipVisuals: true` 导致手牌 UI 留下"幻影"节点。**已按用户的处理逻辑重做**。
-/// </para>
-/// <para>
-/// <b>为什么"代价"堵不住无限循环</b>：花沙砾会等量生成空隙（时之沙的不变式），倒置又能把空隙换回沙砾
-    /// ⇒ 沙砾池可循环。所以硬闸只剩下 <b>「必须交替」（<see cref="GapAlternation" />）</b>
-    /// —— 每回合激活次数的上限**已按用户 2026-10-14 口径取消**（速率只由交替与代价限）。
-/// </para>
+/// ① 职责：间隙牌堆的读写与清空、容量与读数、<c>ActionCost</c>；坍缩 / 换回的流程在 <c>GapCollapseActions</c> / <c>GapRecallActions</c>。
+/// ② 挂点与时机：牌堆由 <c>ExtraPileModules</c> 注册；表现层与两个动作类都从这里读。
+/// ③ 依赖：RitsuLib <c>CardPiles</c>、<c>DeckPiles</c>（间隙跟着哪副牌组）、<c>AlphaBeta</c>（α or β 被动）、设置项。
+/// ④ ⚠️ 间隙里放的是<b>真实卡牌实例</b>（<c>CombatState.CloneCard</c> 的副本、<c>DeckVersion</c> 为 null）躺在 <c>RunPersistent</c> 牌堆里
+/// ⇒ 牌堆界面能看见、搬回手牌即可打出、跨战斗保留（旧版"存档数据槽里的 <c>SerializableCard</c> 列表"已废，那一版界面永远空着）。
+/// 代价堵不住循环（花沙砾会等量生成空隙、倒置又能换回来）⇒ 硬闸只有「必须交替」；每回合次数上限已按 2026-10-14 口径取消。
 /// </remarks>
 internal static class GapStore
 {
@@ -57,7 +47,7 @@ internal static class GapStore
     /// </summary>
     /// <remarks>
     /// 给"按 id 找 RitsuLib 的额外手牌容器"用。
-    /// ⚠️ 2026-10-12 实测踩坑：一度误用了 `StasisZone.ZoneId`（那是 **搁浅 搁浅**的 id）⇒ 永远找不到容器。
+    /// ⚠️ 2026-10-12 实测踩坑：一度误用了 `StasisStore.ZoneId`（那是 **搁浅 搁浅**的 id）⇒ 永远找不到容器。
     /// </remarks>
     public static string ZoneId => _zoneId;
 

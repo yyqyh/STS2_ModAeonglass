@@ -1,11 +1,14 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.Policy;
 
 /// <summary>
-/// "恢复期"标志（规格 §2.6.3 的恢复期坑 1）。
-/// 恢复期间 <c>PowerModel.SetAmount</c> 会被 Harmony prefix 拦掉，改为直接反射写
-/// <c>_amount</c> / <c>_amountOnTurnStart</c>，从而一次性覆盖
-/// <c>DisplayAmountChanged</c>（NPower 刷数字）与 <c>InvokePowerModified</c>（PowerIncreased/Decreased 事件）两条路径。
+/// 回溯的<b>恢复期标志</b>：恢复期间钩子要放行（别把回档当成玩家操作）。
 /// </summary>
+/// <remarks>
+/// ① 职责：<c>Enter()</c> 返回可释放作用域，恢复期判定。
+/// ② 调用时机：恢复流程与相关补丁/钩子。
+/// ④ ⚠️ 见 README 的命名与注释口径；口径沿革以注释里带日期的那行为准。
+/// </remarks>
+
 internal static class RestoreGuard
 {
     private static int _depth;

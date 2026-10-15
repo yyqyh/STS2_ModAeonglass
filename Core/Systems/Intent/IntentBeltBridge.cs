@@ -1,14 +1,15 @@
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 using MegaCrit.Sts2.Core.Entities.Creatures;
-
 /// <summary>
-/// **系统层 → 卡带（表现层）的唯一接缝**：指向模式开关时通知卡带"切可点 / 切回只读"。
+/// 系统层 → 卡带的<b>唯一接缝</b>：通知表现层切可点/给高光。
 /// </summary>
 /// <remarks>
-/// 为什么要有这层：意图的系统层（<see cref="IntentTargeting" />）不该直接引用表现层的节点类型。
-/// 卡带挂载时把自己的静态方法注册进来；没注册（比如卡带没挂）时这里就是空操作，不影响机制。
+/// ① 职责：转发指向模式开关。
+/// ② 调用时机：<c>IntentTargeting</c>。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class IntentBeltBridge
 {
     /// <summary>由卡带注册："把可点状态切成 on"。</summary>

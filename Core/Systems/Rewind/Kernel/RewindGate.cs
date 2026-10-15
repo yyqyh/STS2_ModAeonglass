@@ -1,6 +1,14 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
-/// <summary>整组闸门结果。</summary>
+/// <summary>
+/// 回溯的<b>门禁</b>：把若干"能不能回溯"的检查串成一组，返回第一条拒绝理由。
+/// </summary>
+/// <remarks>
+/// ① 职责：<c>IRewindGateCheck</c> / <c>GateCheck</c> / <c>RewindGateGroup</c>（三条各一文件）。
+/// ② 调用时机：发起回溯前（<c>RewindFacade.EvaluateGates</c>）。
+/// ④ ⚠️ 见 README 的命名与注释口径；口径沿革以注释里带日期的那行为准。
+/// </remarks>
+
 public readonly record struct GateResult(bool Ok, IReadOnlyList<GateCheck> Checks)
 {
     public string FirstFailureName =>

@@ -7,9 +7,14 @@ using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>
-/// 回档期的外锁：禁玩家操作 → 停 UI → 暂停执行器 → 暂停所有玩家队列。
-/// 解锁按相反顺序；每一步都不允许抛（失败只记日志）。
+/// 回档期的<b>外锁</b>：禁玩家操作 → 停 UI → 暂停执行器与玩家队列。
 /// </summary>
+/// <remarks>
+/// ① 职责：<c>IRewindLock</c> 的实现（进入/退出成对）。
+/// ② 调用时机：恢复流程前后；异常路径必须放锁。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal sealed class CombatRewindLock(IRewindLog log) : IRewindLock
 {
     public void Engage(string reason)

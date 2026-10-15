@@ -17,7 +17,7 @@ namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 /// ① 效果：本卡自身没有立即效果（<c>OnPlay</c> 只记一行日志）；升级 = 获得[固有]。
 /// ② 差分：<b>永时副（A）</b> = 给予凋萎时额外 +1 张；<b>流逝副（B）</b> = 「坍缩」「唤回」只消耗 1 沙砾。
 /// ③ 依赖：<c>AlphaBetaPassive</c>（带着这张牌 + 本局未用过回溯才生效，读 <c>RunHistory.Rewinds</c>）、
-///    <c>WitherPool.Inject</c> / <c>GapStore.ActionCostFor</c>；回溯 接缝 <c>AlphaBetaRewindExtension</c>（order 260：
+///    <c>WitherEffects.Inject</c> / <c>GapStore.ActionCostFor</c>；回溯 接缝 <c>AlphaBetaRewindExtension</c>（order 260：
 ///    每次回溯把散落实例收回卡组并补发一张进手牌，手牌已有就不叠）。
 /// ④ ⚠️ 踩红线：「流逝」＝给 时空裂隙 降门槛（P11 守则 4），卡池侧已标红；替代原「唯一时间线」（RW-5 占位已关）。
 /// </remarks>

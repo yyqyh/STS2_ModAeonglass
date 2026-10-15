@@ -11,21 +11,14 @@ using STS2_Aeonglass.Core.Content.Relics;
 
 namespace STS2_Aeonglass.Core.Systems.Rewind;
 
-/// <summary>
-/// <b>「破碎的怀表」事件链</b>：把那个只有一个选项的事件，接着先古（捏奥）之后开出来。
-/// </summary>
+/// <summary><b>「破碎的怀表」事件链</b>：把那个只有一个选项的事件，接着先古（捏奥）之后开出来。</summary>
 /// <remarks>
-/// <para>
-/// <b>三条触发路都要有</b>（用户 2026-10-14 报的漏就是第一条不够）：
-/// ① 捏奥事件<b>刚结束</b> —— <c>EventRoom.OnEventStateChanged</c>（本体只在这条路上叫它）；
-/// ② <b>在初始房间存档 / 读档</b>之后 —— 房间以"已完成（PreFinished）"恢复，本体<b>不会再叫</b>①那个钩子，
-/// 所以必须补一个 <c>EventRoom.EnterInternal</c> 的入口；
-/// ③ 离开初始房间之后才 SL（落在地图上）—— 由 <c>RoomEnteredEvent</c> 在地图上补接一次。
-/// </para>
-/// <para>
-/// 待办状态记在起始遗物的 <c>[SavedProperty] BrokenWatchPending</c> 上 ⇒ 跨读档不丢；
-/// 拿到怀表（或发现已经拿到了）就清零，所以"接事件"这件事最多发生一次。
-/// </para>
+/// ① 职责：判定"该不该现在接事件 / 发怀表"并执行；待办标记的读写。
+/// ② 挂点与时机：三条路都要有 —— 捏奥事件刚结束（<c>EventRoom.OnEventStateChanged</c>，本体只在这条路上叫它）、
+/// 初始房间存档 / 读档后（房间以 PreFinished 恢复，本体不会再叫前一个钩子，所以要补 <c>EventRoom.EnterInternal</c> 入口）、
+/// 离开初始房间后 SL（落在地图上，由 <c>RoomEnteredEvent</c> 补接一次）。
+/// ③ 依赖：起始遗物的 <c>[SavedProperty] BrokenWatchPending</c>、事件模型 <c>AeonglassBrokenWatchEvent</c>。
+/// ④ ⚠️ 用户 2026-10-14 报的漏就是"第一条不够"；待办标记记在 <c>[SavedProperty]</c> 上跨读档不丢，拿到怀表就清零 ⇒ 接事件最多发生一次。
 /// </remarks>
 internal static class BrokenWatchChain
 {

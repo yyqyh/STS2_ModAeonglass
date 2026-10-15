@@ -4,24 +4,14 @@ using MegaCrit.Sts2.Core.Entities.Players;
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>
-/// **指向模式**（用户 2026-10-12）：动作卡打出后进入"选目标"状态，
-/// 目标就是怪物意图卡带上的**意图卡** —— 交互同一张卡选一只怪那样：悬停高亮、点一下即选中并结算。
+/// 指向模式：动作卡打出后进入"选意图卡"状态。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>状态：保留的备选路径</b>（当前正式形态是**原版卡牌指向**，见 <c>IntentTargetingPatches</c>）。
-/// **启用时机**：原版那条链路若被本体改动而失效，就把三张动作卡切回"打出即进本模式"，
-/// 由我们自己接卡带的悬停/点击（卡带侧 <c>SetTargeting</c> 分支已就绪）。
-/// </para>
-/// <para>
-/// 为什么不用本体的 <c>TargetType</c>：本体的目标模型是"生物"（<c>CardPlay.Target</c> 是 <c>Creature</c>），
-/// 没有"以卡牌为目标"这一档；所以这里自己做一层，但**交互形态照抄**（进模式 → 悬停 → 点击 → 立即结算）。
-/// </para>
-/// <para>
-/// 卡带那一侧靠 <c>AeonglassIntentBelt</c> 把意图卡切成可点（并让悬停给青色高光），点中后回调到
-/// <see cref="TrySubmit" />。取消（再按一次动作卡 / 战斗结束）走 <see cref="Cancel" />。
-/// </para>
+/// ① 职责：开/关指向，通知卡带切可点。
+/// ② 调用时机：卡牌指向流程。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class IntentTargeting
 {
     private static Player? _player;

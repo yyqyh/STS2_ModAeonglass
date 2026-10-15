@@ -1,24 +1,15 @@
 namespace STS2_Aeonglass.Core.Systems.Bootstrap;
 
 using STS2_Aeonglass.Core.Systems.Bootstrap;
-
 /// <summary>
-/// 机制注册总线：<b>逐条</b>按设置开关注册各机制模块，单条失败不影响其它条。
+/// 机制注册<b>总线</b>：逐条按开关注册各机制模块，单条失败不影响其它。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 这一层的存在是为了让 <c>Main</c> 保持"薄"：Main 只调一次 <see cref="RegisterAll" />，
-/// 不认识任何机制细节。新增机制 = 加一行 <see cref="Register(string, System.Func{bool}, System.Action)" />。
-/// </para>
-/// <para>
-/// 纪律：① <b>一条机制一个开关</b>（关掉即整块不注册，回到"只有卡牌数值"）；
-/// ② 每条独立 try/catch，一条炸了不影响其它条；③ 注册顺序 = 依赖顺序（目前 时之沙 无前置）。
-/// </para>
-/// <para>
-/// 注意：次级资源 / 牌区 / 卡池这类东西**只能在初始化时注册一次**，
-/// 所以开关改动要**重启游戏**才生效（设置页里已写明）。
-/// </para>
+/// ① 职责：<c>Register</c> 里按顺序调各模块入口。
+/// ② 调用时机：<c>Main</c> 启动一次。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class MechanismBootstrap
 {
     /// <summary>在 <c>Main.Initialize()</c> 里调用一次。</summary>

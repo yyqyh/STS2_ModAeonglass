@@ -5,9 +5,14 @@ using MegaCrit.Sts2.Core.MonsterMoves.MonsterMoveStateMachine;
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>
-/// 意图状态机的<b>唯一写入口</b>：所有改动 <c>MonsterModel.NextMove</c> / 状态机的调用都收在这里，
-/// 于是"必须是 <c>forceTransition: true</c>"这条纪律只需要在一个文件里守。
+/// 意图状态机的<b>唯一写入口</b>：所有本体招式改动都经它。
 /// </summary>
+/// <remarks>
+/// ① 职责：设置下一步 / 推进 / 兜底 follow-up。
+/// ② 调用时机：解析器与动作。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal static class IntentOps
 {
     /// <summary>

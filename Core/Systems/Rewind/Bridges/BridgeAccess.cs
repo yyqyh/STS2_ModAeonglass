@@ -4,12 +4,14 @@ using MegaCrit.Sts2.Core.Runs;
 namespace STS2_Aeonglass.Core.Systems.Rewind.Bridges;
 
 /// <summary>
-/// 接缝侧的只读访问helper（读状态，不改状态）。
+/// 接缝侧的只读访问助手（读状态，不改状态）。
 /// </summary>
 /// <remarks>
-/// Lab B 里这份代码叫 <c>LabA.Binding.GameAccess</c>；角色 mod 里只需要"枚举这一局的玩家"这一件事，
-/// 所以收成一个小助手，不再单开一层 Binding。
+/// ① 职责：给各接缝共享的读取口。
+/// ② 调用时机：接缝回调。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class BridgeAccess
 {
     /// <summary>当前跑局（不在跑局里时为 null）。</summary>

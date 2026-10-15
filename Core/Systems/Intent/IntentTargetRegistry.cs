@@ -5,24 +5,14 @@ using MegaCrit.Sts2.Core.Entities.Creatures;
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>
-/// **意图卡目标登记表**（用户 2026-10-12 要的"原版卡牌指向"的侧通道）。
+/// 意图卡<b>目标登记表</b>：原版指向链路拿不到"卡"这个目标，用它旁路。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 为什么要它：<c>CardPlay.Target</c> 是 <c>Creature?</c> —— 点中的"卡"**没法随这次出牌传进来**，
-/// 所以用侧表把"意图卡节点 ↔ 意图卡"登记下来，再由三个 patch 串起来（见 <c>IntentTargetingPatches</c>）：
-/// <list type="number">
-///   <item><description>卡带把每张意图卡的 <c>NCard</c> 节点登记进来（<see cref="Register" />）；</description></item>
-///   <item><description>瞄准时 <c>NTargetManager.AllowedToTargetNode</c> 放行这些节点；</description></item>
-///   <item><description>玩家悬停/点击时记下"最近指向的那张"（<see cref="NoteHovered" /> / <see cref="CommitHovered" />）；</description></item>
-///   <item><description>卡牌 <c>OnPlay</c> 里用 <see cref="TakePending" /> 取回它 —— 不读 <c>cardPlay.Target</c>（必为 null）。</description></item>
-/// </list>
-/// </para>
-/// <para>
-/// 只认"我们登记过的节点"，所以**只能指向我们的意图卡**（用户 2026-10-12 口径）；
-/// 其余指向方案（选择器 / 我们自己的点击链路 / 直连）都保留着，随时可切 ✔。
-/// </para>
+/// ① 职责：登记/取回本次点中的意图。
+/// ② 调用时机：指向回调。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class IntentTargetRegistry
 {
     private static readonly Dictionary<Node, IntentCard> Nodes = [];

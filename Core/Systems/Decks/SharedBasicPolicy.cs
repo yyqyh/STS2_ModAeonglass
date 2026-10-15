@@ -4,20 +4,18 @@ using MegaCrit.Sts2.Core.Models;
 using STS2_Aeonglass.Core.Systems.Bootstrap;
 
 using STS2_Aeonglass.Core.Systems.Stasis;
+
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
-/// <summary>P3-4 的守门：**共用池的基础牌不带"离开牌堆 / 牌组"类关键词**。</summary>
+/// <summary>
+/// 共用池策略：哪些基础牌两副都有一份（孪生的白名单）。
+/// </summary>
 /// <remarks>
-/// <para>
-/// 为什么这条是硬的：共用池的基础牌在两副各有一份实例（孪生）。如果它带"离开牌组"类关键词
-/// （搁浅 / 虚无 / 消耗 / 终章），那么打出其中一份就会让它离队，而**孪生还留在另一副**
-/// ⇒ 两副立刻 desync，"同一张牌在两副一样"这条前提破掉。
-/// </para>
-/// <para>
-/// 这里**只审计 + 警告，不阻断**：① 卡表还没定稿，拦下来会把测试卡住；
-/// ② 真有例外（将来设计上就要"两副各自独立"的牌）由卡表侧明确声明，而不是被这里静默改掉。
-/// </para>
+/// ① 职责：判定某张牌是否共用。
+/// ② 调用时机：播种与孪生配对。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class SharedBasicPolicy
 {
     /// <summary>这张牌违反了 P3-4 吗？违反就返回原因（中文，直接进日志 / 面板）。</summary>

@@ -9,21 +9,14 @@ using STS2_Aeonglass.Core.Config;
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
 /// <summary>
-/// 双卡组模块入口：注册第二副牌组的牌堆 + 战斗开始时补播种。
+/// 双卡组的<b>模块入口</b>：注册第二副牌堆、战斗开始时补播种。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>与 Zones 分模块</b>（派单口径）：牌区能力在 <c>Core/Systems/Zones/</c>，
-/// 双卡组在 <c>Core/Systems/Decks/</c>；只服务 双卡组的补丁（目前<b>不需要</b>）
-/// 才放 <c>Core/Systems/Decks/Patches/</c>。
-/// </para>
-/// <para>
-/// <b>关掉 双卡组 时不留坏状态</b>：总开关关掉 ⇒ 这个牌堆根本不注册、run 钩子直接返回、
-/// 调试按键不挂；<c>player.Deck</c> 就是本体那一副，一切照旧。
-/// （已经切过、再关掉的情况：非生效的那副会留在 <c>deck_b</c> 牌堆里不再轮换 —— 不会丢牌，
-/// 但也不会自动回主卡组，所以正式发布前不要在局中关这个开关。）
-/// </para>
+/// ① 职责：<c>Register</c>/<c>Enabled</c> 与生命周期订阅。
+/// ② 调用时机：机制总线注册；战斗开始/结束事件。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class DeckModule
 {
     /// <summary>日志 / 设置页里显示的机制名。</summary>
@@ -76,7 +69,7 @@ internal static class DeckModule
 
                 foreach (var player in evt.RunState.Players)
                 {
-                    DeckPiles.EnsureInitialized(player);
+                    DeckSeeding.EnsureInitialized(player);
                 }
 
                 Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Decks} 跑局开始：第二副牌组已就位（早于第一场战斗）");
@@ -99,7 +92,7 @@ internal static class DeckModule
 
                 foreach (var player in Players())
                 {
-                    DeckPiles.EnsureInitialized(player);
+                    DeckSeeding.EnsureInitialized(player);
                 }
             }
             catch (Exception ex)

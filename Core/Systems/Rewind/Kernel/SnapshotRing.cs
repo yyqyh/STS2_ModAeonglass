@@ -1,6 +1,14 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
-/// <summary>环形快照缓冲：容量满时淘汰最旧（并释放它）。</summary>
+/// <summary>
+/// 回溯的<b>快照环</b>：按容量保存最近 N 个快照（回合粒度的历史）。
+/// </summary>
+/// <remarks>
+/// ① 职责：入环 / 取上一个 / 清理与容量控制。
+/// ② 调用时机：每回合开始抓一次；回溯时取上一个。
+/// ④ ⚠️ 见 README 的命名与注释口径；口径沿革以注释里带日期的那行为准。
+/// </remarks>
+
 public sealed class SnapshotRing(int capacity = 5)
 {
     private readonly List<ISnapshot> _items = [];

@@ -6,27 +6,14 @@ using STS2_Aeonglass.Core.Content.Characters;
 
 namespace STS2_Aeonglass.Core.Systems.Sand;
 
-/// <summary>
-/// 时之沙的核心不变式：<b>花掉多少沙砾，就产生多少空隙</b>；并顺带看守
-/// <c>沙砾 + 空隙 = 容量</c>。
-/// </summary>
+/// <summary>时之沙的核心不变式：<b>花掉多少沙砾就产生多少空隙</b>，并看守 <c>沙砾 + 空隙 = 容量</c>。</summary>
 /// <remarks>
-/// <para>
-/// <b>为什么它是"角色类的那份订阅"却不是一个模型钩子</b>：RitsuLib 的次级资源钩子是从本体
-/// <c>CombatState.IterateHookListeners()</c> 收集的，而那串清单只有
-/// <b>能力 / 怪物 / 遗物 / 药水 / 充能球 / 战斗牌堆里的牌（含侵蚀与附魔）/ 修正器 / 徽章 / 联机缩放</b>
-/// —— <b>不含 <c>CharacterModel</c></b>；而且 <c>CharacterModel.ShouldReceiveCombatHooks == false</c>，
-/// 连"当额外模型塞进去"那条路也会被过滤掉。
-/// 所以把 <c>ISecondaryResourceHookListener</c> 直接写在 <c>Aeonglass</c> 类上，那个方法<b>永远不会被调用</b>。
-/// </para>
-/// <para>
-/// 因此走 RitsuLib 的第三条路：<see cref="SecondaryResourceHook.RegisterGlobalListener" /> 注册
-/// <b>进程级监听器</b>，每个回调按角色过滤 —— 效果与"挂在角色类上"完全等价。
-/// </para>
-/// <para>
-/// <b>不变式只在"支付"这条路上成立</b>：沙砾的其它来源不产生空隙，空隙的减少（间隙的换回代价）也不回吐沙砾。
-/// 因此任何"凭空给沙砾"的入口都会破坏 <c>沙砾 + 空隙 = 容量</c> —— 见 <see cref="CheckInvariant" /> 的自检。
-/// </para>
+/// ① 职责："支付沙砾 → 等量加空隙"的唯一写入口（订阅）+ 不变式自检 <c>CheckInvariant</c> + 转发 <c>ISandSpendListener</c>。
+/// ② 挂点与时机：走 RitsuLib 的 <c>SecondaryResourceHook.RegisterGlobalListener</c>（进程级），每次支付时回调、按角色过滤。
+/// ③ 依赖：<c>SandResourceRegistry</c> 的两个资源、角色门、<c>ISandSpendListener</c>。
+/// ④ ⚠️ 不能写成 <c>CharacterModel</c> 上的 <c>ISecondaryResourceHookListener</c>：本体 <c>IterateHookListeners()</c> 的清单不含角色类，
+/// 且 <c>ShouldReceiveCombatHooks == false</c>，当额外模型塞进去也会被过滤 ⇒ 那个方法永远不会被调用（进程级监听效果等价）。
+/// 不变式只在"支付"这条路上成立：凭空给沙砾会破坏 <c>沙砾 + 空隙 = 容量</c>，不要再加第二个人为入口。
 /// </remarks>
 internal sealed class SandGapInvariant : ISecondaryResourceHookListener
 {

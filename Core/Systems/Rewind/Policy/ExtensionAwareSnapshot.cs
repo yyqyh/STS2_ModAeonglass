@@ -3,12 +3,14 @@ using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 namespace STS2_Aeonglass.Core.Systems.Rewind.Policy;
 
 /// <summary>
-/// 把 <see cref="IRewindExtension"/> 的 <c>OnBeforeRestore</c> / <c>OnAfterRestore</c> 真正挂到恢复流程上。
-///
-/// 为什么要包一层：RewindLab 原版只调了 <c>Extensions.Capture(draft)</c>，草稿随后被丢掉、
-/// 两个恢复钩子从来没被调用。这里把"这份快照对应的草稿片段"随快照一起带着，
-/// 恢复时先 <c>BeforeRestore</c>、再恢复本体、最后 <c>AfterRestore</c>（规格 §2.6.3 第 7 步）。
+/// 把扩展的<b>片段</b>并入快照：恢复时先还原扩展数据，再走本体字段图。
 /// </summary>
+/// <remarks>
+/// ① 职责：包装快照 + 调扩展回调。
+/// ② 调用时机：抓取/恢复。
+/// ④ ⚠️ 见 README 的命名与注释口径；口径沿革以注释里带日期的那行为准。
+/// </remarks>
+
 internal sealed class ExtensionAwareSnapshot(
     ISnapshot inner,
     ExtensionRegistry extensions,

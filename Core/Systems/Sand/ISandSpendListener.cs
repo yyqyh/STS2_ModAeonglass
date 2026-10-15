@@ -2,10 +2,12 @@ using MegaCrit.Sts2.Core.Entities.Players;
 
 namespace STS2_Aeonglass.Core.Systems.Sand;
 
-/// <summary>"消耗了沙砾"的监听口（例：SD-7 结壳 = 每消耗至少 1 点沙砾 +2 挡）。</summary>
+/// <summary>"消耗了沙砾"的监听口（例：每消耗至少 1 点沙砾 +2 挡）。</summary>
 /// <remarks>
-/// 沙砾消耗只有一个写入口（支付沙砾的订阅：<c>SandGapInvariant</c>）⇒ 在那一处转发。
-/// 实现方自己负责"每回合 1 次"这类闸门。
+/// ① 职责：声明 <c>OnSandSpent(player, amount)</c>。
+/// ② 挂点与时机：沙砾消耗只有一个写入口（<c>SandGapInvariant</c> 的支付订阅）⇒ 在那一处转发。
+/// ③ 依赖：无。
+/// ④ ⚠️ "每回合 1 次"这类闸门由实现方自己负责。
 /// </remarks>
 internal interface ISandSpendListener
 {

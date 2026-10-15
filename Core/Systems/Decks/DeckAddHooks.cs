@@ -4,19 +4,14 @@ using MegaCrit.Sts2.Core.Models;
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
 /// <summary>
-/// 双卡组「加入卡组 B」的原版钩子补齐（执行计划 Step 4 的第 4 条）。
+/// 「加入卡组 B」的<b>钩子补齐</b>：让新加入的牌也带上副归属。
 /// </summary>
 /// <remarks>
-/// 生效那一副的新牌本来就走在原版 <c>PileType.Deck</c> 路径上，钩子天然会响；
-/// 缺口只在"直接往**非生效**那副塞牌"这一路 —— 它是我们自己的模组牌堆，本体不认识它。
-/// 这里把本体"加进牌组"会跑的两个钩子按同样顺序补上，给将来的卡牌 / 遗物调用
-/// （要等 Step 8 有真卡才有东西可对照验证）。
-/// <list type="number">
-///   <item><description><c>Hook.ShouldAddToDeck</c>：有"禁止加牌"的效果就拒绝，并带出是谁挡的。</description></item>
-///   <item><description><c>Hook.ModifyCardBeingAddedToDeck</c>：有"加进来的牌会被改造"的效果就换牌。</description></item>
-/// </list>
-/// 两个钩子都**不让异常外泄**：出问题就按"允许 / 不改造"处理并打日志，绝不因为一个效果把加牌流程带崩。
+/// ① 职责：拦卡牌入组并补记录。
+/// ② 调用时机：牌组增删时。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class DeckAddHooks
 {
     /// <summary>能不能把这张牌加进牌组；不能就带出是谁挡的。</summary>

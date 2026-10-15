@@ -3,22 +3,15 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace STS2_Aeonglass.Core.Systems.Stasis;
 
-/// <summary>搁浅 × 回溯的<b>接缝（只留位，未接线）</b>。</summary>
+/// <summary>
+/// 搁浅 ↔ 回溯的<b>接缝外壳</b>：把区域读写交给回溯的 <c>StasisRewindExtension</c>。
+/// </summary>
 /// <remarks>
-/// <para>
-/// 按 C 方案的策略「先做机制、回溯 再 retrofit」：这一层现在就把三个动作的**语义**写清楚，
-/// 但**没有任何人调用它**。回溯 落地时的接线方式（照 Lab B）：
-/// </para>
-/// <list type="number">
-/// <item><description>用 <c>IRewindExtension</c>（<b>order 100</b>）包一层，把 Capture / BeforeRestore / AfterRestore 分别接到 OnCapture / OnBeforeRestore / OnAfterRestore；</description></item>
-/// <item><description>必须同时带上 <c>ExtensionAwareSnapshot</c> —— RewindLab 原版把 draft 丢掉、且从不调 OnBeforeRestore/OnAfterRestore，<b>只注册扩展等于死代码</b>；</description></item>
-/// <item><description>扩展数据要随 <c>ISnapshotDraft</c> 走（存在实例字段上会被备份快照覆盖）。</description></item>
-/// </list>
-/// <para>
-/// <b>唯一性铁律</b>：撤销滞留时必须把<b>母本放回牌组</b>。只把它从搁浅"摘掉"会让牌悬空 = 丢牌
-/// （Lab A 版踩过，Lab B 修好，实测 <c>drift = 0/20</c>）。
-/// </para>
+/// ① 职责：暴露搁浅条的抓取/恢复口。
+/// ② 调用时机：回溯各阶段。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class StasisRewindHooks
 {
     /// <summary>一条滞留记录：哪张牌 + 当时的倒计时。</summary>
@@ -26,7 +19,7 @@ internal static class StasisRewindHooks
 
     /// <summary>快照：把搁浅当前的内容与计数记下来。</summary>
     public static Entry[] Capture(Player player)
-        => StasisZone.ZoneCards(player)
+        => StasisStore.ZoneCards(player)
             .Where(card => card is IStasisCard)
             .Select(card => new Entry(card, ((IStasisCard)card).CombatsLeft))
             .ToArray();
@@ -37,7 +30,7 @@ internal static class StasisRewindHooks
     {
         var known = snapshot.Select(entry => entry.Master).ToHashSet();
 
-        foreach (var card in StasisZone.ZoneCards(player).ToList())
+        foreach (var card in StasisStore.ZoneCards(player).ToList())
         {
             if (known.Contains(card))
             {
@@ -45,14 +38,14 @@ internal static class StasisRewindHooks
             }
 
             Const.Logger.Info($"[{Const.ModId}] [搁浅] 回溯：摘掉快照之后进搁浅的 {card.Id.Entry}（母本回牌组）");
-            await StasisZone.ReturnToDeck(player, card);
+            await StasisReturn.ReturnToDeck(player, card);
         }
     }
 
     /// <summary>恢复后：把快照里的滞留卡放回搁浅，并把倒计时复位。</summary>
     public static void AfterRestore(Player player, Entry[] snapshot)
     {
-        var zone = StasisZone.Zone(player);
+        var zone = StasisStore.Zone(player);
         if (zone is null)
         {
             return;

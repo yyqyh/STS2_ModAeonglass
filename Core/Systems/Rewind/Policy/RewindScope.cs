@@ -1,9 +1,14 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.Policy;
 
 /// <summary>
-/// 回溯作用域开关（规格 §1 与 §7 的可执行版本）。
-/// 这里只回答"这一类要不要回档"，不回答"怎么回" —— 怎么回在各 Stage。
+/// 回溯的<b>作用域开关</b>：决定这次回档回退哪些范围（战斗 / 玩家 / 只读探针）。
 /// </summary>
+/// <remarks>
+/// ① 职责：作用域取值与判定。
+/// ② 调用时机：抓取与恢复前。
+/// ④ ⚠️ 见 README 的命名与注释口径；口径沿革以注释里带日期的那行为准。
+/// </remarks>
+
 internal sealed class RewindScope
 {
     /// <summary>我方 power：回档。</summary>

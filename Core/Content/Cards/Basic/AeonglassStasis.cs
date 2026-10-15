@@ -19,7 +19,7 @@ namespace STS2_Aeonglass.Core.Content.Cards.Basic;
 /// <remarks>
 /// ① 效果：打出后不回任何原版牌堆（落点 <c>PileType.None</c>），把牌组里的母本交给搁浅区；倒计时随存档走。
 /// ② 差分：无差分。
-/// ③ 依赖：搁浅区（<c>ExtraPileModules</c> / <c>StasisZone</c>）+ <c>[SavedProperty] CombatsLeft</c>；
+/// ③ 依赖：搁浅区（<c>ExtraPileModules</c> / <c>StasisStore</c>）+ <c>[SavedProperty] CombatsLeft</c>；
 ///    与「铭刻 / 封沙 / 破片」共用同一套搁浅流程（那三张已收进 <c>AeonglassStasis*Template</c>）。
 /// ④ ⚠️ 搁浅未注册（<c>ExtraPileModules.StasisEnabled = false</c>）时退回本体默认落点（进弃牌堆）—— 卡退化成 0 效果技能牌，<b>不会</b>平白消失。
 ///    起始牌组现在是 打击×4 + 防御×4 + 潮汐×1 + 堤岸×1（共 10 张，见 <c>DeckBSeed</c>）⇒ 本卡要靠奖励/控制台拿到。
@@ -61,7 +61,7 @@ public sealed class AeonglassStasis : ModCardTemplate, IStasisCard
 
     /// <summary>打出后不回任何原版牌堆（搁浅 关掉时退回本体默认行为）。</summary>
     protected override CardLocation GetResultLocationForCardPlay()
-        => ExtraPileModules.StasisEnabled && StasisZone.IsReady
+        => ExtraPileModules.StasisEnabled && StasisStore.IsReady
             ? new CardLocation(Owner, PileType.None, CardPilePosition.Bottom)
             : base.GetResultLocationForCardPlay();
 
@@ -73,7 +73,7 @@ public sealed class AeonglassStasis : ModCardTemplate, IStasisCard
             return;
         }
 
-        if (!ExtraPileModules.StasisEnabled || !StasisZone.IsReady)
+        if (!ExtraPileModules.StasisEnabled || !StasisStore.IsReady)
         {
             return;
         }
@@ -87,6 +87,6 @@ public sealed class AeonglassStasis : ModCardTemplate, IStasisCard
         var master = DeckVersion;
         DeckVersion = null;
 
-        await StasisZone.SendToZone(Owner, master, AeonglassSettingStore.Current.StasisCombats);
+        await StasisReturn.SendToZone(Owner, master, AeonglassSettingStore.Current.StasisCombats);
     }
 }

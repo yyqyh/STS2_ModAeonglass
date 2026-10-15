@@ -5,12 +5,14 @@ using STS2_Aeonglass.Core.Systems.Rewind.Policy;
 namespace STS2_Aeonglass.Core.Systems.Rewind.Bridges;
 
 /// <summary>
-/// 回溯 ↔「延宕」的接缝（<b>order 250</b>）。
+/// 回溯 ↔ 延宕的接缝（order 250）：欠账与实例列表一起回退。
 /// </summary>
 /// <remarks>
-/// 规则层 §2.8.4 第 6 条：延宕与欠账都是<b>玩家侧状态</b> ⇒ 回溯要一并回退（合法且合理）。
-/// 所以这条接缝是**真的回档**（不是像 时空裂隙那样的刻意空实现）：把欠账列表与延宕窗口一起写回去。
+/// ① 职责：<c>DeferralLedger.Snapshot/Restore</c>。
+/// ② 调用时机：回溯抓取/恢复。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal sealed class DeferralRewindExtension : IRewindExtension
 {
     private const string DraftKey = "aeonglass.deferral";

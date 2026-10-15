@@ -5,18 +5,14 @@ using STS2_Aeonglass.Core.Content.Relics;
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
 /// <summary>
-/// 双卡组的状态读写单点：全部落在初始遗物「沙漏之心」的 <c>[SavedProperty]</c> 上。
+/// 双卡组的<b>状态读写单点</b>：全部落在起始遗物的存档字段上。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>为什么挂遗物</b>：本体的局内可存字段只认 <c>[SavedProperty]</c>，而 <c>CharacterModel</c>
-/// 不在钩子分发里、也不随局内数据走（堕化拉撒路的实测结论；本项目的《工作约定》也记了这条）。
-/// 遗物是这局真正持有的对象 —— 双卡组 只借它当"状态载体"，机制逻辑一律在 <c>Core/Systems/Decks/</c>。
-/// </para>
-/// <para>
-/// 冷却是"主动切换"的节奏闸：每场战斗结束 +1，主动切换成功时清零。默认 0 = 无冷却（测试期）。
-/// </para>
+/// ① 职责：当前副 / 是否播种 / 冷却 / 切换次数。
+/// ② 调用时机：切副、播种、run 钩子。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class DeckState
 {
     /// <summary>把冷却计数钳在这个上限内，免得长局里数字无限涨。</summary>

@@ -21,7 +21,7 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// <remarks>
 /// ① 效果：敌人侧走 凋萎 注入口；自己侧把同一张不可打出的凋萎卡实例塞进自己的弃牌堆（占牌位）。
 /// ② 差分：无差分。
-/// ③ 依赖：<c>WitherPool.Inject</c>（敌人侧）+ <c>RunState.CreateCard</c> / <c>CardPileCmd.Add</c>（自己侧）。
+/// ③ 依赖：<c>WitherEffects.Inject</c>（敌人侧）+ <c>RunState.CreateCard</c> / <c>CardPileCmd.Add</c>（自己侧）。
 /// ④ ⚠️ 玩家侧凋萎是 2026-10-15 用户新开的（凋萎 原口径"只存在于怪物手牌"被推翻）⇒ 它那句"掉血"只在怪物手牌里生效，在自己牌堆里是纯堵塞；要有惩罚只改 <c>PutIntoOwnDiscardAsync</c> 一处。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
@@ -43,7 +43,7 @@ public sealed class AeonglassMutualRuin()
 
         if (cardPlay.Target is { } target)
         {
-            Const.Logger.Info($"[{Const.ModId}] 玉石俱焚：{WitherPool.Inject(target, toEnemy)}");
+            Const.Logger.Info($"[{Const.ModId}] 玉石俱焚：{WitherEffects.Inject(target, toEnemy)}");
         }
 
         Const.Logger.Info($"[{Const.ModId}] 玉石俱焚：自己弃牌堆 +{await PutIntoOwnDiscardAsync(Owner, toSelf)} 张凋萎");

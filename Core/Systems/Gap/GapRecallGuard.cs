@@ -2,13 +2,12 @@ using MegaCrit.Sts2.Core.Entities.Players;
 
 namespace STS2_Aeonglass.Core.Systems.Gap;
 
-/// <summary>「本回合回归时别丢手牌」的开关位（GAP-2 缓收引入）。</summary>
+/// <summary>「本回合换回时别丢手牌」的开关位。</summary>
 /// <remarks>
-/// <para>
-/// 卡在打出时把"间隙至少要有几张牌"的门槛挂上；真正生效点是 <c>GapRecallActions.Recall</c> ——
-/// 它此刻才去数间隙里有几张，满足门槛就跳过"丢弃当前手牌"这一步。
-/// </para>
-/// <para>本回合限定：回合/战斗一变自动失效（记账方式与 间隙的两道闸一致）。</para>
+/// ① 职责：<c>Arm</c> 挂"间隙至少要有几张 + 是否额外抽"的门槛；查询给 <c>GapRecallActions</c>。
+/// ② 挂点与时机：卡打出时挂上；真正生效点是 <c>GapRecallActions.Recall</c> —— 它此刻才数间隙里有几张。
+/// ③ 依赖：<c>Player</c> + 战斗 / 回合号。
+/// ④ ⚠️ 本回合限定：回合 / 战斗一变自动失效（记账方式与 <c>GapAlternation</c> 一致）。
 /// </remarks>
 internal static class GapRecallGuard
 {

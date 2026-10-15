@@ -7,18 +7,15 @@ using STS2_Aeonglass.Core.Systems.History;
 namespace STS2_Aeonglass.Core.Systems.AlphaBeta;
 
 /// <summary>
-/// <b>α or β</b> 的两条被动（「若未使用回溯」）的唯一读口。
+/// α or β 的两条被动的<b>唯一读口</b>（带着牌 + 本局未用过回溯才生效）。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 判定 = ① 本局<b>还没用过回溯</b>（<see cref="RunHistory.Rewinds" /> == 0）；② 对应那一副的牌组里带着
-/// <see cref="AeonglassAlphaBeta" />：
-/// <b>永时副（A）</b> = 给予凋萎时额外给予 1 张；<b>流逝副（B）</b> = 「坍缩」「唤回」只消耗 1 沙砾。
-/// </para>
-/// <para>
+/// ① 职责：<c>WitherBonus</c>（给予凋萎 +1）/ <c>GapCostReduced</c>（坍缩唤回 1 沙砾）。
+/// ② 调用时机：凋萎注入与裂隙代价计算。
 /// ⚠️ 一旦本局用掉第一次回溯，两条被动立刻整体失效（这是"若未使用回溯"的字面口径）。
-/// </para>
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class AlphaBetaPassive
 {
     /// <summary>流逝副（B）：坍缩 / 唤回只消耗 1 沙砾。</summary>

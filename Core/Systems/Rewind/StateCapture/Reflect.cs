@@ -4,9 +4,14 @@ using System.Reflection;
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>
-/// 私有字段访问的单一入口：带缓存、永不抛。
-/// 反射失败只返回 false，避免一个失效字段把整场战斗带崩。
+/// 私有字段访问的<b>单一入口</b>：带缓存、永不抛。
 /// </summary>
+/// <remarks>
+/// ① 职责：<c>Set</c> / <c>Get</c>（失败只记日志）。
+/// ② 调用时机：字段图与各处补丁。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal static class Reflect
 {
     private const BindingFlags Flags =

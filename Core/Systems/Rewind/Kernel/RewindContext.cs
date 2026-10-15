@@ -1,6 +1,14 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
-/// <summary>阶段间共享的上下文。除 <see cref="Bag"/> 外都由编排器填写。</summary>
+/// <summary>
+/// 回溯的<b>上下文</b>：把快照草稿与本次事务信息交给扩展。
+/// </summary>
+/// <remarks>
+/// ① 职责：扩展拿到的只读上下文。
+/// ② 调用时机：每次抓取 / 恢复回调。
+/// ④ ⚠️ 见 README 的命名与注释口径；口径沿革以注释里带日期的那行为准。
+/// </remarks>
+
 public sealed class RewindContext(ISnapshot target, IRewindLog log)
 {
     public ISnapshot Target { get; } = target;

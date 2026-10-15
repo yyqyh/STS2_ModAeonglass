@@ -6,7 +6,15 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
-/// <summary>这张牌此刻属于哪一副（0 = A / 1 = B）。</summary>
+/// <summary>
+/// 差分（永时副 / 消逝副）的<b>执行口</b>：判定副 → 取块 → 跑块；<c>DeckSide</c>/<c>IDeckVariantCard</c> 也在这里。
+/// </summary>
+/// <remarks>
+/// ① 职责：<c>SideOf</c>（判定单点）/ <c>BlocksOf</c> / <c>PlayVariantAsync</c> / 文案注入。
+/// ② 调用时机：差分卡打出与卡面渲染。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 public enum DeckSide
 {
     /// <summary>起始那一副。</summary>

@@ -3,8 +3,14 @@ using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 namespace STS2_Aeonglass.Core.Systems.Rewind.Policy;
 
 /// <summary>
-/// 扩展注册表。单个扩展抛异常只把它标为 Degraded 并记日志，其它扩展继续 —— 降级不中止。
+/// 回溯的<b>扩展注册表</b>：按 order 排序调度，单个扩展抛异常只标记它 Degraded。
 /// </summary>
+/// <remarks>
+/// ① 职责：注册 / 排序 / 逐阶段派发。
+/// ② 调用时机：模块装配时注册；每次回溯派发。
+/// ④ ⚠️ 见 README 的命名与注释口径；口径沿革以注释里带日期的那行为准。
+/// </remarks>
+
 internal sealed class ExtensionRegistry(IRewindLog log)
 {
     private readonly List<IRewindExtension> _items = [];

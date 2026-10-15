@@ -44,7 +44,7 @@ internal static class CombatUiRefresh
         //    ⇒ 三个都要发，它的计数才会动。
         RefreshZone(GapStore.Zone(player));                       // 时空裂隙·存储（Headless，无 UI，但保持事件一致）
         RefreshZone(GapViewPile.Zone(player));                       // 时空裂隙·显示（额外手牌容器）
-        RefreshZone(StasisZone.Zone(player));                    // 搁浅 搁浅（顶栏按钮计数）
+        RefreshZone(StasisStore.Zone(player));                    // 搁浅 搁浅（顶栏按钮计数）
         RefreshZone(DeckPiles.InactivePileOf(player));   // 双卡组 非生效副（顶栏按钮计数）
 
         // ④ 额外手牌容器（间隙）：找 RitsuLib 的容器重新同步 + 压层级。

@@ -7,15 +7,14 @@ using MegaCrit.Sts2.Core.Models;
 namespace STS2_Aeonglass.Core.Systems.Cards;
 
 /// <summary>
-/// 「从手牌选 N 张弃掉」的共用口（v2 的拨针等牌用）。
+/// 「从手牌选 N 张弃掉」的<b>共用口</b>。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 原来这个方法是写在「贯刺」卡里的静态方法（<c>AeonglassImpale.DiscardOneAsync</c>）——
-/// 那张卡在 v2 卡池里没有 ⇒ 抽成系统层工具，别再让"某张卡"承担公用逻辑。
-/// </para>
-/// <para>写法照本体「飞匕」/「杂技」：<c>CardSelectCmd.FromHandForDiscard</c> 选 → <c>CardCmd.Discard</c> 弃。</para>
+/// ① 职责：走 <c>CardSelectCmd</c> 选牌后逐张 <c>CardCmd.Discard</c>。
+/// ② 调用时机：拨针等需要弃牌的卡。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class HandDiscard
 {
     /// <summary>从手牌选 <paramref name="count" /> 张弃掉（玩家取消 / 手牌不够就弃多少算多少）。</summary>

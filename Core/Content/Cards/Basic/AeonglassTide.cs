@@ -21,7 +21,7 @@ namespace STS2_Aeonglass.Core.Content.Cards.Basic;
 /// ① 效果：伤害走差分攻击模板；永时副把伤害换成定值 3，并在主伤害之后塞凋萎。
 /// ② 差分：永时副（A）= 3 伤 + 2 张凋萎（升级 +1 张）；消逝副（B）= 9 伤（升级 12）。
 /// ③ 依赖：差分判定（<c>DeckVariants</c> → <c>DeckPiles.DeckIndexOf</c>）、
-///    凋萎注入（<c>WitherPool.Inject</c>）、起始牌组注册（<c>[RegisterCharacterStarterCard(...,1)]</c>）。
+///    凋萎注入（<c>WitherEffects.Inject</c>）、起始牌组注册（<c>[RegisterCharacterStarterCard(...,1)]</c>）。
 /// ④ ⚠️ 永时副那段伤害是<b>定值、不随升级涨</b>（卡表口径）；两副共用同一张牌（孪生镜像，按"此刻在哪一副"走档）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
@@ -59,7 +59,7 @@ public sealed class AeonglassTide() : AeonglassVariantAttackTemplate(1, CardRari
                 $"wither+{count}",
                 _ =>
                 {
-                    Const.Logger.Info($"[{Const.ModId}] 潮汐（永时副）：{WitherPool.Inject(target, count)}");
+                    Const.Logger.Info($"[{Const.ModId}] 潮汐（永时副）：{WitherEffects.Inject(target, count)}");
                     return Task.CompletedTask;
                 }),
         ];

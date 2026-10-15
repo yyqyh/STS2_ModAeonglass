@@ -6,20 +6,13 @@ using STS2_Aeonglass.Core.Systems.Sand;
 
 namespace STS2_Aeonglass.Core.Systems.Gap;
 
-/// <summary>
-/// 时空裂隙「间隙 → 手牌」时的**费用补挂单点**。
-/// </summary>
+/// <summary>时空裂隙「间隙 → 手牌」时的<b>费用补挂单点</b>。</summary>
 /// <remarks>
-/// <para>
-/// <b>现在这条路上正常情况下不会丢费用</b>：间隙里放的是 <c>CombatState.CloneCard</c> 造出来的
-/// **真实实例**（深拷贝，附魔 / 升级 / `[SavedProperty]` / 次级资源费用全都保留），
-/// 不像"序列化成纯数据再还原"那条路会丢东西。
-/// </para>
-/// <para>
-/// 那为什么还留着它：**跨存档**那条路仍然要过序列化（牌堆随 run 存档）。
-/// 如果真的从存档回来后费用没了，这里是唯一能补回来的地方 —— 按卡的规范声明
-/// （<see cref="ISandCostCard" />）重新挂一遍，成本 3 行，属于保险。
-/// </para>
+/// ① 职责：换回时按卡的规范声明（<see cref="ISandCostCard" />）重新挂上沙砾费用。
+/// ② 挂点与时机：<c>GapRecallActions</c> 把副本搬回手牌的那一步。
+/// ③ 依赖：<c>ISandCostCard</c>、RitsuLib 的次级资源费用 API。
+/// ④ ⚠️ 正常路上不丢费用（间隙里是 <c>CombatState.CloneCard</c> 深拷贝出来的真实实例）；留着它是替<b>跨存档</b>那条路兜底
+/// （牌堆随 run 存档 ⇒ 要过序列化），成本 3 行。
 /// </remarks>
 internal static class GapCopyRestore
 {

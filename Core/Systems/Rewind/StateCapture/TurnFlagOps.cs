@@ -7,27 +7,14 @@ using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>
-/// <b>回合级私有标记</b>的快照 / 重置（规格 §2.6.2「回档作用域表」的最后一行）。
+/// 回合级私有标记的快照 / 重置（回档作用域表）。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 这些字段**不在** <c>FieldGraphSnapshot</c> 的覆盖范围里（那一层只走"我方 power + 遗物"），
-/// 但它们真的会改变回档后的行为，所以必须单独收：
-/// </para>
-/// <list type="bullet">
-///   <item><description><c>MonsterModel._spawnedThisTurn</c> —— 本回合新召唤的怪本回合不该行动；</description></item>
-///   <item><description><c>MonsterMoveStateMachine._performedFirstMove</c> —— 决定第一次 <c>RollMove</c> 是否原地返回；</description></item>
-///   <item><description><c>MoveState._performedAtLeastOnce</c> —— <c>MustPerformOnceBeforeTransitioning</c> 的"必须打一次才准换招"。</description></item>
-/// </list>
-/// <para>
-/// <b>写回的是"快照时的值"，不是一律 false</b>（规格 V6）——
-/// 一律置 false 会让"本回合新召唤、本不该行动"的怪在回档后行动，属于引入新 bug。
-/// </para>
-/// <para>
-/// 遗物 / 附魔的"每回合一次"标记（<c>_usedThisCombat</c> 那一类）**已经**由模型字段图覆盖
-/// （它们在 <c>CombatStateSnapshot</c> 里作为 <c>RelicKind</c> 条目被逐字段快照），所以这里不再重复处理。
-/// </para>
+/// ① 职责：抓取 / 重置回合标记。
+/// ② 调用时机：回档抓取/恢复。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class TurnFlagOps
 {
     /// <summary>一份回合级标记快照（按实例引用索引）。</summary>

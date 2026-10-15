@@ -3,9 +3,14 @@ using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 namespace STS2_Aeonglass.Core.Systems.Rewind.Policy;
 
 /// <summary>
-/// 宿主接入点：引擎永不判断"这是哪个角色"，玩法相关逻辑全部走这里。
-/// 加一个新机制 = 加一个实现并注册，不改引擎。
+/// 回溯的<b>扩展点</b>：玩法侧状态通过它接入抓取/恢复。
 /// </summary>
+/// <remarks>
+/// ① 职责：<c>OnCapture</c> / <c>OnBeforeRestore</c> / <c>OnAfterRestore</c> 三个回调。
+/// ② 调用时机：引擎在每个阶段按 order 依次调。
+/// ④ ⚠️ 见 README 的命名与注释口径；口径沿革以注释里带日期的那行为准。
+/// </remarks>
+
 internal interface IRewindExtension
 {
     string Name { get; }

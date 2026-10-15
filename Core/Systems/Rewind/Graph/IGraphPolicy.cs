@@ -3,9 +3,14 @@ using System.Reflection;
 namespace STS2_Aeonglass.Core.Systems.Rewind.Graph;
 
 /// <summary>
-/// 字段图策略：把"哪些类型算原子 / 哪些对象要保留引用 / 哪些字段要跳过 / 什么要特例克隆"
-/// 从图引擎里抽出来。L1 因此可以完全不认识游戏类型，换游戏只换策略实现。
+/// 字段图策略契约：哪些算原子 / 保留引用 / 跳过。
 /// </summary>
+/// <remarks>
+/// ① 职责：定义策略接口。
+/// ② 调用时机：由 <c>FieldGraphCloner</c> 查询。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 public interface IGraphPolicy
 {
     /// <summary>值语义类型：直接复制值，不再递归。</summary>

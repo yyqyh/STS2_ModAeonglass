@@ -1,10 +1,14 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>
-/// 异步卡牌 VFX 的"在飞"计数器。
-/// 这些动画是不 await 的后台任务，结束后还会继续改/释放卡节点；回档期间重建手牌就会撞上它们。
-/// 严格模式下一次有 VFX 在飞就拒绝回档（见 <c>RewindScope.VfxBarrierStrict</c>）。
+/// 异步卡牌 VFX 的"在飞"计数器：有特效在飞就别回档。
 /// </summary>
+/// <remarks>
+/// ① 职责：进入 / 退出计数 + 当前数量。
+/// ② 调用时机：VFX 补丁与门禁。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal static class VfxBarrier
 {
     private static readonly Lock Gate = new();

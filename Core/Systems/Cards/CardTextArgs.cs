@@ -4,19 +4,14 @@ using MegaCrit.Sts2.Core.Models;
 namespace STS2_Aeonglass.Core.Systems.Cards;
 
 /// <summary>
-/// 卡面文案的共用拼装件：**占位符解析** + **「升级档追加句」注入**。
+/// 卡面文案的<b>共用拼装件</b>：占位符解析 + "升级档追加句"注入。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>为什么要自己解析占位符</b>：注入进卡面的文本<b>不会被本体再解析一次</b>
-/// （本体的格式化只走一遍），所以 <c>{Damage}</c> 这类占位符必须在注入前自己换成当前值，
-/// 否则卡面上会直接露出大括号。
-/// </para>
-/// <para>
-/// 只认「名字在 <c>DynamicVars</c> 里存在」的占位符，其余原样留着（不猜、不吞）——
-/// 与差分文案（<c>DeckVariants</c>）同一套口径，实现也共用这一份。
-/// </para>
+/// ① 职责：把 DynamicVars 与差分文案拼进描述。
+/// ② 调用时机：卡面渲染。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class CardTextArgs
 {
     /// <summary>把 <c>{名字}</c> / <c>{名字:任意后缀}</c> 换成该卡 <c>DynamicVars</c> 的当前值。</summary>

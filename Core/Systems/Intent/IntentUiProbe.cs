@@ -5,13 +5,14 @@ using MegaCrit.Sts2.Core.Nodes.Combat;
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>
-/// 观测器：把"意图 UI 到底刷新了没有"变成可读文本。
+/// 意图 UI 观测器：把"意图刷新了没有"变成可读文本。
 /// </summary>
 /// <remarks>
-/// 本体只渲染 <c>Monster.NextMove.Intents</c>，所以原生意图区的子节点数 == 当前那张卡的图标数。
-/// 本轮按**档 1（沿用原版意图图标）**交付，这个探针就是"档 1 有没有刷新"的证据；
-/// 档 2（怪物头顶的意图卡带）是可选后续，见交接文档。
+/// ① 职责：只读探针。
+/// ② 调用时机：调试与控制面板。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class IntentUiProbe
 {
     public static string Describe(Creature? creature)

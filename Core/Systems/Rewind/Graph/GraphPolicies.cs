@@ -5,9 +5,14 @@ using System.Threading.Tasks;
 namespace STS2_Aeonglass.Core.Systems.Rewind.Graph;
 
 /// <summary>
-/// 纯 BCL 的默认策略：认得原子类型、委托 / Task / 取消源、以及"名字以 Godot. 开头"的引擎对象。
-/// 游戏类型知识（模型 / 实体 / 拍堆）由 L2 继承并覆盖，L1 不引用它们。
+/// 纯 BCL 的默认字段图策略：原子类型、委托/Task、容器。
 /// </summary>
+/// <remarks>
+/// ① 职责：默认 <c>IGraphPolicy</c> 实现。
+/// ② 调用时机：字段图抓取/恢复。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 public class GraphPolicies : IGraphPolicy
 {
     /// <summary>这些命名空间前缀下的对象按引用保留（默认只保护引擎对象）。</summary>

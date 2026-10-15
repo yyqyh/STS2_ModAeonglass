@@ -8,23 +8,14 @@ using STS2_Aeonglass.Core.Systems.Rewind.Policy;
 namespace STS2_Aeonglass.Core.Systems.Rewind.Bridges;
 
 /// <summary>
-/// 回溯 ↔「α or β」的接缝（<b>order 260</b>）：<b>每次回溯</b>都把这张牌"重新发一张到你手里"，
-/// 同时把散在战斗牌堆里的其它实例收回<b>卡组</b> ⇒ 任何时刻都是「卡组一份 + 手上最多一份」。
+/// 回溯 ↔ α or β 的接缝（order 260）：每次回溯补发一张进手牌。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>用户 2026-10-15 口径</b>：每次回溯都给；防止回溯等效果叠出多张 ⇒ <b>回溯后没使用的那张回卡组</b>
-/// （下一回回溯再发新的）。
-/// </para>
-/// <para>
-/// 落地：<c>OnAfterRestore</c> 里 ① 把抽/弃/打出/消耗区里散落的实例收回卡组（卡组已有就只把实例移出战斗，
-/// 不复制）；② 手牌里已经有一张就<b>不再叠</b>；③ 否则新发一张进手牌，卡组那份保留。
-/// </para>
-/// <para>
-/// 只用同步的牌堆 API（<c>RemoveFromCurrentPile / AddInternal / InvokeContentsChanged</c>）：
-/// 回溯接缝的三个回调是同步签名，不能 <c>await</c>。
-/// </para>
+/// ① 职责：把散落实例收回卡组 + 补发一张（手上有就不叠）。
+/// ② 调用时机：回溯恢复之后。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal sealed class AlphaBetaRewindExtension : IRewindExtension
 {
     public string Name => "aeonglass-alpha-beta";

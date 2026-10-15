@@ -3,19 +3,15 @@ using MegaCrit.Sts2.Core.MonsterMoves.Intents;
 
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
-/// <summary>意图卡面上要显示的数字（攻击 = 伤害；多段 = <c>单段×段数</c>；其它意图取文案里的数字）。</summary>
+/// <summary>
+/// 意图数字的<b>口径</b>：从本体招式取出"要打多少"。
+/// </summary>
 /// <remarks>
-/// <para>
-/// <b>2026-10-13 修 bug（用户实测：多段攻击显示错误）</b>：原来一律"把文案里的非数字字符删掉"，
-/// 而本体的多段攻击文案是 <c>FORMAT_DAMAGE_MULTI = "{Damage}[font_size=18]×{Repeat}[/font_size]"</c>
-/// ⇒ 删除非数字后 <c>3×2</c> 被压成 <b>"32"</b>。
-/// </para>
-/// <para>
-/// 现在攻击类走<b>数值 API</b>（<see cref="AttackIntent.GetSingleDamage" /> + <see cref="AttackIntent.Repeats" />），
-/// 多段输出 <c>单段×段数</c> —— 与本体意图图标/悬浮说明里的写法一致；
-/// 非攻击意图（防御值、状态张数这类）仍然只取文案里的数字。
-/// </para>
+/// ① 职责：读数值/派生显示。
+/// ② 调用时机：结算与卡面渲染。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class IntentNumbers
 {
     /// <summary>把这一组意图要显示的数字拼成一行（多个意图用空格分隔；没有数字返回空串）。</summary>

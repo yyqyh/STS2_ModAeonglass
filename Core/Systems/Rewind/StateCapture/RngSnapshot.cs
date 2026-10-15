@@ -12,15 +12,14 @@ using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>
-/// 回溯的 RNG 快照（本 Lab 补齐的唯一规格缺口）。
-/// 覆盖三处：
-/// <list type="number">
-///   <item><c>RunRngSet</c>（含全部 <c>RunRngType</c> 子流）—— <c>ToSerializable()</c> / <c>LoadFromSerializable()</c>；</item>
-///   <item>每只怪的 <c>MonsterModel.Rng</c>（<c>CombatState.CreateCreature</c> 按 mapCoord+act+combatId 播种的那个）；</item>
-///   <item>mod 自己的 <c>StsRng</c>（<c>ModRunRngRegistry</c> / <c>RitsuLibFramework.GetModRunRng</c>）。</item>
-/// </list>
-/// <b>一律"灌回原实例"</b>（<c>LoadFromSerializable</c>），不替换实例 —— 引擎里到处按引用持有这些 Rng。
+/// 随机数快照：各条流的计数值。
 /// </summary>
+/// <remarks>
+/// ① 职责：数据载体。
+/// ② 调用时机：<c>RngOps</c> 存取。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal sealed class RngSnapshot
 {
     internal SerializableRunRngSet? RunRng { get; init; }

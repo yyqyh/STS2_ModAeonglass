@@ -6,13 +6,14 @@ using STS2_Aeonglass.Core.Config;
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
 /// <summary>
-/// 双卡组「每场战斗主动切换次数」的闸门（测试期默认上限 0 = 不限）。
+/// 双卡组的<b>切换额度闸</b>（每场战斗主动切换次数）。
 /// </summary>
 /// <remarks>
-/// 判定方式与 时之沙 倒置 / 时空裂隙 激活 / 回溯一致：记"这条记录属于哪一场战斗"，
-/// <b>战斗一换就自动清零</b>，不需要额外的战斗开始钩子。这里用 <c>CombatState</c>
-/// <b>实例引用</b>判定（不用回合号 —— 回溯 会把回合号往回拨）。
+/// ① 职责：查询/记一笔。
+/// ② 调用时机：切副前与战斗开始重置。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class DeckSwitchLimit
 {
     private static readonly Dictionary<Player, (CombatState? Combat, int Count)> Usage = [];

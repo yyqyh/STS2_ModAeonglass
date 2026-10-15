@@ -5,9 +5,18 @@ using MegaCrit.Sts2.Core.Combat;
 using STS2_Aeonglass.Core.Systems;
 
 using STS2_Aeonglass.Core.Systems.Bootstrap;
+
 namespace STS2_Aeonglass.Core.Systems.Rewind.Host;
 
-/// <summary>宿主装配：生命周期订阅 + 引擎就绪日志。只在这里用 RitsuLib。</summary>
+/// <summary>
+/// 回溯的<b>装配入口</b>：把门禁/快照环/扩展接缝按顺序装好。
+/// </summary>
+/// <remarks>
+/// ① 职责：构建 <c>RewindFacade</c> 并注册三条接缝。
+/// ② 调用时机：<c>RewindModule.Register</c>。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 public static class RewindBootstrapper
 {
     private static bool _started;

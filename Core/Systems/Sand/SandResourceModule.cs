@@ -4,15 +4,13 @@ using STS2_Aeonglass.Core.Config;
 
 namespace STS2_Aeonglass.Core.Systems.Sand;
 
-/// <summary>
-/// 时之沙的<b>模块入口</b>（模块化约定：每个机制模块自己暴露一个 <c>Register()</c>）。
-/// </summary>
+/// <summary>时之沙的<b>模块入口</b>：一个 <c>Register()</c> 注册本机制的全部件。</summary>
 /// <remarks>
-/// <para>
-/// <c>Main</c> 不认识 时之沙的任何细节，只通过 <c>MechanismBootstrap.RegisterAll()</c> 按开关逐条调用各模块的
-/// <see cref="Register" />；所以"新增一个机制"= 加一个 <c>Systems/&lt;模块&gt;/</c> 目录 + 在 bootstrap 里加一行。
-/// </para>
-/// <para>模块内部的三件事：① 注册两个次级资源与两处 UI；② 注册"支付 → 生成空隙"的进程级订阅。</para>
+/// ① 职责：注册两个次级资源与两处 UI，并注册"支付 → 生成空隙"的进程级订阅。
+/// ② 挂点与时机：<c>Main</c> 只调 <c>MechanismBootstrap.RegisterAll()</c>，由它按开关逐条调用各模块的 <c>Register</c>。
+/// ③ 依赖：<c>SandResourceRegistry</c>、<c>SandCounterUiWiring</c>、<c>SandGapInvariant</c>。
+/// ④ ⚠️ 模块化约定：新增一个机制的代价 = 加一个 <c>Systems/&lt;模块&gt;/</c> 目录 + 在 bootstrap 里加一行；
+/// 入口只做注册，机制逻辑放各自文件。
 /// </remarks>
 internal static class SandResourceModule
 {

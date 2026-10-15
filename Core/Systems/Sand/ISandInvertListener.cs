@@ -3,14 +3,12 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 
 namespace STS2_Aeonglass.Core.Systems.Sand;
 
-/// <summary>"沙漏被翻转了"的监听口（能力牌用；例：INV-3 惯性 = 每翻转一次抽 1 张）。</summary>
+/// <summary>"沙漏被翻转了"的监听口（能力牌用；例：每翻转一次抽 1 张）。</summary>
 /// <remarks>
-/// <para>
-/// 翻转的入口只有一个（<see cref="SandInvertCmd.TryInvert" />）⇒ 通知也只在那一处发，
-/// 不做钩子、不做补丁：<c>TryInvert</c> 成功后遍历该玩家的能力，逐个调
-/// <see cref="OnSandInverted" />。
-/// </para>
-/// <para>实现方自己负责"每回合 1 次"这类闸门（本类只转发事件）。</para>
+/// ① 职责：声明 <c>OnSandInverted</c> 回调。
+/// ② 挂点与时机：翻转的入口只有 <see cref="SandInvertCmd.TryInvert" /> ⇒ 通知只在那一处发（不做钩子、不做补丁）。
+/// ③ 依赖：无。
+/// ④ ⚠️ "每回合 1 次"这类闸门由实现方自己负责，本接口只转发事件。
 /// </remarks>
 internal interface ISandInvertListener
 {

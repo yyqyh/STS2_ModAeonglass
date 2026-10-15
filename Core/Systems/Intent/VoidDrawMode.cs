@@ -3,7 +3,15 @@ using STS2_Aeonglass.Core.Config;
 
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
-/// <summary>虚无在循环里被抽到时的口径（新三堆模型的"待确认 1"）。</summary>
+/// <summary>
+/// 虚无被抽到时的<b>口径枚举</b>（once / recycle / nopenalty）。
+/// </summary>
+/// <remarks>
+/// ① 职责：取值。
+/// ② 调用时机：<c>IntentRules</c> 与结算。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal enum VoidDrawMode
 {
     /// <summary>

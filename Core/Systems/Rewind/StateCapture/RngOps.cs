@@ -10,6 +10,15 @@ using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
+/// <summary>
+/// 随机数的<b>快照与恢复</b>：本体各条随机流 + 本 mod 自己的流。
+/// </summary>
+/// <remarks>
+/// ① 职责：<c>Capture</c> / <c>Restore</c> / <c>Describe</c> / <c>Probe*</c>（探针）。
+/// ② 调用时机：回档抓取/恢复与调试。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal static class RngOps
 {
     /// <summary>拍一份 RNG 快照。三处都取；取不到的（如怪不可变）跳过并记日志。</summary>
@@ -183,65 +192,8 @@ internal static class RngOps
         return $"run[{RngCounter(run)}] {string.Join(" ", monsters)} {string.Join(" ", mod)}";
     }
 
-    /// <summary>
-    /// 自检探针：从 run Rng 的 <c>CombatTargets</c> 子流取 <paramref name="count"/> 个值。
-    /// "回档后重放同一手牌 ⇒ 随机结果一致"的最直观判据就是"两次取出来的序列相同"。
-    /// </summary>
-    internal static string ProbeRunRng(int count, RunRngType type = RunRngType.CombatTargets)
-    {
-        var state = CombatAccess.State;
-        if (state is null)
-        {
-            return "no combat";
-        }
 
-        var rng = state.RunState.Rng.GetRng(type);
-        var values = new List<int>(count);
-        for (var i = 0; i < count; i++)
-        {
-            values.Add(rng.NextInt(0, 1000));
-        }
 
-        return $"{type} counter={rng.ToSerializable().counter} seq=[{string.Join(",", values)}]";
-    }
-
-    /// <summary>自检探针：从 mod 自己的 StsRng 取值（验证 ModRunRngRegistry 的流也被灌回）。</summary>
-    internal static string ProbeModRng(string stream, int count)
-    {
-        var state = CombatAccess.State;
-        if (state?.RunState is not RunState runState)
-        {
-            return "no run";
-        }
-
-        var rng = RitsuLibFramework.GetModRunRng(runState, Const.ModId, stream);
-        var values = new List<int>(count);
-        for (var i = 0; i < count; i++)
-        {
-            values.Add(rng.NextInt(0, 1000));
-        }
-
-        return $"{stream} counter={rng.ToSerializable().counter} seq=[{string.Join(",", values)}]";
-    }
-
-    /// <summary>自检探针：从某只怪的 <c>MonsterModel.Rng</c> 取值。</summary>
-    internal static string ProbeMonsterRng(Creature? creature, int count)
-    {
-        if (creature?.Monster is not { } monster || !monster.IsMutable)
-        {
-            return "no mutable monster";
-        }
-
-        var rng = monster.Rng;
-        var values = new List<int>(count);
-        for (var i = 0; i < count; i++)
-        {
-            values.Add(rng.NextInt(0, 1000));
-        }
-
-        return $"{monster.Id.Entry}#{creature.CombatId?.ToString() ?? "-"} "
-            + $"counter={rng.ToSerializable().counter} seq=[{string.Join(",", values)}]";
-    }
 
     private static int RngCounter(SerializableRunRngSet set) =>
         set.Rngs.TryGetValue(RunRngType.CombatTargets, out var rng)

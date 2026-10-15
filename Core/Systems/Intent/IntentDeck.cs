@@ -5,71 +5,13 @@ using STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
-/// <summary>
-/// 一只怪的意图状态：<b>三堆</b>（抽牌堆 / 手牌 / 弃牌堆）+ 消耗历史 + 本次决策。
-/// </summary>
+/// <summary>意图牌堆的工厂与惰性构建（一只怪一份 <c>EnemyIntentState</c> 的三堆循环）。</summary>
 /// <remarks>
-/// 新模型（2026-10-11 用户定稿）：像玩家一样三堆、**没有消耗堆**（虚无被消耗时直接移除）。
-/// 抽牌堆空时把**弃牌堆洗回**抽牌堆继续抽 ⇒ 模拟真实循环。
-/// 守恒式：<c>deck + hand + discard + consumed + voidsSpent == total</c>。
-/// </remarks>
-internal sealed class EnemyIntentState(string monsterId)
-{
-    public string MonsterId { get; } = monsterId;
-
-    /// <summary>抽牌堆：队首 = 下一个被抽到。</summary>
-    public List<IntentCard> Deck { get; } = [];
-
-    /// <summary>手牌：索引 0 = 第一张（解析时从它开始扫）。</summary>
-    public List<IntentCard> Hand { get; } = [];
-
-    /// <summary>弃牌堆：打出的 / 弃掉的 / <b>玩家塞进来的虚无</b>。</summary>
-    public List<IntentCard> Discard { get; } = [];
-
-    /// <summary>被"消耗"掉的意图卡 Id（已永久离开循环；只是历史，参与守恒）。</summary>
-    public List<string> Consumed { get; } = [];
-
-    /// <summary>已经被直接移除的虚无张数（<c>once</c> 口径下抽到即移除 ⇒ 参与守恒）。</summary>
-    public int VoidsSpent { get; set; }
-
-    /// <summary>本回合会被引擎执行的那张（= 我们上次 <c>SetMoveImmediate</c> 设进去的）。</summary>
-    public IntentCard? Pending { get; set; }
-
-    /// <summary>本回合的判定原因（面板的"判定行"）。</summary>
-    public string Decision { get; set; } = "-";
-
-    /// <summary>上一次敌人回合是否真的开始了（用来判断 <see cref="Pending" /> 有没有被打出）。</summary>
-    public bool EnemyTurnSeen { get; set; }
-
-    /// <summary>抽牌数 N = 该怪的<b>意图卡总数</b>（不含虚无）。</summary>
-    public int IntentCount { get; set; }
-
-    /// <summary>守恒基数 = 意图卡总数 + 曾经塞进来的虚无总数。</summary>
-    public int Total { get; set; }
-
-    /// <summary>洗回次数（诊断用：证明"弃牌堆洗回抽牌堆"真的发生了）。</summary>
-    public int Reshuffles { get; set; }
-
-    /// <summary>塞进来的虚无总数。</summary>
-    public int VoidsInjected { get; set; }
-
-    public string Counts() =>
-        $"deck {Deck.Count} hand {Hand.Count} discard {Discard.Count} "
-        + $"consumed {Consumed.Count} voidsSpent {VoidsSpent} total {Total} reshuffles {Reshuffles}";
-}
-
-/// <summary>
-/// 意图牌堆的工厂与惰性构建。
-/// </summary>
-/// <remarks>
-/// <para>
-/// <b>关键取舍</b>：意图卡的本尊就是本体 <c>States</c> 里已有的 <c>MoveState</c>
-/// （零注册风险、天然能 follow-up、天然能被原生 UI 渲染）；工厂只负责"把哪些 <c>MoveState</c>
-/// 放进牌堆 + 给元数据"。
-/// </para>
-/// <para>
-/// <b>惰性构建</b>：该怪第一次需要出牌时才现场建（覆盖开局批次与召唤物，多怪各自建堆）。
-/// </para>
+/// ① 职责：状态查找 / 建立（<c>Ensure</c>）、洗牌建堆、描述与守恒自检；抽弃洗流程在 <c>IntentCycle</c> / <c>IntentHandCycle</c>。
+/// ② 挂点与时机：<c>IntentTurnFlow.PrepareTurn</c> 与 UI 读状态时调；该怪第一次要出牌时才建堆。
+/// ③ 依赖：<c>IntentCard</c>/<c>IntentOps</c>、本体 <c>MonsterModel.States</c>（意图卡本尊 = 现成 <c>MoveState</c>）。
+/// ④ ⚠️ 卡本尊用本体已有的 <c>MoveState</c>（零注册风险、天然 follow-up、原生 UI 能渲染），工厂只负责"放哪些进去 + 元数据"；
+/// 惰性构建覆盖开局批次与召唤物，多怪各自建堆。
 /// </remarks>
 internal static class IntentDeck
 {
@@ -128,10 +70,10 @@ internal static class IntentDeck
         }
 
         var state = new EnemyIntentState(MonsterAccess.IdOf(creature));
-        var (pool, filled, capped) = BuildPool(BuildCards(creature).ToList());
+        var (pool, filled, capped) = BuildPool(IntentCycle.BuildCards(creature).ToList());
         // 构建完**先洗一次**：用户口径「抽牌完全随机」—— 抽牌堆的初始顺序也得是随机的，
         // 否则前几回合会按构建顺序（id 排序 + 循环复制）出牌。洗回时同样随机（见 IntentTurnFlow）。
-        Shuffle(pool, creature);
+        IntentCycle.Shuffle(pool, creature);
         state.Deck.AddRange(pool);
 
         state.IntentCount = state.Deck.Count;
@@ -173,73 +115,6 @@ internal static class IntentDeck
         }
 
         return (pool, pool.Count - baseCards.Count, 0);
-    }
-
-    /// <summary>洗牌（用怪物自己的 AI 随机流 ⇒ 跑局内可复现、回档也被快照覆盖；拿不到就用 <c>Random.Shared</c>）。</summary>
-    private static void Shuffle(List<IntentCard> cards, Creature creature)
-    {
-        var rng = creature.Monster?.RunRng.MonsterAi;
-        for (var i = cards.Count - 1; i > 0; i--)
-        {
-            var j = rng is null ? Random.Shared.Next(i + 1) : rng.NextInt(i + 1);
-            (cards[i], cards[j]) = (cards[j], cards[i]);
-        }
-    }
-
-    /// <summary>工厂：把怪物的 <c>MoveState</c> 集合生产成一叠意图卡（每场战斗一次）。</summary>
-    private static IEnumerable<IntentCard> BuildCards(Creature creature)
-    {
-        var machine = MonsterAccess.MachineOf(creature);
-        if (machine is null)
-        {
-            yield break;
-        }
-
-        var excluded = 0;
-        foreach (var move in machine.States.Values.OfType<MoveState>()
-                     .Where(m => m.Id != Const.Intent.UnsetMoveId && m.Id != Const.Intent.StunnedStateId)
-                     .OrderBy(m => m.Id, StringComparer.Ordinal))
-        {
-            if (IntentRules.ExcludeSpecialStates && IsSpecial(move.Id))
-            {
-                excluded++;
-                continue;
-            }
-
-            yield return new IntentCard(move.Id, isVoid: false) { State = move };
-        }
-
-        if (excluded > 0)
-        {
-            Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 工厂排除了 {excluded} 个特殊状态（DEAD/ENRAGED/STUN 等）");
-        }
-    }
-
-    private static bool IsSpecial(string moveId) =>
-        Const.Intent.ExcludedStateFragments.Any(fragment =>
-            moveId.Contains(fragment, StringComparison.OrdinalIgnoreCase));
-
-    /// <summary>把一张意图卡解析回 <c>MoveState</c>（优先用构建时抓到的引用）。</summary>
-    public static MoveState? Resolve(Creature creature, IntentCard card)
-    {
-        if (card.IsVoid)
-        {
-            return null;
-        }
-
-        if (card.State is not null)
-        {
-            return card.State;
-        }
-
-        var machine = MonsterAccess.MachineOf(creature);
-        if (machine is not null && machine.States.TryGetValue(card.MoveId, out var raw) && raw is MoveState move)
-        {
-            return move;
-        }
-
-        Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Intent} 找不到意图状态 {card.MoveId}");
-        return null;
     }
 
     /// <summary>一行文本（面板 / 日志用）。</summary>

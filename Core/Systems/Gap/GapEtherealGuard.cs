@@ -2,10 +2,12 @@ using MegaCrit.Sts2.Core.Entities.Players;
 
 namespace STS2_Aeonglass.Core.Systems.Gap;
 
-/// <summary>「本回合坍缩进去的副本不带虚无」的开关位（GAP-3 存真引入）。</summary>
+/// <summary>「本回合坍缩进去的副本不带虚无」的开关位。</summary>
 /// <remarks>
-/// 卡打出时挂上；生效点在 <c>GapRecallActions.Recall</c>（它才给副本挂「虚无」）—— 本回合回归时跳过那一步。
-/// 回合/战斗一变自动失效（记账方式与 间隙的闸门一致）。
+/// ① 职责：<c>Arm</c> 挂单 + 查询本回合是否生效。
+/// ② 挂点与时机：卡打出时挂上；生效点在 <c>GapRecallActions.Recall</c>（它才给副本挂「虚无」）—— 本回合换回时跳过那一步。
+/// ③ 依赖：<c>Player</c> + 战斗 / 回合号。
+/// ④ ⚠️ 本回合限定：回合 / 战斗一变自动失效（记账方式与 <c>GapAlternation</c> 一致）。
 /// </remarks>
 internal static class GapEtherealGuard
 {

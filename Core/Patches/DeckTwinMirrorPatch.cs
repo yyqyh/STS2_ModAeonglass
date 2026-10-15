@@ -25,7 +25,7 @@ namespace STS2_Aeonglass.Core.Patches;
 internal static class DeckTwinMirrorPatch
 {
     [HarmonyPostfix]
-    private static void UpgradePostfix(CardModel __instance) => DeckTwins.MirrorUpgrade(__instance);
+    private static void UpgradePostfix(CardModel __instance) => DeckTwinMirrors.MirrorUpgrade(__instance);
 }
 
 /// <summary>孪生镜像：降级（变换 / 重置）时把孪生一起降回去。</summary>
@@ -33,7 +33,7 @@ internal static class DeckTwinMirrorPatch
 internal static class DeckTwinDowngradePatch
 {
     [HarmonyPostfix]
-    private static void DowngradePostfix(CardModel __instance) => DeckTwins.MirrorDowngrade(__instance);
+    private static void DowngradePostfix(CardModel __instance) => DeckTwinMirrors.MirrorDowngrade(__instance);
 }
 
 /// <summary>孪生镜像：<b>附魔</b>（本体的所有附魔入口都走 <c>EnchantInternal</c>）。</summary>
@@ -41,7 +41,7 @@ internal static class DeckTwinDowngradePatch
 internal static class DeckTwinEnchantPatch
 {
     [HarmonyPostfix]
-    private static void EnchantPostfix(CardModel __instance) => DeckTwins.MirrorEnchant(__instance);
+    private static void EnchantPostfix(CardModel __instance) => DeckTwinMirrors.MirrorEnchant(__instance);
 }
 
 /// <summary>孪生镜像：<b>清附魔</b>。</summary>
@@ -49,7 +49,7 @@ internal static class DeckTwinEnchantPatch
 internal static class DeckTwinClearEnchantPatch
 {
     [HarmonyPostfix]
-    private static void ClearEnchantPostfix(CardModel __instance) => DeckTwins.MirrorClearEnchant(__instance);
+    private static void ClearEnchantPostfix(CardModel __instance) => DeckTwinMirrors.MirrorClearEnchant(__instance);
 }
 
 /// <summary>孪生镜像：<b>离开牌组</b>（删牌 / 变换的"删一张" / 清空牌堆）。</summary>
@@ -62,5 +62,5 @@ internal static class DeckTwinClearEnchantPatch
 internal static class DeckTwinRemovalPatch
 {
     [HarmonyPostfix]
-    private static void RemovePostfix(CardPile __instance, CardModel card) => DeckTwins.MirrorRemoval(__instance, card);
+    private static void RemovePostfix(CardPile __instance, CardModel card) => DeckTwinMirrors.MirrorRemoval(__instance, card);
 }

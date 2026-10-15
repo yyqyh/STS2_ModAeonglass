@@ -55,7 +55,7 @@ internal static partial class AeonglassGapSequence
     /// </remarks>
     internal static async Task<GapResult> RecallAsync(Player player)
     {
-        var plan = GapRecallActions.PlanRecall(player);
+        var plan = GapRecallPlan.PlanRecall(player);
         if (plan.Count == 0 || OperationBarrier.IsBusy)
         {
             return await GapRecallActions.Recall(player);

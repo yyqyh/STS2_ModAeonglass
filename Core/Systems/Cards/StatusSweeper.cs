@@ -7,16 +7,14 @@ using MegaCrit.Sts2.Core.Models;
 namespace STS2_Aeonglass.Core.Systems.Cards;
 
 /// <summary>
-/// 「把玩家战斗牌堆里符合条件的牌**全部消耗掉**」的共用口（v2「净化」用）。
+/// 「把玩家战斗牌堆里符合条件的牌<b>全部消耗</b>」的共用口。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 为什么需要它：净化要清的是"场上所有人"的凋萎 / 状态牌 —— 怪侧走
-/// <c>WitherPool</c>（意图堆不是 <c>CardModel</c>），<b>玩家侧</b>才是真正的卡模型堆（手牌 / 抽 / 弃 / 消耗），
-/// 这一份负责后者。
-/// </para>
-/// <para>消耗走本体的 <c>CardCmd.Exhaust</c>（进消耗堆、不再参与循环），表现与本体一致。</para>
+/// ① 职责：计数与清扫（净化等卡用）。
+/// ② 调用时机：卡牌效果。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class StatusSweeper
 {
     /// <summary>这张玩家现在有几张符合条件的牌（只看战斗牌堆：手牌 / 抽牌堆 / 弃牌堆 / 消耗堆）。</summary>

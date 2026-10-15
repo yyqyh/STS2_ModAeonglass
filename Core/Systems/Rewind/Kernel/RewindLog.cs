@@ -1,6 +1,14 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
-/// <summary>默认实现：内存环（供面板读）+ 转发给宿主 sink。</summary>
+/// <summary>
+/// 回溯的<b>日志抽象</b>：内核不认识游戏 Logger，由宿主注入。
+/// </summary>
+/// <remarks>
+/// ① 职责：<c>IRewindLog</c>（接口）+ <c>RewindLog</c>（适配到本 mod 的日志）。
+/// ② 调用时机：引擎全程。
+/// ④ ⚠️ 见 README 的命名与注释口径；口径沿革以注释里带日期的那行为准。
+/// </remarks>
+
 public sealed class RewindLog(int capacity = 200, Action<string>? sink = null) : IRewindLog
 {
     private readonly Queue<string> _tail = new();

@@ -1,6 +1,14 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
-/// <summary>一次回档的最终结果。</summary>
+/// <summary>
+/// 回溯的<b>一次事务</b>：记录阶段、快照与结果，串起"评估 → 抓取 → 恢复"。
+/// </summary>
+/// <remarks>
+/// ① 职责：一次回溯的状态载体（阶段 / 目标快照 / 结果 / 错误）。
+/// ② 调用时机：<c>RewindFacade</c> 每次发起回溯时创建。
+/// ④ ⚠️ 见 README 的命名与注释口径；口径沿革以注释里带日期的那行为准。
+/// </remarks>
+
 public readonly record struct RewindOutcome(bool Ok, bool RolledBack, string Error);
 
 /// <summary>

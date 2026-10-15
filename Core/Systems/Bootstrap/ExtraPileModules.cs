@@ -9,20 +9,18 @@ using STS2_Aeonglass.Core.Config;
 
 using STS2_Aeonglass.Core.Systems.Stasis;
 using STS2_Aeonglass.Core.Systems.Gap;
+
 namespace STS2_Aeonglass.Core.Systems.Bootstrap;
 
-/// <summary>「牌区」模块入口：搁浅 搁浅 + 时空裂隙（两个机制同模块，各自一段 Register）。</summary>
+/// <summary>
+/// 额外牌堆（时空裂隙 / 搁浅）的<b>注册件</b>。
+/// </summary>
 /// <remarks>
-/// <para>
-/// 两个牌堆都用 <c>RegisterOwned</c> 注册；本地化键从 <c>static_hover_tips</c> 按
-/// <c>{完整牌堆id}.title</c> / <c>.description</c> / <c>.empty</c> 读取
-/// （完整 id = <c>{MOD}_CARDPILE_{STEM}</c>）。
-/// </para>
-/// <para>
-/// 一个机制一个开关：<c>mechanism_m7_enabled</c> / <c>mechanism_m2_enabled</c>，
-/// 由 <c>MechanismBootstrap</c> 逐条调用对应的 Register。
-/// </para>
+/// ① 职责：把两张额外牌的牌堆定义注册进本体。
+/// ② 调用时机：机制注册；牌堆可见性按设置。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class ExtraPileModules
 {
     /// <summary>日志 / 设置页里显示的机制名。</summary>
@@ -55,7 +53,7 @@ internal static class ExtraPileModules
                 // OnOpen 留空 ⇒ 点开就是原版牌堆界面（只读查看）。
             });
 
-        StasisZone.Configure(zone);
+        StasisStore.Configure(zone);
     }
 
     // ============================ 时空裂隙 ============================

@@ -9,85 +9,20 @@ using STS2RitsuLib.CardPiles;
 using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Systems.Persistence;
 
+
 namespace STS2_Aeonglass.Core.Systems.Stasis;
 
 /// <summary>
-/// 搁浅的搁浅：挂在 <c>ModCardPileScope.RunPersistent</c> 牌堆上的场外牌区。
+/// 搁浅的<b>进出</b>：把牌交给搁浅区、归队回牌组、战斗结束递减。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>三条实测结论（照 Lab A）</b>：
-/// </para>
-/// <list type="number">
-/// <item><description>
-/// <b>入堆前必须先解析牌堆</b>：<c>Player.Piles</c> 只含**已创建**的 run 持久牌堆，
-/// 而 <c>CardModel.Pile</c> 是"在 owner 的牌堆里找包含我的那个" —— 所以先
-/// <c>CardPile.Get(zoneType, player)</c> 把它解析出来，再动牌。
-/// </description></item>
-/// <item><description>
-/// <b>入场必须走静默路径</b>：<c>CardPileCmd.Add</c> 对 <c>HasBeenRemovedFromState == true</c> 的卡
-/// <b>静默失败</b>（实测 <c>success = False</c>）⇒ 用 <c>AddInternal</c>。
-/// </description></item>
-/// <item><description>
-/// <b>搁浅里的牌收不到任何 hook</b>（<c>RunState.IterateHookListeners</c> 只遍历 <c>player.Deck.Cards</c>）
-/// ⇒ 倒计时只能由 mod 的 run 级订阅者驱动（<see cref="StasisRunHook" />）。
-/// </description></item>
-/// </list>
+/// ① 职责：<c>SendToZone</c> / <c>ReturnToDeck</c> / <c>TickAfterCombatEnd</c> + 监听者通知。
+/// ② 调用时机：卡牌打出（<c>IStasisCard</c>）、战斗结束顺序链、归队事件。
+/// ③ 依赖：<c>StasisStore</c>（存储牌堆）+ <c>DeckPiles</c>（回哪一副）+ 战斗结束顺序链。
+/// ④ ⚠️ 递减/归队按"战斗结束"计数；归队的母本要回"当时的当前卡组"。
 /// </remarks>
-internal static class StasisZone
+internal static class StasisReturn
 {
-    private static PileType? _zonePileType;
-    private static string _zoneId = string.Empty;
-
-    /// <summary>搁浅牌堆的完整 id（注册后才有值）。</summary>
-    public static string ZoneId => _zoneId;
-
-    /// <summary>牌堆是否已经注册好（搁浅 关掉时是 false，卡会退化成普通牌）。</summary>
-    public static bool IsReady => _zonePileType is not null;
-
-    /// <summary>由 <see cref="ExtraPileModules.Register" /> 在注册牌堆后调用。</summary>
-    public static void Configure(ModCardPileDefinition definition)
-    {
-        _zonePileType = definition.PileType;
-        _zoneId = definition.Id;
-
-        Const.Logger.Info(
-            $"[{Const.ModId}] [搁浅] 搁浅牌堆已注册：{definition.Id}"
-            + $"（type=0x{(int)definition.PileType:X8}，scope={definition.Scope}）");
-    }
-
-    /// <summary>取搁浅牌堆；未注册或未解析时返回 null。</summary>
-    public static CardPile? Zone(Player player) =>
-        _zonePileType is { } type ? CardPile.Get(type, player) : null;
-
-    /// <summary>搁浅里现在有几张。</summary>
-    public static int ZoneCount(Player player) => Zone(player)?.Cards.Count ?? 0;
-
-    /// <summary>搁浅里的牌（快照）。</summary>
-    public static IReadOnlyList<CardModel> ZoneCards(Player player) => Zone(player)?.Cards ?? [];
-
-    /// <summary>一行状态（日志 / 调试面板用）。</summary>
-    public static string Describe(Player? player)
-    {
-        if (player is null)
-        {
-            return "无玩家";
-        }
-
-        var zone = Zone(player);
-        if (zone is null)
-        {
-            return "搁浅牌堆不可用";
-        }
-
-        if (zone.Cards.Count == 0)
-        {
-            return "搁浅：空";
-        }
-
-        return "搁浅：" + string.Join(", ", zone.Cards.Select(card =>
-            card is IStasisCard stasis ? $"{card.Id.Entry}(剩{stasis.CombatsLeft})" : card.Id.Entry));
-    }
 
     /// <summary>
     /// 把牌送进搁浅：先从牌组摘掉母本，再落到 run 级搁浅牌堆。
@@ -95,7 +30,7 @@ internal static class StasisZone
     /// <param name="x">规格里的 X（几场战斗后归队）。<b>打出当场不计</b>，所以内部按 <c>x + 1</c> 存。</param>
     public static async Task<bool> SendToZone(Player player, CardModel master, int x)
     {
-        var zone = Zone(player);
+        var zone = StasisStore.Zone(player);
         if (zone is null)
         {
             Const.Logger.Warn($"[{Const.ModId}] [搁浅] 搁浅牌堆不可用，取消滞留：{master.Id.Entry}");
@@ -142,7 +77,7 @@ internal static class StasisZone
 
         Const.Logger.Info(
             $"[{Const.ModId}] [搁浅] 滞留 {master.Id.Entry} → 搁浅"
-            + $"（X={x}，存 {x + 1}，所在牌堆={PileName(master.Pile?.Type)}）");
+            + $"（X={x}，存 {x + 1}，所在牌堆={StasisStore.PileName(master.Pile?.Type)}）");
 
         // 搁浅通知（STA 通道的收益线读它；例：压舱 = 每搁浅一张 +6 挡）。
         await NotifyStrandListeners(player, master, x + 1);
@@ -152,7 +87,7 @@ internal static class StasisZone
 
     /// <summary>把"有牌被搁浅了"转发给该玩家身上实现了 <see cref="IStasisReturnListener" /> 的能力。</summary>
     /// <remarks>单个监听者抛异常只记日志，不影响搁浅本身。</remarks>
-    private static async Task NotifyStrandListeners(Player player, CardModel master, int combatsLeft)
+    internal static async Task NotifyStrandListeners(Player player, CardModel master, int combatsLeft)
     {
         foreach (var listener in player.Creature.Powers.OfType<IStasisReturnListener>().ToList())
         {
@@ -171,7 +106,7 @@ internal static class StasisZone
     /// <summary>归队：从搁浅摘下 → 回到<b>当时的当前卡组</b>。</summary>
     public static async Task<bool> ReturnToDeck(Player player, CardModel master)
     {
-        var zone = Zone(player);
+        var zone = StasisStore.Zone(player);
         if (zone is null || !zone.Cards.Contains(master))
         {
             return false;
@@ -207,7 +142,7 @@ internal static class StasisZone
 
         foreach (var player in runState.Players)
         {
-            var zone = Zone(player);
+            var zone = StasisStore.Zone(player);
             if (zone is null || zone.Cards.Count == 0)
             {
                 continue;
@@ -249,7 +184,7 @@ internal static class StasisZone
     /// <c>HasBeenRemovedFromState = true</c>；而这个标志为真时 <c>CardPileCmd.Add</c> 会静默失败。
     /// 所以：<b>先清标志</b>（若卡已不在 RunState 里，再补一次 <c>AddCard</c>），**再** <c>Add</c>。
     /// </remarks>
-    private static async Task<bool> PutMasterBackToDeck(Player player, CardModel master)
+    internal static async Task<bool> PutMasterBackToDeck(Player player, CardModel master)
     {
         if (player.RunState is not RunState runState)
         {
@@ -270,12 +205,4 @@ internal static class StasisZone
             skipVisuals: true);
         return result.success;
     }
-
-    /// <summary>牌堆名：模组牌堆打印注册 id，原版牌堆打印枚举名。</summary>
-    private static string PileName(PileType? type) =>
-        type is not { } value
-            ? "none"
-            : ModCardPileRegistry.TryGetId(value, out var id)
-                ? id
-                : value.ToString();
 }

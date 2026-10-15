@@ -4,9 +4,14 @@ using MegaCrit.Sts2.Core.Models;
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>
-/// 字段级恢复不会发任何事件，所以恢复完必须补一次刷新：
-/// 逐模型触发 <c>InvokeDisplayAmountChanged</c>（刷数字），再通知 StateTracker 一次。
+/// 字段级恢复不发事件 ⇒ 恢复完必须补一次 UI 刷新。
 /// </summary>
+/// <remarks>
+/// ① 职责：按模型类型派发"显示数值变更/状态变更"。
+/// ② 调用时机：回档恢复之后。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal static class RewindUiRefresh
 {
     private const string InvokeDisplayAmountChanged = "InvokeDisplayAmountChanged";

@@ -158,7 +158,7 @@ public abstract class AeonglassStasisAttackTemplate : AeonglassAttackTemplate, I
 
     /// <summary>打出后不回任何原版牌堆（搁浅没注册时退回本体默认行为）。</summary>
     protected override CardLocation GetResultLocationForCardPlay()
-        => ExtraPileModules.StasisEnabled && StasisZone.IsReady
+        => ExtraPileModules.StasisEnabled && StasisStore.IsReady
             ? new CardLocation(Owner, PileType.None, CardPilePosition.Bottom)
             : base.GetResultLocationForCardPlay();
 
@@ -169,13 +169,13 @@ public abstract class AeonglassStasisAttackTemplate : AeonglassAttackTemplate, I
             return;
         }
 
-        if (!ExtraPileModules.StasisEnabled || !StasisZone.IsReady || DeckVersion is not { } master)
+        if (!ExtraPileModules.StasisEnabled || !StasisStore.IsReady || DeckVersion is not { } master)
         {
             return;
         }
 
         DeckVersion = null;
-        await StasisZone.SendToZone(Owner, master, StrandCombats);
+        await StasisReturn.SendToZone(Owner, master, StrandCombats);
     }
 }
 
@@ -211,7 +211,7 @@ public abstract class AeonglassStasisBlockTemplate : AeonglassBlockTemplate, ISt
 
     /// <summary>打出后不回任何原版牌堆（搁浅没注册时退回本体默认行为）。</summary>
     protected override CardLocation GetResultLocationForCardPlay()
-        => ExtraPileModules.StasisEnabled && StasisZone.IsReady
+        => ExtraPileModules.StasisEnabled && StasisStore.IsReady
             ? new CardLocation(Owner, PileType.None, CardPilePosition.Bottom)
             : base.GetResultLocationForCardPlay();
 
@@ -222,13 +222,13 @@ public abstract class AeonglassStasisBlockTemplate : AeonglassBlockTemplate, ISt
             return;
         }
 
-        if (!ExtraPileModules.StasisEnabled || !StasisZone.IsReady || DeckVersion is not { } master)
+        if (!ExtraPileModules.StasisEnabled || !StasisStore.IsReady || DeckVersion is not { } master)
         {
             return;
         }
 
         DeckVersion = null;
-        await StasisZone.SendToZone(Owner, master, StrandCombats);
+        await StasisReturn.SendToZone(Owner, master, StrandCombats);
     }
 }
 

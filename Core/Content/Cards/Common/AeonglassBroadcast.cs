@@ -17,7 +17,7 @@ namespace STS2_Aeonglass.Core.Content.Cards.Common;
 /// <remarks>
 /// ① 效果：只塞凋萎、不造成伤害；塞进去的牌要等"洗回抽牌堆"才可能被抽到（延迟生效）。
 /// ② 差分：无差分。
-/// ③ 依赖：凋萎（<c>WitherPool.Inject</c> → 怪物意图卡组）+ 意图 敌人时间；与「播种（消逝副）」「蔓生」「玉石俱焚」共用同一个注入口 ——
+/// ③ 依赖：凋萎（<c>WitherEffects.Inject</c> → 怪物意图卡组）+ 意图 敌人时间；与「播种（消逝副）」「蔓生」「玉石俱焚」共用同一个注入口 ——
 ///    带「α or β（永时副）」时每次给予凋萎额外 +1 张。
 /// ④ ⚠️ 0 费件里属于"大效果"那一类（卡池体检表点名），强度要盯。
 /// </remarks>
@@ -39,7 +39,7 @@ public sealed class AeonglassBroadcast() : ModCardTemplate(0, CardType.Skill, Ca
         }
 
         var count = (int)DynamicVars["Wither"].BaseValue;
-        Const.Logger.Info($"[{Const.ModId}] 撒播：{WitherPool.Inject(target, count)}");
+        Const.Logger.Info($"[{Const.ModId}] 撒播：{WitherEffects.Inject(target, count)}");
         return Task.CompletedTask;
     }
 

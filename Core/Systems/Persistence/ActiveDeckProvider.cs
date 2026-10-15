@@ -6,19 +6,14 @@ using STS2_Aeonglass.Core.Systems.Decks;
 namespace STS2_Aeonglass.Core.Systems.Persistence;
 
 /// <summary>
-/// 「当时的当前卡组」的<b>唯一入口</b>。
+/// 「当时的当前卡组」的<b>唯一入口</b>（跨战斗读取当前生效副）。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 搁浅的归队目标、间隙的跨场数据、以及将来的 双卡组（双卡组）都依赖"此刻哪一副牌组是生效的"。
-/// <b>双卡组 落地后这件事仍然是 <c>player.Deck</c></b> —— 因为 双卡组 用的是"**内容互换**"语义：
-/// "生效中的那一副"始终真实地躺在 <c>player.Deck</c> 里，另一副存在 <c>deck_b</c>
-/// （<c>RunPersistent</c> 牌堆）里。好处是所有"把牌放进当前卡组"的老调用点**一行都不用改**。
-/// </para>
-/// <para>
-/// 纪律：任何"要把牌放进当前卡组"的地方都调 <see cref="DeckOf" />，<b>不要</b>直接写 <c>player.Deck</c>。
-/// </para>
+/// ① 职责：取当前副的母本牌组。
+/// ② 调用时机：搁浅归队、双卡组相关逻辑。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class ActiveDeckProvider
 {
     /// <summary>此刻生效的卡组（双卡组 之后仍是 <c>player.Deck</c>，见类型注释）。</summary>

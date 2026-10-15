@@ -8,24 +8,20 @@ using STS2_Aeonglass.Core.Systems.Decks;
 using STS2_Aeonglass.Core.Systems.Bootstrap;
 
 using STS2_Aeonglass.Core.Systems.Stasis;
+
 namespace STS2_Aeonglass.Core.Systems.Bootstrap;
 
-/// <summary>
-/// 战斗结束的**显式顺序链**（接缝 2）：<b>双卡组 轮换 → 搁浅 递减 → 搁浅 归队</b>。
-/// </summary>
+/// <summary>战斗结束的<b>显式顺序链</b>：双卡组轮换 → 搁浅递减 → 搁浅归队，顺序固定。</summary>
 /// <remarks>
-/// <para>
-/// 为什么要有这么一个"只负责排序"的模型：双卡组 与 搁浅 各有一个 <c>HookedSingletonModel</c>，
-/// 而 RitsuLib 的 run 钩子是**按注册/发现顺序**派发的 —— 那是不确定的。
-/// 规则层 v1 要求"归队严格发生在卡组切换之后"，所以顺序**不能靠碰运气**：把两件事收进同一条链，
-/// 由本类按固定次序调用（这也是方案里"接缝 2"的落点）。
-/// </para>
-/// <para>
-/// 三个段各自打日志（含顺序证据），交接文档里贴的就是这些行。
-/// 每一步都自己判断自己的开关 —— 某个机制关掉时只跳过那一段，不影响另一段。
-/// </para>
+/// ① 职责：按固定次序调各机制的战斗结束钩子；每段自己判断自己的开关，关掉就只跳过那一段。
+/// ② 挂点与时机：<c>[RegisterSingleton]</c> + <c>HookType.Run</c> 的 <c>AfterCombatVictory</c>。
+/// ③ 依赖：<c>DeckSwitchService</c>（轮换）、<c>StasisReturn</c>（递减 / 归队）。
+/// ④ ⚠️ 为什么要有这么一个"只负责排序"的模型：RitsuLib 的 run 钩子<b>按注册 / 发现顺序</b>派发（不确定），
+/// 而规则层 v1 要求"归队严格发生在卡组切换之后"，顺序不能靠碰运气 ⇒ 把两件事收进同一条链；
+/// 三段各自打日志（含顺序证据），交接文档里贴的就是这些行。
 /// </remarks>
 [RegisterSingleton]
+
 public sealed class EndOfCombatSequencer : HookedSingletonModel
 {
     public EndOfCombatSequencer()
@@ -40,11 +36,11 @@ public sealed class EndOfCombatSequencer : HookedSingletonModel
             return;
         }
 
-        var m6 = await RotateDecksAsync(runState);
-        var m7 = await TickStasisAsync(runState);
+        var deckRotation = await RotateDecksAsync(runState);
+        var stasisTick = await TickStasisAsync(runState);
 
         Const.Logger.Info(
-            $"[{Const.ModId}] {Const.Prefix.Stasis} 结束序列（显式链）：双卡组 轮换={m6} → 搁浅 递减+归队={m7}");
+            $"[{Const.ModId}] {Const.Prefix.Stasis} 结束序列（显式链）：双卡组 轮换={deckRotation} → 搁浅 递减+归队={stasisTick}");
     }
 
     /// <summary>第 1 段：双卡组 自动轮换（关掉 双卡组 或关掉自动轮换时跳过）。</summary>
@@ -101,7 +97,7 @@ public sealed class EndOfCombatSequencer : HookedSingletonModel
             return "旧口径（轮换前归队，见 StasisRunHook）";
         }
 
-        await StasisZone.TickAfterCombatEnd(runState);
+        await StasisReturn.TickAfterCombatEnd(runState);
         return "已递减+归队（在轮换之后）";
     }
 }

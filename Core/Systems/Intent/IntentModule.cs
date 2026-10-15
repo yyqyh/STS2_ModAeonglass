@@ -9,20 +9,18 @@ using STS2_Aeonglass.Core.Systems;
 
 using STS2_Aeonglass.Core.Systems.Bootstrap;
 using STS2_Aeonglass.Core.Systems.Wither;
+
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>
-/// 操作时间+ 凋萎模块入口：订阅回合事件驱动解析，并提供玩家的意图操纵入口。
+/// 操作时间（意图）的<b>模块入口</b>：订阅回合事件驱动解析。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 时机：<b>敌人回合开始前</b>标记"上一张真的被执行过"；<b>玩家回合开始</b>做整轮解析
-/// （结算 → 清手牌 → 抽满 N → 判定 → 写 <c>NextMove</c>）。敌人的回合只负责执行我们设好的那张。
-/// </para>
-/// <para>
-/// C11 接管原生掷招的补丁在 <c>Patches/IntentRollPatch.cs</c>；本模块只负责"什么时候解析、谁有额度"。
-/// </para>
+/// ① 职责：注册与每回合驱动。
+/// ② 调用时机：机制总线注册；玩家/敌人回合事件。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class IntentModule
 {
     /// <summary>日志 / 设置页里显示的机制名。</summary>
@@ -118,7 +116,7 @@ internal static class IntentModule
     /// <summary>「塞虚无」：往目标的弃牌堆塞虚无（洗回后可能被抽到）。</summary>
     public static string InjectVoid(Player player, Creature target) =>
         Manipulate(player, target, "塞虚无",
-            creature => WitherPool.Inject(creature, IntentRules.InjectPerUse));
+            creature => WitherEffects.Inject(creature, IntentRules.InjectPerUse));
 
     /// <summary>调试用：切换手牌第一张意图的三属性（构造"条件不满足 / 强制 / 消耗"剧本）。</summary>
     public static string CycleFlag(Player player, Creature target, string which) =>

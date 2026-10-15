@@ -196,7 +196,7 @@ internal sealed partial class AeonglassGapActionRow : Control
 
     /// <summary>「唤回」能不能做：间隙非空 + 两道闸（代价不足也在里面）。</summary>
     private static bool CanRecall(Player player)
-        => GapStore.IsReady && GapRecallActions.PlanRecall(player).Count > 0;
+        => GapStore.IsReady && GapRecallPlan.PlanRecall(player).Count > 0;
 
     /// <summary>找我们的玩家：按战斗外观类型认（与其它面板共用同一套认法）。</summary>
     private static Player? Player()

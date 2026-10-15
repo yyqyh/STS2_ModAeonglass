@@ -3,7 +3,15 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
-/// <summary>力量对齐结果：补回多少、移除多少。</summary>
+/// <summary>
+/// 能力（Power）的<b>对齐</b>：把回档后的能力集合与快照对齐。
+/// </summary>
+/// <remarks>
+/// ① 职责：增删/改值到快照状态，返回对齐结果。
+/// ② 调用时机：回档恢复。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal readonly record struct PowerAlignment(int ReAdded, int Removed);
 
 /// <summary>

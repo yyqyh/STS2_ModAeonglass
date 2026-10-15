@@ -202,7 +202,7 @@ internal sealed class AeonglassIntentCardView
 
         if (card is not null)
         {
-            var move = IntentDeck.Resolve(owner, card);
+            var move = IntentCycle.Resolve(owner, card);
             var intents = move?.Intents;
             var targets = MonsterAccess.Combat?.PlayerCreatures?.ToList() ?? [];
             art = FirstTexture(intents, targets, owner);

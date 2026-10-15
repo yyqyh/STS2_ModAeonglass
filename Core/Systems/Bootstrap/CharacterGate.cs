@@ -6,20 +6,14 @@ using STS2_Aeonglass.Core.Content.Characters;
 
 namespace STS2_Aeonglass.Core.Systems.Bootstrap;
 
-/// <summary>
-/// <b>角色门</b>：本 mod 的所有机制只在"本地玩家是永世沙漏"时生效。
-/// </summary>
+/// <summary><b>角色门</b>：本 mod 的所有机制只在"本地玩家是永世沙漏"时生效。</summary>
 /// <remarks>
-/// <para>
-/// 为什么必须有：我们改了**本体共享路径** —— 补丁拦了 <c>MonsterModel.RollMove</c>、
-/// 订阅了 <c>SideTurnStarted</c> / <c>CombatManager.TurnStarted</c>。
-/// 若不做角色过滤，玩别的角色（本体或其他 mod 的角色）时也会：
-/// ① 给怪建意图牌堆并接管掷招；② 每回合拍回溯快照；③ 在战斗结束轮换"双卡组"。
-/// </para>
-/// <para>
-/// 读法：优先问本体"本地玩家是谁"（<c>LocalContext.GetMe</c>，战斗内最准），
-/// 拿不到时退回"这一局的第一个玩家"（单人局等价）。任何一步异常都当作"不是我们"，宁可不生效也不要乱改。
-/// </para>
+/// ① 职责：<c>IsActive</c> 判定 —— 本地这个玩家是不是永世沙漏。
+/// ② 挂点与时机：所有订阅 / 补丁的第一道判断（掷招接管、每回合快照、战斗结束轮换、UI 挂载等）。
+/// ③ 依赖：<c>LocalContext.GetMe</c>（战斗内最准）；拿不到时退回"这一局的第一个玩家"（单人局等价）。
+/// ④ ⚠️ 为什么必须有：我们改了<b>本体共享路径</b>（<c>MonsterModel.RollMove</c> 补丁、<c>SideTurnStarted</c> /
+/// <c>CombatManager.TurnStarted</c> 订阅）⇒ 不做过滤，玩别的角色时也会给怪建意图牌堆、拍回溯快照、轮换双卡组。
+/// 任何一步异常都当作"不是我们"：宁可不生效，也不要乱改。
 /// </remarks>
 internal static class CharacterGate
 {

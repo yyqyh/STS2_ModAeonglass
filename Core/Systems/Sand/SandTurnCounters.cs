@@ -5,13 +5,11 @@ namespace STS2_Aeonglass.Core.Systems.Sand;
 
 /// <summary>时之沙的<b>回合内计数</b>：本回合翻转了几次沙漏（给"翻转联动"类卡读）。</summary>
 /// <remarks>
-/// <para>
-/// 记账方式与 <c>GapAlternation</c> 一致：记"这条记录属于哪场战斗的第几回合"，任一变化自动归零
-/// —— 不需要额外的回合开始钩子。
-/// </para>
-/// <para>
-/// ⚠️ 这与"时之沙的每回合次数上限"是两回事：上限早已取消（Step 1），这里只是**纯计数**，不拦任何操作。
-/// </para>
+/// ① 职责：<c>Flip</c> 记一次 + <c>FlipsThisTurn</c> 读数。
+/// ② 挂点与时机：<c>SandInvertCmd</c> 倒置成功后调；同步读。
+/// ③ 依赖：无（只记 <c>CombatState</c> + 回合号）。
+/// ④ ⚠️ 与"时之沙的每回合次数上限"是两回事：上限早已取消，这里只是纯计数、不拦任何操作；
+/// 记账方式与 <c>GapAlternation</c> 一致（战斗 / 回合一变自动归零，不需要额外的回合钩子）。
 /// </remarks>
 internal static class SandTurnCounters
 {

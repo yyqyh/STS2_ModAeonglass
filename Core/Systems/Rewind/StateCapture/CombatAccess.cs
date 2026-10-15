@@ -5,7 +5,15 @@ using MegaCrit.Sts2.Core.Runs;
 
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
-/// <summary>本体只读访问的唯一入口：读状态，不改状态。</summary>
+/// <summary>
+/// 战斗态只读访问口（给接缝与探针读，不写）。
+/// </summary>
+/// <remarks>
+/// ① 职责：取战斗 / 玩家 / 牌堆等只读视图。
+/// ② 调用时机：接缝与调试面板。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal static class CombatAccess
 {
     internal static CombatState? State => CombatManager.Instance.DebugOnlyGetState();

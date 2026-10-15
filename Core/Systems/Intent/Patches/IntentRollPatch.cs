@@ -4,23 +4,20 @@ using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Models;
 
 using STS2_Aeonglass.Core.Systems.Bootstrap;
+
 namespace STS2_Aeonglass.Core.Systems.Intent.Patches;
 
-/// <summary>
-/// C11 的"接管"支路：对"已经被我们托管的怪"跳过原生掷招。
-/// </summary>
+/// <summary>操作时间的"接管"支路：对<b>已被我们托管的怪</b>跳过原生掷招。</summary>
 /// <remarks>
-/// <para>
-/// 不接管的话，每次玩家回合开始原生都会先 <c>RollMove</c>（推进 <c>_currentState</c>、写 <c>StateLog</c>、
-/// 消耗 <c>RunRng.MonsterAi</c>），而 <c>StateLog</c> 正是随机分支状态的权重 / 冷却 / <c>UseOnlyOnce</c> 判据，
-/// 会悄悄改掉我们排好的牌堆语义。
-/// </para>
-/// <para>
-/// 跳过是安全的：<c>SetMoveImmediate</c> 内部本来就会 <c>ForceCurrentState</c>，链不会断；
-/// <b>牌堆为空（= 没被托管）时不跳过</b>，让原生掷招继续跑。
-/// </para>
+/// ① 职责：拦 <c>MonsterModel.RollMove</c>，命中托管怪时返回 <c>false</c>（真身由 <c>IntentTurnFlow</c> 写 <c>NextMove</c>）。
+/// ② 挂点与时机：Harmony 前缀补丁，怪物每次掷招时跑；<b>牌堆为空（= 没被托管）时放行</b>，让原生掷招继续。
+/// ③ 依赖：<c>IntentRules</c>（托管开关）、<c>IntentDeck</c>（是否托管）、角色门（不是永世沙漏的局绝不接管）。
+/// ④ ⚠️ 不接管的话原生会推进 <c>_currentState</c>、写 <c>StateLog</c>、耗 <c>RunRng.MonsterAi</c>，
+/// 而 <c>StateLog</c> 正是分支权重 / 冷却 / <c>UseOnlyOnce</c> 的判据，会悄悄改掉我们排好的牌堆语义；
+/// 跳过是安全的：<c>SetMoveImmediate</c> 内部本来就会 <c>ForceCurrentState</c>，链不会断。
 /// </remarks>
 [HarmonyPatch(typeof(MonsterModel), nameof(MonsterModel.RollMove))]
+
 internal static class IntentRollPatch
 {
     [HarmonyPrefix]

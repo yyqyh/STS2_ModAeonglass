@@ -29,36 +29,6 @@ namespace STS2_Aeonglass.Core.Systems.Gap;
 internal static class GapRecallActions
 {
 
-    /// <summary>
-    /// <b>预测</b>：这一次「回归」会把间隙里的哪几张搬回手牌（**无任何副作用**）。
-    /// </summary>
-    /// <remarks>
-    /// 返回空 = 这次一定不成功（不在战斗 / 间隙没注册 / 间隙是空的 / 沙砾不够付代价）⇒
-    /// 表现层什么都不该演，直接走 <see cref="Recall" /> 拿失败原因。
-    /// 与执行端共用"间隙里现在有什么、代价多少"这两条判断，不会出现"演的和做的不一样"。
-    /// </remarks>
-    public static IReadOnlyList<CardModel> PlanRecall(Player player)
-    {
-        if (player.PlayerCombatState is null || GapStore.Zone(player) is not { } gap || gap.Cards.Count == 0)
-        {
-            return [];
-        }
-
-        // **与执行端同源**：必须交替（每回合额度已取消）不满足 ⇒ 这一次一定失败 ⇒ 什么都不该演。
-        if (!GapAlternation.AllowsAlternation(player, GapAlternation.GapAction.Recall))
-        {
-            return [];
-        }
-
-        // 定价与坍缩同一笔（2026-10-13 统一 2 沙砾，不再按张乘）。
-        var cost = GapStore.ActionCost;
-        if (cost > 0 && SecondaryResourceCmd.Get(player, SandResourceRegistry.SandId) < cost)
-        {
-            return [];
-        }
-
-        return gap.Cards.ToList();
-    }
 
     /// <summary>
     /// 激活：<b>先付代价 → 丢弃当前手牌（进弃牌堆）→ 把间隙里的卡牌实例搬进手牌 → 清空间隙记录</b>。

@@ -10,9 +10,14 @@ using STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>
-/// 本体访问的唯一入口（读多写少）：取战斗 / 敌人 / 状态机 / 节点。
-/// 写操作一律走 <see cref="IntentOps" />。
+/// 本体访问的<b>唯一入口</b>（读多写少）：战斗/敌人/状态机/节点。
 /// </summary>
+/// <remarks>
+/// ① 职责：集中所有对本体怪物侧的直接读。
+/// ② 调用时机：解析器、卡带、控制面板。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal static class MonsterAccess
 {
     private static int _focusIndex;

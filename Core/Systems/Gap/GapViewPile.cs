@@ -8,23 +8,14 @@ using STS2RitsuLib.CardPiles;
 
 namespace STS2_Aeonglass.Core.Systems.Gap;
 
-/// <summary>
-/// 间隙的**显示层镜像**：把「间隙」存储牌堆（Headless，负责序列化持久化）镜像到一个
-/// <c>ExtraHand</c> 显示牌堆（战斗内临时），卡面靠**原版可视流程**挂上/撤下。
-/// </summary>
+/// <summary>间隙的<b>显示层镜像</b>：把「间隙」存储牌堆镜像到一个 <c>ExtraHand</c> 显示牌堆。</summary>
 /// <remarks>
-/// <para>
-/// 用户 2026-10-12 定的结构：**存储与显示分离** ——
-/// </para>
-/// <list type="number">
-///   <item><description><b>存储牌堆</b>（<c>time_gap</c>，`RunPersistent` + **Headless**）：真相所在，随存档序列化；不显示。</description></item>
-///   <item><description><b>显示牌堆</b>（<c>time_gap_view</c>，`CombatOnly` + **ExtraHand**）：只是"投影"，每场战斗重建。</description></item>
-/// </list>
-/// <para>
-/// 为什么必须这么做：RitsuLib 的额外手牌**不订阅牌堆事件**，卡面是靠原版可视流程挂上去的
-/// （见其 <c>ModExtraHandCard*Patch</c>）⇒ 镜像必须走 <c>CardPileCmd</c> 才看得见。
-/// 链接关系用 <c>clone.DeckVersion = 存储卡</c>（本体"战斗克隆指向母本"的既有约定）。
-/// </para>
+/// ① 职责：建显示牌堆、把存储内容镜像过来（走 <c>CardPileCmd</c>）、对外报状态（<c>IsReady</c> / <c>ZoneId</c>）。
+/// ② 挂点与时机：由 <c>ExtraPileModules.RegisterTimeGap</c> 在注册显示牌堆后调用；此后每次内容变化再镜像。
+/// ③ 依赖：RitsuLib <c>CardPiles</c>、<c>GapStore</c>（内容真相）。
+/// ④ ⚠️ 用户 2026-10-12 定的"存储与显示分离"：存储牌堆（<c>time_gap</c>，RunPersistent + Headless）是真相、随存档序列化、不显示；
+/// 显示牌堆（<c>time_gap_view</c>，CombatOnly + ExtraHand）只是投影、每场战斗重建。RitsuLib 的额外手牌<b>不订阅牌堆事件</b>
+/// （卡面靠原版可视流程挂）⇒ 镜像必须走 <c>CardPileCmd</c> 才看得见；链接关系用 <c>clone.DeckVersion = 存储卡</c>。
 /// </remarks>
 internal static class GapViewPile
 {

@@ -4,7 +4,15 @@ using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
-/// <summary>一只生物的血量 / 上限 / 格挡快照。</summary>
+/// <summary>
+/// 生物<b>血量快照</b>（回档时按它写回）。
+/// </summary>
+/// <remarks>
+/// ① 职责：记录当前/最大生命与格挡。
+/// ② 调用时机：抓取与恢复。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal readonly record struct Vitals(int Hp, int MaxHp, int Block);
 
 /// <summary>

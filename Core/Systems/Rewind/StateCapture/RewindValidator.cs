@@ -7,9 +7,14 @@ using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>
-/// 恢复后的不变量校验：牌归属 / 战斗牌登记 / 重复落堆 / 生物 id / 队列与效果深度。
-/// 任一不过 → 事务会回滚到回档前状态。
+/// 恢复后的<b>不变量校验</b>：牌归属 / 战斗牌登记 / 重复落堆 / 生物 id。
 /// </summary>
+/// <remarks>
+/// ① 职责：校验并回报问题清单（不修数据）。
+/// ② 调用时机：恢复完成之后。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal sealed class RewindValidator : IRewindValidator
 {
     public bool Validate(out string reason)

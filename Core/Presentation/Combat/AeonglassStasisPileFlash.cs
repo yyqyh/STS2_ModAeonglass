@@ -16,8 +16,8 @@ namespace STS2_Aeonglass.Core.Presentation.Combat;
 /// <summary>搁浅「搁浅」顶栏按钮的<b>闪烁提示</b>（卡归队时闪一下）。</summary>
 /// <remarks>
 /// ① 职责：找到顶栏搁浅按钮并让它闪一次。
-/// ② 调用时机：<c>StasisZone</c> 归队时 / 控制面板"搁浅页"的验证按钮。
-/// ③ 依赖：按 <c>StasisZone.ZoneId</c> 找 <c>NModCardPileButton</c>（用 <c>NodeSearch</c>）。
+/// ② 调用时机：<c>StasisStore</c> 归队时 / 控制面板"搁浅页"的验证按钮。
+/// ③ 依赖：按 <c>StasisStore.ZoneId</c> 找 <c>NModCardPileButton</c>（用 <c>NodeSearch</c>）。
 /// ④ ⚠️ 找不到按钮 ⇒ <b>静默不闪</b>（不抛错、不影响归队逻辑）。
 /// </remarks>
 
@@ -70,12 +70,12 @@ internal static class AeonglassStasisPileFlash
         }
 
         var topBar = run.GlobalUi?.TopBar;
-        if (topBar is null || !StasisZone.IsReady)
+        if (topBar is null || !StasisStore.IsReady)
         {
             return null;
         }
 
-        var target = StasisZone.ZoneId;
+        var target = StasisStore.ZoneId;
         return NodeSearch.FindDescendant<NModCardPileButton>(topBar, button => string.Equals(button.Definition?.Id, target, StringComparison.OrdinalIgnoreCase));
     }
 

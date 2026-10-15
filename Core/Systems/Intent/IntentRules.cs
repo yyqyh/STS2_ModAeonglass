@@ -3,11 +3,14 @@ using STS2_Aeonglass.Core.Config;
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>
-/// 意图/凋萎的开关读取单点（把 Lab C 的 <c>LabScope</c> 换成角色设置；改设置立刻生效）。
+/// 意图三堆的<b>规则档位</b>：虚无抽牌口径与回合末手牌去向（两个枚举另文件）。
 /// </summary>
 /// <remarks>
-/// 只有"注册类"的开关（总开关 / C11 接管）需要重启；其余全是每次现读。
+/// ① 职责：读设置给出当前规则取值。
+/// ② 调用时机：手牌循环与结算。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class IntentRules
 {
     /// <summary>意图 总开关。</summary>

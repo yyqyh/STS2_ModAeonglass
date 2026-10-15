@@ -19,31 +19,17 @@ internal readonly record struct DeckSwitchOutcome(bool Ok, bool Switched, string
     public static DeckSwitchOutcome Done(string message) => new(true, true, message);
 }
 
-/// <summary>
-/// 双卡组的<b>内部接口单点</b>：所有切换（自动轮换 / 主动切换 / 战斗内热切换）都从这里走。
-/// </summary>
+/// <summary>双卡组的<b>内部接口单点（存储侧）</b>：堆访问、索引、命名与描述。</summary>
 /// <remarks>
-/// <para>
-/// <b>存储 = 活实例常驻</b>（2026-10-11 已拍定）："生效中的那副"永远真实地在 <c>player.Deck</c> 里，
-/// 另一副作为**真母本实例**躺在 <c>deck_b</c> 这个 <c>RunPersistent</c> 牌堆里（照 搁浅 搁浅的形状）。
-/// 切换 = 静默 <c>RemoveInternal</c>/<c>AddInternal</c> **搬运母本** ——
-/// 升级 / 附魔 / 私有状态 / RitsuLib 的 <c>SecondaryCosts</c> 全都在实例上，会话内零丢失。
-/// </para>
-/// <para>
-/// ⚠️ <b>存档仍然要落盘成 <c>SerializableCard</c></b>（唯一格式）⇒ **读档那一次**仍会丢
-/// "未标 <c>[SavedProperty]</c> 的私有状态"与 <c>SecondaryCosts</c>。应对：
-/// ① 我们自己的卡**约定"要长期存活的字段必须标 <c>[SavedProperty]</c>"**；
-/// ② 读档后对带 <c>SecondaryCosts</c> 的卡补挂费用（复用 间隙的 <c>GapCopyRestore</c> 那套）。
-/// </para>
-/// <para>
-/// <b>为什么 <c>ActiveDeckProvider.DeckOf(player)</c> 仍然是 <c>player.Deck</c></b>：
-/// 因为这里是"**内容互换**"语义 —— 卡组层的"生效那一副"就放在 <c>player.Deck</c> 里，
-/// 于是 搁浅的归队（回到"当时的当前卡组"）与"新获得的牌落哪副"天然跟着走，不需要改任何调用点。
-/// </para>
-/// <para>
-/// ⚠️ 将来若要支持多人：这个入口必须换成 RitsuLib 的**同步动作**（右键或等价），
-/// 否则单端改卡组会让校验和分化、直接终止 run。
-/// </para>
+/// ① 职责：<c>Configure</c> / <c>PileOfIndex</c> / <c>CountOf</c> / <c>NameOf</c> / <c>DeckIndexOf</c> / <c>DescribeActive</c> / <c>DescribeNext</c>；切换流程在 <c>DeckSwitchService</c>。
+/// ② 挂点与时机：所有切换（自动轮换 / 主动切换 / 战斗内热切换）与 UI 读数都从这里走。
+/// ③ 依赖：<c>deck_b</c> 牌堆（<c>RunPersistent</c>）、<c>Player.Deck</c>、<c>ActiveDeckProvider</c>。
+/// ④ ⚠️ <b>存储 = 活实例常驻</b>（2026-10-11 拍定）：生效那副真在 <c>player.Deck</c>，另一副作为真母本躺在 <c>deck_b</c>（照搁浅的形状）；
+/// 切换 = 静默 <c>RemoveInternal</c>/<c>AddInternal</c> 搬运母本 ⇒ 升级 / 附魔 / 私有状态 / <c>SecondaryCosts</c> 会话内零丢失。
+/// 存档仍要落盘成 <c>SerializableCard</c> ⇒ <b>读档那一次</b>仍会丢"未标 <c>[SavedProperty]</c> 的私有状态"与 <c>SecondaryCosts</c>：
+/// 我们的卡约定"长期存活的字段必须标 <c>[SavedProperty]</c>"，读档后按 <c>GapCopyRestore</c> 那套补挂费用。
+/// <c>ActiveDeckProvider.DeckOf</c> 仍是 <c>player.Deck</c>（"内容互换"语义 ⇒ 搁浅归队与"新牌落哪副"天然跟着走）。
+/// 将来支持多人时这个入口必须换成 RitsuLib 的同步动作，否则单端改卡组会让校验和分化、终止 run。
 /// </remarks>
 internal static class DeckPiles
 {
@@ -180,92 +166,6 @@ internal static class DeckPiles
 
     // ============================ 初始化 ============================
 
-    /// <summary>
-    /// 保证"非生效那一副"有内容（只在第一次做，靠遗物上的 <c>[SavedProperty]</c> 记）。
-    /// </summary>
-    public static void EnsureInitialized(Player player)
-    {
-        if (!DeckModule.Enabled || !IsReady || DeckState.DecksInitialized(player))
-        {
-            return;
-        }
-
-        // 只有"A 生效"时才轮到播种 B：如果当前生效的是 B，说明这局已经切过卡组
-        // （模组牌堆里躺着的是真 A），此时把测试牌倒进去等于污染玩家的牌组。
-        if (ActiveIndexOf(player) != 0)
-        {
-            DeckState.MarkInitialized(player);
-            return;
-        }
-
-        var pile = InactivePileOf(player);
-        if (pile is null)
-        {
-            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Decks} 播种失败：第二副牌组牌堆不可用");
-            return;
-        }
-
-        var seeded = 0;
-        var seededCards = new List<CardModel>();
-        foreach (var card in DeckBSeed.Create(player))
-        {
-            if (!pile.Cards.Contains(card))
-            {
-                pile.AddInternal(card, -1, true);
-                seededCards.Add(card);
-                seeded++;
-            }
-        }
-
-        pile.InvokeContentsChanged();
-        LinkSeededTwins(player, seededCards);
-        DeckState.MarkInitialized(player);
-
-        Const.Logger.Info(
-            $"[{Const.ModId}] {Const.Prefix.Decks} 第二副牌组已播种：{DeckBSeed.Describe()}"
-            + $"（实际入堆 {seeded} 张）｜{DescribeActive(player)}");
-    }
-
-    /// <summary>
-    /// 把刚播种进 B 的牌与 A 里**同名的牌按顺序一对一**配成孪生（P3-2：同一批基础牌，两副各一份实例）。
-    /// </summary>
-    /// <remarks>
-    /// 配对只做一次（播种也只在第一次做）。配不上的（例如 A 里没有同名牌）就留空，
-    /// 之后"改一张牌"时它自然没有孪生可镜像 —— 不会误伤。
-    /// </remarks>
-    private static void LinkSeededTwins(Player player, IReadOnlyList<CardModel> seededCards)
-    {
-        if (seededCards.Count == 0)
-        {
-            return;
-        }
-
-        var candidates = player.Deck.Cards.Where(card => !DeckTwins.IsLinked(card)).ToList();
-        // P3-4 守门：共用基础牌不该带"离开牌堆"类关键词（只警告，不阻断）。
-        SharedBasicPolicy.Audit(candidates);
-
-        var linked = 0;
-        foreach (var twin in seededCards)
-        {
-            var index = candidates.FindIndex(card => card.Id.Entry == twin.Id.Entry);
-            if (index < 0)
-            {
-                Const.Logger.Info(
-                    $"[{Const.ModId}] {Const.Prefix.Decks} 孪生：{twin.Id.Entry} 在生效副里找不到同名的基础牌 ⇒ 不配对");
-                continue;
-            }
-
-            DeckTwins.Link(candidates[index], twin);
-            candidates.RemoveAt(index);
-            linked++;
-        }
-
-        Const.Logger.Info(
-            $"[{Const.ModId}] {Const.Prefix.Decks} 孪生配对完成：{linked} 对（共 {DeckTwins.Count} 对）"
-            + $"｜{DeckTwins.Describe()}");
-    }
-
     // ============================ 切换 ============================
-
 
 }

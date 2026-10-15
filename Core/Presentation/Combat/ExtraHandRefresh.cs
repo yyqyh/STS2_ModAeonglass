@@ -130,7 +130,7 @@ internal static class ExtraHandRefresh
             }
 
             // ⚠️ 这里必须是**显示牌堆**（ExtraHand 容器）的 id。
-            // 踩过的两个坑：① 写成 StasisZone.ZoneId（= 搁浅 搁浅）⇒ 匹配不上；
+            // 踩过的两个坑：① 写成 StasisStore.ZoneId（= 搁浅 搁浅）⇒ 匹配不上；
             // ② 写成 GapStore.ZoneId（= 存储牌堆，Headless 无容器）⇒ 也匹配不上。
             var target = GapViewPile.ZoneId;
             var scanned = 0;

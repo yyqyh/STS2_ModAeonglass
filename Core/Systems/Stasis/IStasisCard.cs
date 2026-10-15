@@ -1,10 +1,14 @@
 namespace STS2_Aeonglass.Core.Systems.Stasis;
 
-/// <summary>搁浅 滞留牌：卡上带一个随存档往返的倒计时。</summary>
+/// <summary>
+/// 标记接口：<b>这张卡打出后进搁浅</b>。
+/// </summary>
 /// <remarks>
-/// 实现者必须把 <see cref="CombatsLeft" /> 标成 <c>[SavedProperty]</c>，它才会随
-/// <c>SerializableCard.Props</c> 入档（否则读档后倒计时归零、牌立刻归队）。
+/// ① 职责：类型标记 + 倒计数字段约定。
+/// ② 调用时机：卡牌落点与搁浅流程。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal interface IStasisCard
 {
     /// <summary>还剩几次"战斗结束"才归队（内部按 <c>X + 1</c> 存，所以打出当场那次不计）。</summary>

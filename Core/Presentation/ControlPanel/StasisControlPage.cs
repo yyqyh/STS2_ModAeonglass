@@ -9,7 +9,7 @@ namespace STS2_Aeonglass.Core.Presentation.ControlPanel;
 /// <remarks>
 /// ① 职责：显示搁浅区状态，提供闪烁验证按钮。
 /// ② 调用时机：页签打开与按钮点击。
-/// ③ 依赖：<c>StasisZone</c> + <c>AeonglassStasisPileFlash</c>。
+/// ③ 依赖：<c>StasisStore</c> + <c>AeonglassStasisPileFlash</c>。
 /// ④ ⚠️ 搁浅 没有玩家主动动作（入口是卡牌本身），这页只有读数与验证。
 /// </remarks>
 
@@ -17,7 +17,7 @@ internal sealed partial class StasisControlPage : ControlPage
 {
     internal override string Title => "搁浅";
 
-    internal override bool IsAvailable => StasisZone.IsReady;
+    internal override bool IsAvailable => StasisStore.IsReady;
 
     protected override void BuildBody(VBoxContainer body)
     {
@@ -32,12 +32,12 @@ internal sealed partial class StasisControlPage : ControlPage
     protected override string Status()
     {
         var player = Player();
-        return player is null ? "不在战斗" : StasisZone.Describe(player);
+        return player is null ? "不在战斗" : StasisStore.Describe(player);
     }
 
     private void PrintStatus()
     {
-        var text = Player() is { } player ? StasisZone.Describe(player) : "不在战斗";
+        var text = Player() is { } player ? StasisStore.Describe(player) : "不在战斗";
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Stasis} 面板状态：{text}");
         Show(text);
     }

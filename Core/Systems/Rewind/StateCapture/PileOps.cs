@@ -4,7 +4,15 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
-/// <summary>牌堆恢复结果：放回多少张、因"当时不存在"而摘掉多少张。</summary>
+/// <summary>
+/// 牌堆的<b>快照与静默搬运</b>（RemoveInternal/AddInternal，不发事件、不触发钩子）。
+/// </summary>
+/// <remarks>
+/// ① 职责：<c>Capture</c> / <c>Restore</c>（按每张堆自身 <c>Type</c> 存取，乱流对调也安全）。
+/// ② 调用时机：回档抓取/恢复。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal readonly record struct PileRestoreResult(int Restored, int Dropped);
 
 /// <summary>

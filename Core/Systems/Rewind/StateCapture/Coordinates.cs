@@ -1,9 +1,14 @@
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>
-/// 0.111 反射坐标表。<b>整个项目里只有这个文件允许出现字段名 / 方法名字面量。</b>
-/// 换游戏版本时只改这里；其余层不动。
+/// <b>反射坐标表</b>：整个项目里唯一允许出现私有字段名/方法名的地方。
 /// </summary>
+/// <remarks>
+/// ① 职责：把要反射的字段名集中在常量里。
+/// ② 调用时机：由 <c>Reflect</c> 与字段图恢复使用。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal static class Coordinates
 {
     internal static class CombatManager

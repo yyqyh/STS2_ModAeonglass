@@ -19,7 +19,7 @@ namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 /// <remarks>
 /// ① 效果：X = 实际打出的能量（本体 X 费开关 <c>HasEnergyCostX</c> + <c>ResolveEnergyXValue()</c>）；每点能量换 2 张凋萎。
 /// ② 差分：无差分。
-/// ③ 依赖：凋萎注入（<c>WitherPool.Inject</c>）+ 意图 敌人牌堆。
+/// ③ 依赖：凋萎注入（<c>WitherEffects.Inject</c>）+ 意图 敌人牌堆。
 /// ④ ⚠️ v2 两处改动：类型 能力 → <b>技能</b>（v1 借能力牌的 Limbo 做一次性）；系数 1 → 2 且升级不再"不变" ⇒ 强度翻倍，实机要盯。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
@@ -44,7 +44,7 @@ public sealed class AeonglassOvergrow() : ModCardTemplate(-1, CardType.Skill, Ca
 
         var x = ResolveEnergyXValue() + (IsUpgraded ? UpgradeEnergyBonus : 0);
         var count = x * (int)DynamicVars["PerEnergy"].BaseValue;
-        Const.Logger.Info($"[{Const.ModId}] 蔓生：X={x} ⇒ {WitherPool.Inject(cardPlay.Target, count)}");
+        Const.Logger.Info($"[{Const.ModId}] 蔓生：X={x} ⇒ {WitherEffects.Inject(cardPlay.Target, count)}");
         return Task.CompletedTask;
     }
 

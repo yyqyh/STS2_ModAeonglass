@@ -5,14 +5,15 @@ using STS2_Aeonglass.Core.Content.Cards.Token;
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>
-/// 一张"意图卡"：<b>一个 <c>MoveState</c> 的元数据</b>
-/// （<c>MoveState</c> 不是模型：没有卡面、没有 hook、不进存档）。
+/// 一张"意图卡"：<b>一个 MoveState 的元数据</b> + 凋萎真卡实例挂点。
 /// </summary>
 /// <remarks>
-/// 三属性 <c>消耗 / 条件意图 / 条件是否满足</c> 与"被虚无吃掉"标记都挂在元数据上。
+/// ① 职责：编号/可行动判定/描述。
+/// ② 调用时机：牌堆与卡带。
 /// ⚠️ <b>三属性只能挂在携带 <c>MoveState</c> 的意图卡上</b>：虚无是纯元数据卡（<see cref="IsVoid" /> = true），
-/// 给它挂三属性没有意义，UI / 面板都要跳过它（Lab C 第一轮实测踩过这个坑）。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal sealed class IntentCard(string moveId, bool isVoid)
 {
     /// <summary>对应 <c>MoveState</c> 的 Id；虚无卡没有对应的 MoveState。</summary>

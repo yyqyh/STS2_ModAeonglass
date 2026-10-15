@@ -5,26 +5,15 @@ using STS2RitsuLib.Utils;
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
 /// <summary>
-/// 卡牌实例上的「<b>我来自哪一副</b>」记录。
+/// 卡牌实例上的"<b>我来自哪一副</b>"记录（差分判定的原始依据）。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>为什么需要它</b>：间隙的间隙副本是 <c>CombatState.CloneCard</c> 造出来的真实实例，而本体在
-/// <c>CardModel.AfterCloned</c> 里把 <c>DeckVersion</c> 清空 ⇒ 副本一出生就<b>认不出自己原属哪一副</b>，
-/// 于是差分判定（卡框配色 / 差分文案 / 差分效果）只能回退成"当前生效那一副"。
-/// 用户 2026-10-14 口径：<b>间隙卡回到手牌时要保持它原本的差分</b>。
-/// </para>
-/// <para>
-/// <b>为什么用 RitsuLib 的 <see cref="SavedAttachedState{TKey,TValue}" /></b>：它把值挂在实例上、
-/// 并通过 <c>SavedProperties</c> 接进原版存档流程 ⇒ 间隙是 <c>RunPersistent</c> 牌堆，
-/// 跨战斗、跨读档都还认得出这一张的来源副。自己拿 <c>ConditionalWeakTable</c> 会在读档后丢
-/// （读档是从 <c>SerializableCard</c> 重建实例的）。
-/// </para>
-/// <para>
+/// ① 职责：读写卡 → 副的映射。
+/// ② 调用时机：建卡与差分判定。
 /// ⚠️ <b>注册必须发生在"存档属性名冻结"之前</b>（RitsuLib 在原生序列化缓存初始化时才冻结）
-/// ⇒ 在 <c>Main.Initialize()</c> 里调一次 <see cref="Register" />。
-/// </para>
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class DeckOrigin
 {
     /// <summary>挂载值的名字（会进存档属性表，必须唯一）。</summary>

@@ -4,16 +4,19 @@ using System.Runtime.CompilerServices;
 
 namespace STS2_Aeonglass.Core.Systems.Rewind.Graph;
 
-/// <summary>
-/// 字段级深拷贝 / 恢复。恢复时直接写私有字段 ⇒ <b>不触发任何事件、不经过任何 setter</b>。
-/// 这是"静默恢复"的基础（规格 V1）。
-/// </summary>
+/// <summary>字段级深拷贝 / 恢复：直接写私有字段 ⇒ <b>不触发事件、不走 setter</b>（规格 V1 的"静默恢复"）。</summary>
+/// <remarks>
+/// ① 职责：<c>Capture</c> / <c>TryRestore</c> / <c>GetHashCode</c>；克隆细节在 <c>FieldGraphCloner</c>。
+/// ② 挂点与时机：<c>CombatStateSnapshot</c> 抓模型字段（power / 遗物）时逐字段用。
+/// ③ 依赖：<c>IGraphPolicy</c>（哪些字段该抓）、字段缓存 <c>FieldCache</c>。
+/// ④ ⚠️ 恢复是静默的 ⇒ 数字与通知不会自己刷新，恢复结束必须由 <c>RewindUiRefresh</c> 统一补刷。
+/// </remarks>
 public sealed class FieldGraphSnapshot
 {
-    private static readonly MethodInfo MemberwiseCloneMethod =
+    internal static readonly MethodInfo MemberwiseCloneMethod =
         typeof(object).GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
-    private static readonly Dictionary<Type, FieldInfo[]> FieldCache = [];
+    internal static readonly Dictionary<Type, FieldInfo[]> FieldCache = [];
 
     private readonly object _root;
     private readonly Dictionary<FieldInfo, object?> _values = [];
@@ -23,14 +26,14 @@ public sealed class FieldGraphSnapshot
         _root = root;
         var visited = new Dictionary<object, object?>(RefComparer.Instance);
 
-        foreach (var field in EnumerateFields(root.GetType()))
+        foreach (var field in FieldGraphCloner.EnumerateFields(root.GetType()))
         {
             if (policy.ShouldSkipField(field))
             {
                 continue;
             }
 
-            _values[field] = Clone(field.GetValue(root), root, policy, visited);
+            _values[field] = FieldGraphCloner.Clone(field.GetValue(root), root, policy, visited);
         }
     }
 
@@ -58,12 +61,12 @@ public sealed class FieldGraphSnapshot
                     continue;
                 }
 
-                if (field.IsInitOnly && TryRestoreContainer(current, captured, policy, visited))
+                if (field.IsInitOnly && FieldGraphCloner.TryRestoreContainer(current, captured, policy, visited))
                 {
                     continue;
                 }
 
-                field.SetValue(root, Clone(captured, root, policy, visited));
+                field.SetValue(root, FieldGraphCloner.Clone(captured, root, policy, visited));
             }
             catch (Exception ex)
             {
@@ -77,191 +80,9 @@ public sealed class FieldGraphSnapshot
 
     // ---------- 克隆 ----------
 
-    private static object? Clone(object? value, object? owner, IGraphPolicy policy, Dictionary<object, object?> visited)
-    {
-        if (value is null)
-        {
-            return null;
-        }
-
-        var type = value.GetType();
-        if (policy.IsAtomic(type) || policy.IsIdentityReference(value))
-        {
-            return value;
-        }
-
-        if (visited.TryGetValue(value, out var made))
-        {
-            return made;
-        }
-
-        if (policy.TryCloneSpecial(value, owner, out var special))
-        {
-            visited[value] = special!;
-            return special;
-        }
-
-        if (type.IsArray)
-        {
-            var source = (Array)value;
-            var copy = (Array)Activator.CreateInstance(type, source.Length)!;
-            visited[value] = copy;
-            for (var i = 0; i < source.Length; i++)
-            {
-                copy.SetValue(Clone(source.GetValue(i), owner, policy, visited), i);
-            }
-
-            return copy;
-        }
-
-        if (value is IDictionary dictionary)
-        {
-            var copy = (IDictionary)CreateContainer(type, typeof(Dictionary<,>))!;
-            visited[value] = copy;
-            foreach (DictionaryEntry entry in dictionary)
-            {
-                copy[Clone(entry.Key, owner, policy, visited)!] =
-                    Clone(entry.Value, owner, policy, visited);
-            }
-
-            return copy;
-        }
-
-        if (IsGenericHashSet(type))
-        {
-            var copy = (IList)CreateContainer(type, typeof(HashSet<>))!;
-            visited[value] = copy;
-            foreach (var item in (IEnumerable)value)
-            {
-                copy.Add(Clone(item, owner, policy, visited));
-            }
-
-            return copy;
-        }
-
-        if (value is IList list)
-        {
-            var copy = (IList)CreateContainer(type, typeof(List<>))!;
-            visited[value] = copy;
-            foreach (var item in list)
-            {
-                copy.Add(Clone(item, owner, policy, visited));
-            }
-
-            return copy;
-        }
-
-        // 普通对象：浅拷贝后逐字段克隆
-        var clone = MemberwiseCloneMethod.Invoke(value, null)!;
-        visited[value] = clone;
-        foreach (var field in EnumerateFields(type))
-        {
-            if (policy.ShouldSkipField(field))
-            {
-                continue;
-            }
-
-            var cloned = Clone(field.GetValue(value), owner, policy, visited);
-            try
-            {
-                field.SetValue(clone, cloned);
-            }
-            catch
-            {
-                TryRestoreContainer(field.GetValue(clone), cloned, policy, visited);
-            }
-        }
-
-        return clone;
-    }
-
     // ---------- 只读容器：清空 + 回填（不替换容器本身） ----------
 
-    private static bool TryRestoreContainer(
-        object? destination, object? source, IGraphPolicy policy, Dictionary<object, object?> visited)
-    {
-        if (destination is null || source is null)
-        {
-            return false;
-        }
-
-        if (destination is IDictionary dictionary && source is IDictionary sourceDictionary)
-        {
-            dictionary.Clear();
-            foreach (DictionaryEntry entry in sourceDictionary)
-            {
-                dictionary[Clone(entry.Key, null, policy, visited)!] = Clone(entry.Value, null, policy, visited);
-            }
-
-            return true;
-        }
-
-        if (destination is IList list && source is IList sourceList)
-        {
-            list.Clear();
-            foreach (var item in sourceList)
-            {
-                list.Add(Clone(item, null, policy, visited));
-            }
-
-            return true;
-        }
-
-        var type = destination.GetType();
-        if (IsGenericHashSet(type) && source.GetType() == type)
-        {
-            type.GetMethod("Clear")?.Invoke(destination, null);
-            var add = type.GetMethod("Add");
-            foreach (var item in (IEnumerable)source)
-            {
-                add?.Invoke(destination, [Clone(item, null, policy, visited)]);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
     // ---------- 基础设施 ----------
-
-    private static bool IsGenericHashSet(Type type) =>
-        type.IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>);
-
-    private static object? CreateContainer(Type type, Type openGeneric)
-    {
-        if (!type.IsInterface && !type.IsAbstract && type.GetConstructor(Type.EmptyTypes) is not null)
-        {
-            return Activator.CreateInstance(type);
-        }
-
-        var arguments = type.IsGenericType
-            ? type.GetGenericArguments()
-            : openGeneric == typeof(Dictionary<,>)
-                ? [typeof(object), typeof(object)]
-                : [typeof(object)];
-
-        return Activator.CreateInstance(openGeneric.MakeGenericType(arguments));
-    }
-
-    private static IEnumerable<FieldInfo> EnumerateFields(Type type)
-    {
-        if (FieldCache.TryGetValue(type, out var cached))
-        {
-            return cached;
-        }
-
-        var fields = new List<FieldInfo>();
-        for (var current = type; current is not null && current != typeof(object); current = current.BaseType)
-        {
-            fields.AddRange(current.GetFields(
-                BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
-        }
-
-        var array = fields.ToArray();
-        FieldCache[type] = array;
-        return array;
-    }
 
     private sealed class RefComparer : IEqualityComparer<object>
     {

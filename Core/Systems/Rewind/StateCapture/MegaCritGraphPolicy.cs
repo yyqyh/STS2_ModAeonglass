@@ -11,9 +11,14 @@ using STS2_Aeonglass.Core.Systems.Rewind.Graph;
 namespace STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 /// <summary>
-/// 本体策略：把"身份引用"从引擎对象扩展成模型 / 实体 / 战斗态 / 拍堆。
-/// 这些对象不在这里克隆 —— 模型各自由字段快照单独负责（时空裂隙 接）。
+/// 本体策略：把"身份引用"从引擎对象扩展到模型 / 实体 / 战斗态 / 拍堆。
 /// </summary>
+/// <remarks>
+/// ① 职责：<c>IGraphPolicy</c> 的本体实现。
+/// ② 调用时机：字段图抓取/恢复时判定原子与保留引用。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// </remarks>
+
 internal sealed class MegaCritGraphPolicy : GraphPolicies
 {
     /// <summary>全局单例：策略无状态，缓存字段表，复用即可。</summary>

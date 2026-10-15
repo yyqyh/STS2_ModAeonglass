@@ -42,7 +42,7 @@ public sealed class AeonglassPurify() : ModCardTemplate(1, CardType.Attack, Card
         var count = monsterWithers + playerWithers;
 
         // ② 消耗：怪侧全部凋萎 + 玩家侧全部凋萎（升级档再吃掉所有状态牌）。
-        var purged = MonsterAccess.LivingEnemies.Sum(WitherPool.PurgeAll);
+        var purged = MonsterAccess.LivingEnemies.Sum(WitherEffects.PurgeAll);
         purged += await StatusSweeper.ConsumeAsync(choiceContext, Owner, card => card is AeonglassWitherCard);
         if (IsUpgraded)
         {

@@ -6,18 +6,13 @@ using STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 
 namespace STS2_Aeonglass.Core.Systems.Rewind;
 
-/// <summary>
-/// 回溯的"每场战斗 1 次"闸门（定稿参数）。
-/// </summary>
+/// <summary>回溯的"每场战斗 1 次"闸门（定稿参数）。</summary>
 /// <remarks>
-/// <para>
-/// 判定方式和 时之沙 倒置 / 时空裂隙 激活一样：记"这条记录属于哪一场战斗"，**战斗一换就自动允许** ——
-/// 不需要额外的战斗开始钩子来重置。
-/// </para>
-/// <para>
-/// 这里记的是 <c>CombatState</c> <b>实例引用</b>（不是回合号）：回溯会把回合号往回拨，
-/// 用回合号当键会被自己的回档重置掉，等于没有闸门。
-/// </para>
+/// ① 职责：<c>TryConsume</c> 判定本场是否还有额度并记账。
+/// ② 挂点与时机：<c>RewindFacade</c> 的闸门评估链里调（真正回档之前）。
+/// ③ 依赖：<c>CombatState</c> 实例引用 + 设置项。
+/// ④ ⚠️ 键必须记 <c>CombatState</c> <b>实例引用</b>而不是回合号：回溯会把回合号往回拨，用回合号当键会被自己的回档重置掉（等于没闸门）；
+/// 战斗一换就自动允许，不需要额外的战斗开始钩子（判定方式与倒置 / 坍缩的闸门一致）。
 /// </remarks>
 internal static class RewindCombatLimit
 {

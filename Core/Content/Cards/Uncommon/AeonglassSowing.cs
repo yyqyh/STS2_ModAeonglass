@@ -21,7 +21,7 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// <remarks>
 /// ① 效果：消逝副只塞凋萎、不造成伤害；永时副按正常攻击结算。
 /// ② 差分：永时副（A）= 伤害路线（升级 +6）；消逝副（B）= 污染路线（升级 +2 张）。
-/// ③ 依赖：差分判定（本卡不用差分块，直接读 <c>IsVariantB</c> 走两条路）、凋萎注入（<c>WitherPool.Inject</c>）。
+/// ③ 依赖：差分判定（本卡不用差分块，直接读 <c>IsVariantB</c> 走两条路）、凋萎注入（<c>WitherEffects.Inject</c>）。
 /// ④ ⚠️ v2 重写：v1 的"伤害 + 凋萎各来一点"已废；升级同时抬两副各自那半边。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
@@ -44,7 +44,7 @@ public sealed class AeonglassSowing()
         if (IsVariantB)
         {
             var wither = (int)DynamicVars["WitherB"].BaseValue;
-            Const.Logger.Info($"[{Const.ModId}] 播种（消逝副）：{WitherPool.Inject(cardPlay.Target, wither)}");
+            Const.Logger.Info($"[{Const.ModId}] 播种（消逝副）：{WitherEffects.Inject(cardPlay.Target, wither)}");
             return;
         }
 

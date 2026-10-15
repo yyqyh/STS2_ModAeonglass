@@ -3,21 +3,13 @@ using MegaCrit.Sts2.Core.Entities.Players;
 
 namespace STS2_Aeonglass.Core.Systems.Gap;
 
-/// <summary>
-/// 间隙的<b>「必须交替」闸</b>：坍缩之后必须先回归，反之亦然（同一种动作不能连着做两次）。
-/// </summary>
+/// <summary>间隙的<b>「必须交替」闸</b>：坍缩之后必须先回归，反之亦然（同一种动作不能连着做两次）。</summary>
 /// <remarks>
-/// <para>
-/// <b>2026-10-14 用户口径更新</b>：<b>取消「每回合 1 次激活」的上限</b> ——
-/// 速率只由「必须交替」与代价（每次 2 沙砾，见 <c>GapStore.ActionCost</c>）来限，
-/// 原来的每回合计数与设置项 <c>GapActivationsPerTurn</c> 已一并删除。
-/// </para>
-/// <para>
-/// 判定方式：记「哪一场战斗 + 上一次做了什么动作」，战斗一换自动清零。
-/// </para>
-/// <para>
-/// 文件名保留历史名字（<c>GapAlternation</c>）：它现在是 时空裂隙 唯一的速率闸，改名要动的地方太多、收益不值。
-/// </para>
+/// ① 职责：<c>TryConsume</c> 判定本次动作是否合法并记账（+ <c>GapAction</c> 枚举）。
+/// ② 挂点与时机：坍缩 / 换回动作开始之前。
+/// ③ 依赖：<c>CombatState</c> + 回合号（战斗一换自动清零，不需要额外的战斗钩子）。
+/// ④ ⚠️ 2026-10-14 用户口径：<b>取消「每回合 1 次激活」上限</b> ⇒ 速率只由本闸与代价（每次 2 沙砾，<c>GapStore.ActionCost</c>）来限，
+/// 原来的每回合计数与设置项 <c>GapActivationsPerTurn</c> 已一并删除。文件名保留历史名（它现在是时空裂隙唯一的速率闸，改名收益不值）。
 /// </remarks>
 internal static class GapAlternation
 {

@@ -3,11 +3,15 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace STS2_Aeonglass.Core.Systems.Stasis;
 
-/// <summary>"有牌被搁浅了"的监听口（STA 通道的收益线卡用；例：STA-2 压舱 = 每搁浅一张 +6 挡）。</summary>
+/// <summary>
+/// 标记接口：<b>关心"搁浅牌归队"的监听者</b>（给收益类卡/能力用）。
+/// </summary>
 /// <remarks>
-/// 搁浅只有一个入口（<c>StasisZone.SendToZone</c>）⇒ 通知就在那一处发，不做钩子、不做补丁。
-/// 实现方自己负责"每回合 1 次"这类闸门。
+/// ① 职责：归队回调。
+/// ② 调用时机：<c>StasisReturn</c> 归队时逐个通知。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal interface IStasisReturnListener
 {
     /// <param name="player">搁浅动作的归属玩家。</param>

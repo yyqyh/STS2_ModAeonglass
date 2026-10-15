@@ -4,20 +4,14 @@ using MegaCrit.Sts2.Core.Entities.Players;
 namespace STS2_Aeonglass.Core.Systems.Intent;
 
 /// <summary>
-/// 「指向意图」的动作卡共用执行口：把玩家在卡带上点中的那张意图交给动作结算。
+/// 「指向意图」的动作卡<b>共用执行口</b>：把玩家点中的意图交给动作。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>位置说明</b>：v1 时期这段逻辑挂在 <c>Core/Content/Cards/Basic/IntentActionCard.cs</c>
-/// （当时它只服务三张测试卡）。v2 里它成了「提前 / 威吓」等正式动作卡的共用件 ⇒ 按分层放回
-/// <b>系统层</b>（意图的指向链路：<see cref="IntentTargeting" /> + <c>IntentTargetRegistry</c> +
-/// <c>Core/Patches/IntentTargetingPatches.cs</c>），卡片不再承担公用逻辑。
-/// </para>
-/// <para>
-/// <b>链路</b>：卡声明 <c>TargetType.TargetedNoCreature</c> + <see cref="IIntentTargetCard" /> ⇒
-/// 补丁放行"指向意图卡" ⇒ 玩家点卡带上的意图 ⇒ 侧表记下选择 ⇒ 卡打出时在这里取回来并结算。
-/// </para>
+/// ① 职责：<c>ApplyPointed</c>。
+/// ② 调用时机：动作卡（提前/威吓/思维剥夺）打出时。
+/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
 /// </remarks>
+
 internal static class IntentActionCard
 {
     /// <summary>**当前形态：原版卡牌指向** —— 玩家点的那张意图卡由侧表带回。</summary>

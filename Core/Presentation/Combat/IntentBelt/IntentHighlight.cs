@@ -17,6 +17,8 @@ namespace STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
 /// ② 调用时机：卡带每次刷新、指向模式切换时判档。
 /// ③ 依赖：无（纯枚举）。
 /// ④ ⚠️ 口径（用户 2026-10-12）：红 = <b>怪物将要打出的那张</b>；青 = <b>我们选中的那张</b>。
+///    2026-10-15 试过"发牌结束后非选中卡也点青背光"，定位到真因（发牌红闪把背光留在显示态）后**已撤掉**，
+///    恢复"没被点名的卡就是没有背光"。
 /// </remarks>
 
 internal enum IntentHighlight

@@ -5,9 +5,11 @@ using MegaCrit.Sts2.Core.Entities.Creatures;
 /// 系统层 → 卡带的<b>唯一接缝</b>：通知表现层切可点/给高光。
 /// </summary>
 /// <remarks>
-/// ① 职责：转发指向模式开关。
-/// ② 调用时机：<c>IntentTargeting</c>。
-/// ④ ⚠️ 口径沿革以带日期的那行为准；命名/注释规范见 Core/Systems/README.md。
+/// ① 职责：转发"指向模式开关"给卡带（表现层注册回调）。
+/// ② 调用时机：将来若要重新用"我们自己的点击链路"（卡带点击 ↔ 系统层），从 <see cref="SetTargeting" /> 接回。
+/// ④ ⚠️ 2026-10-15 优化：原来调用它的 <c>IntentTargeting</c> 整套（点击链路）实测 <b>0 调用</b>已删除；
+///    这个接缝与 <see cref="TopPickRequested" /> 保留 —— 现在真正在用指向的是**本体卡牌选目标那套**
+///    （见 <c>Core/Patches/IntentTargetingPatches.cs</c>）。
 /// </remarks>
 
 internal static class IntentBeltBridge

@@ -74,4 +74,12 @@
   "STS2_AEONGLASS_POWER_AEONGLASS_SKIP_NEXT_TURN_POWER.title": "跳过回合",
   "STS2_AEONGLASS_POWER_AEONGLASS_SKIP_NEXT_TURN_POWER.description": "你的下一个回合什么都不发生：不抽牌、不给能量、立刻结束。",
   "STS2_AEONGLASS_POWER_AEONGLASS_SKIP_NEXT_TURN_POWER.smartDescription": "你的下一个回合什么都不发生：不抽牌、不给能量、立刻结束。"
+  ,
+  "STS2_AEONGLASS_POWER_AEONGLASS_TIME_LORD_POWER.title": "时间主宰",
+  "STS2_AEONGLASS_POWER_AEONGLASS_TIME_LORD_POWER.description": "本场战斗中，[gold]凋萎[/gold]不会再被给予。",
+  "STS2_AEONGLASS_POWER_AEONGLASS_TIME_LORD_POWER.smartDescription": "本场战斗中，[gold]凋萎[/gold]不会再被给予。"
+  ,
+  "STS2_AEONGLASS_POWER_AEONGLASS_LAST_CHAPTER_POWER.title": "时之终章",
+  "STS2_AEONGLASS_POWER_AEONGLASS_LAST_CHAPTER_POWER.description": "每回合开始时：额外获得 3 点能量，并额外抽 5 张牌。",
+  "STS2_AEONGLASS_POWER_AEONGLASS_LAST_CHAPTER_POWER.smartDescription": "每回合开始时：额外获得 3 点能量，并额外抽 5 张牌。"
 }

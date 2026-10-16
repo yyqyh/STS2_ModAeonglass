@@ -59,6 +59,26 @@ internal static class ExtraPileModules
     // ============================ 时空裂隙 ============================
 
     /// <summary>
+    /// 时空裂隙是否用**单张牌堆**（存储 = 显示），而不是"存储 + 克隆显示"双层。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>2026-10-16 实测否决，默认关闭（走双层）</b>。原因：合并成 <c>RunPersistent</c>（**非战斗牌堆**）后，
+    /// 卡面一旦挂出来，鼠标悬停 holder 就会顺着 RitsuLib <c>NModExtraHand.OnHolderFocused</c> →
+    /// 本体 <c>HoveredModelTracker.OnLocalCardHovered</c> → <c>NetCombatCard.FromModel</c> 抛
+    /// <c>Cannot use NetCombatCard to serialize a card in a non-combat pile!</c>（实机 log 28 条；双层实现 0 条）。
+    /// RitsuLib 的 <c>ModCardPileIsCombatPatch</c> 只把 **CombatOnly** 的模组牌堆算战斗牌堆
+    /// ⇒ "可聚焦悬停的额外手牌"必须处在战斗牌堆里 —— 这正是上一版"存储 + 显示"分层存在的原因。
+    /// </para>
+    /// <para>
+    /// ⚠️ 保留开关只为留档 / 将来重试：真要再合并，必须同时解决"悬停上报"这条路（例如显示牌堆仍用
+    /// CombatOnly、只把持久存储换成我们自己的数据槽），否则每次悬停刷一条 ERROR。
+    /// </para>
+    /// <para>用 <c>static readonly</c> 而不是 <c>const</c>：常量会让编译器把下面那套双层实现判成"不可达代码"（CS0162 警告）。</para>
+    /// </remarks>
+    private static readonly bool MergeGapPiles = false;
+
+    /// <summary>
     /// 注册 间隙的间隙牌堆（<b>额外手牌容器</b>形态）。
     /// </summary>
     /// <remarks>
@@ -75,6 +95,12 @@ internal static class ExtraPileModules
     /// </remarks>
     public static void RegisterTimeGap()
     {
+        if (MergeGapPiles)
+        {
+            RegisterMergedTimeGap();
+            return;
+        }
+
         // ① **存储牌堆**（真相所在）：Headless（不显示）+ RunPersistent（随存档序列化）。
         //    存进来的真实例只在这里；显示靠下面的"镜像"，所以这里不需要任何 UI 参数。
         var gap = RitsuLibFramework.GetCardPileRegistry(Const.ModId).RegisterOwned(
@@ -149,5 +175,51 @@ internal static class ExtraPileModules
                 Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Gap} 战斗开始同步镜像失败（已忽略）：{ex.GetType().Name}");
             }
         });
+    }
+
+    /// <summary>
+    /// 时空裂隙 · <b>单牌堆模式</b>：只注册一张 <c>RunPersistent + ExtraHand</c>（存储 = 显示），不做镜像。
+    /// </summary>
+    /// <remarks>
+    /// ① 表现参数与双层版的"显示牌堆"**逐字一致**（用户 2026-10-12 亲自调过：手牌下方 / 灰色禁用态（下移 + 灰）
+    /// / 显示可打出高光 / 过渡 0.2s）—— 合并只改"存哪"，不改观感。
+    /// ② 作用域仍是 <c>RunPersistent</c> ⇒ 跨战斗保留、随存档序列化（真实例一直是这一份）。
+    /// ③ 不再订阅 <c>CombatStartingEvent</c> 的镜像同步：没有镜像层可同步。
+    /// </remarks>
+    private static void RegisterMergedTimeGap()
+    {
+        var gap = RitsuLibFramework.GetCardPileRegistry(Const.ModId).RegisterOwned(
+            Const.Paths.CardPiles.TimeGapStem,
+            new ModCardPileSpec
+            {
+                Scope = ModCardPileScope.RunPersistent,
+                // 额外手牌容器：居中放在原版手牌下方（与双层版的显示牌堆同锚点）。
+                Style = ModCardPileUiStyle.ExtraHand,
+                Anchor = new ModCardPileAnchor(ModCardPileAnchorKind.ExtraHandBelow),
+                // 不能打出 ⇒ 必须显式要求"用卡牌节点表示"（否则只有一个空容器）。
+                CardShouldBeVisible = true,
+                ExtraHand = new ModCardPileExtraHandSpec
+                {
+                    AllowCardPlay = false,
+                    ShowPlayableGlow = true,
+                    DisabledOffset = new(0, 240),
+                    DisabledModulate = Colors.SlateGray,
+                    DisabledTransitionDuration = 0.2,
+                    OnCardVisualCreated = ctx => Const.Logger.Info(
+                        $"[{Const.ModId}] {Const.Prefix.Gap} 额外手牌：卡面已挂载 {ctx.Card?.Id.Entry ?? "-"}"),
+                    OnCardArrived = ctx => Const.Logger.Info(
+                        $"[{Const.ModId}] {Const.Prefix.Gap} 额外手牌：入场到位 {ctx.Card?.Id.Entry ?? "-"}"),
+                },
+                IconPath = Const.Paths.Ui.PileIcon(Const.Paths.CardPiles.TimeGapStem),
+                VisibleWhen = ctx => ctx.Player != null && Systems.Bootstrap.CharacterGate.IsActive,
+            });
+
+        GapStore.Configure(gap);
+        // 显示侧的对外接口（ZoneId / Zone / Zone(player)）指回同一张牌堆；SyncAsync 在合并模式下空转。
+        GapViewPile.ConfigureMerged(gap);
+
+        Const.Logger.Info(
+            $"[{Const.ModId}] {Const.Prefix.Gap} 间隙牌堆已注册（**单牌堆模式**：{gap.Id}｜RunPersistent + ExtraHand，" 
+            + "存储=显示，无镜像层）");
     }
 }

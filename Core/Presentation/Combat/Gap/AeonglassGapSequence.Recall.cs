@@ -78,7 +78,8 @@ internal static partial class AeonglassGapSequence
             var clones = StageGapViewCards(ui, player);
 
             // ② 开门（和 ① 同时开始）
-            var openTask = portals.PlayOpenAsync(right: !RecallFromLeft, OpenDuration);
+            // suckIn: false = 漩涡往外吐（唤回：牌从门里出来）
+            var openTask = portals.PlayOpenAsync(right: !RecallFromLeft, OpenDuration, suckIn: false);
 
             // ① 间隙卡面**原地**透明化消失
             await FadeGapCardsAsync(clones);
@@ -349,8 +350,8 @@ internal static partial class AeonglassGapSequence
         {
             if (AeonglassGapPortals.Instance is { } portals)
             {
-                await portals.PlayCloseAsync(right: false, CloseDuration);
-                await portals.PlayCloseAsync(right: true, CloseDuration);
+                await portals.PlayCloseAsync(right: false, CloseDuration, suckIn: false);
+                await portals.PlayCloseAsync(right: true, CloseDuration, suckIn: false);
             }
         }
         catch (Exception ex)

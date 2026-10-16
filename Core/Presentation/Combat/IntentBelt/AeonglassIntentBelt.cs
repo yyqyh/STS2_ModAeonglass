@@ -5,7 +5,6 @@ using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Nodes.Combat;
 
-using STS2_Aeonglass.Core.Presentation.Support;
 using STS2_Aeonglass.Core.Systems.Intent;
 
 namespace STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
@@ -38,16 +37,33 @@ public partial class AeonglassIntentBelt : Control
     private const float SlotGap = 3f;
     private const float RowGap = 6f;
 
+    /// <summary>牌堆小卡行与卡片行之间的间距（与 <see cref="RowGap" /> 同口径，便于派生落点）。</summary>
+    private const float PileRowGap = 6f;
+
+    /// <summary>
+    /// **视觉保持量**：卡面定位改成"对齐到槽位"之后，卡面比老位置整体挪了这么多；
+    /// 卡带整体补回它 ⇒ 你按老位置调好的东西不用全部重调。
+    /// </summary>
+    /// <remarks>
+    /// <para>派生落点用的也是它：`PileRowOffset / TopPickOffset` 都写成 <c>CardVisualHold + (本地偏移)</c>，
+    /// 代码在摆的时候再减掉这一份（见 <c>SyncPosition</c>），所以它们的**实际含义 = 相对卡带原点（= 第一张卡左上角）的偏移**。</para>
+    /// <para>把这里改成 <c>(0, 0)</c> ⇒ 卡带按公式落位（会整体往左上跳），落点常量也要跟着重算。</para>
+    /// </remarks>
+    private static readonly Vector2 CardVisualHold = new(132f, 184.6f);
+
     /// <summary>
     /// **牌堆行的位置**：直接就是它在**卡带**里的坐标（用户 2026-10-12：
     /// "第一个卡牌换了之后卡组位置也变了 —— 挂在卡带上"）。
     /// </summary>
     /// <remarks>
-    /// 刻意**不含卡片高度**：以前写成"卡片行底 + 间距"，于是改卡牌大小（`SlotHeight`）时牌堆会跟着跑。
-    /// 现在它是相对卡带原点的固定坐标，跟卡牌尺寸解耦 —— 想调就改这两个数：
-    /// <c>X</c> = 往右（0 = 与第一张卡左边缘对齐）；<c>Y</c> = 往下（越小越靠上）。
+    /// <para>
+    /// **反推口径（2026-10-15 卡面对齐槽位之后）**：卡面现在正好落在槽位里，而槽位就在卡带原点上
+    /// ⇒ <b>卡带原点 = 第一张卡的左上角</b>，于是"第一张卡正下方"就是
+    /// <c>(0, SlotHeight + 间距)</c>；再加上 <see cref="CardVisualHold" />（代码里会把它减掉）得到本字段的值。
+    /// </para>
+    /// <para><c>X</c> = 往右（0 = 与第一张卡左边缘对齐）；<c>Y</c> = 往下。</para>
     /// </remarks>
-    private static readonly Vector2 PileRowOffset = new(-100f, -50f);
+    private static readonly Vector2 PileRowOffset = CardVisualHold + new Vector2(0f, SlotHeight + PileRowGap);
 
     /// <summary>
     /// 卡带相对"意图行锚点"的**额外落点偏移**（用户 2026-10-15：整体再往左上挪一点、压在怪物意图之上）。
@@ -56,13 +72,18 @@ public partial class AeonglassIntentBelt : Control
     /// X 负往左、Y 负往上；单位与 <c>Position</c> 同口径（锚点所在父节点的局部单位，受相机缩放影响）。
     /// 只影响落点，不影响行宽与槽位大小 —— 想调位置只改这一行。
     /// </remarks>
-    private static readonly Vector2 BeltOffset = new(-14f, -14f);
+    private static readonly Vector2 BeltOffset = new(-150f, -200f);
 
     /// <summary>
     /// **「拆解」选牌面板的位置**：相对卡带原点的固定坐标（与 <see cref="PileRowOffset" /> 同一套口径）。
     /// </summary>
-    /// <remarks>X = 往右（0 = 与第一张卡左边缘对齐）；Y = 往下（越小越靠上）。想挪面板就改这两个数。</remarks>
-    private static readonly Vector2 TopPickOffset = new(-100f, -170f);
+    /// <remarks>
+    /// 反推口径同 <see cref="PileRowOffset" />：**卡带原点 = 第一张卡左上角**。
+    /// 默认摆在"牌堆小卡行再往下 <c>SlotHeight + PileRowGap</c>"处（不与小卡抢位置）；
+    /// X 想跟第一张卡左边缘对齐就填 0，Y 越小越靠上。
+    /// </remarks>
+    private static readonly Vector2 TopPickOffset =
+        CardVisualHold + new Vector2(0f, (SlotHeight + PileRowGap) * 2f);
 
     private Creature? _creature;
     private Control? _anchor;
@@ -88,8 +109,6 @@ public partial class AeonglassIntentBelt : Control
     private int _lastCounts;
     private int _lastHandHash;
     private object? _lastPendingRef;
-    private object? _lastSelectedRef;
-    private bool _lastTargeting;
     private bool _lastHadState;
 
     /// <summary>行宽缓存（只在行内容变化后重算一次，不再每帧问容器的最小尺寸）。</summary>
@@ -107,30 +126,20 @@ public partial class AeonglassIntentBelt : Control
     /// <summary>"空 ↔ 有"切换只在变化时打一行（不是每帧）。</summary>
     private bool? _lastShown;
 
-    /// <summary>
-    /// "我们选中的"那张意图（青色高光）—— 动作卡进入**指向模式**时由它填上，平时是 null。
-    /// </summary>
-    /// <remarks>指向模式还没接（下一步）：那时 `<c>SetSelected(card)</c>` 由指向逻辑调，这里只负责画高光。</remarks>
-    internal static IntentCard? SelectedCard { get; private set; }
-
     /// <summary>当前战斗里本地玩家（造意图卡实例要用它的 <c>RunState</c>）。</summary>
     private static MegaCrit.Sts2.Core.Entities.Players.Player? PlayerOf() =>
         MonsterAccess.Combat?.PlayerCreatures?.FirstOrDefault()?.Player;
 
-    /// <summary>指向模式是否打开（打开时意图卡可点；用户 2026-10-12 的"用卡牌选目标"）。</summary>
-    internal static bool TargetingActive { get; private set; }
-
     /// <summary>
-    /// 高光口径（用户 2026-10-12）：<b>红 = 怪物将要打出的那张</b>；<b>青 = 我们选中的那张</b>。
+    /// 高光口径：<b>红 = 怪物将要打出的那张</b>；其余无背光。
     /// </summary>
-    private static IntentHighlight HighlightFor(IntentCard card, EnemyIntentState state)
+    /// <remarks>
+    /// 2026-10-15：原来还有"青 = 我们选中的那张"，那套指向模式（<c>IntentTargeting` + 卡带点击）实测 0 调用已删除；
+    /// 现在真正在用指向的是**本体卡牌选目标那套**（<c>Core/Patches/IntentTargetingPatches.cs</c>），它不依赖这个档位。
+    /// </remarks>
+    private IntentHighlight HighlightFor(IntentCard card, EnemyIntentState state)
     {
-        if (ReferenceEquals(card, state.Pending))
-        {
-            return IntentHighlight.Pending;
-        }
-
-        return ReferenceEquals(card, SelectedCard) ? IntentHighlight.Selected : IntentHighlight.None;
+        return ReferenceEquals(card, state.Pending) ? IntentHighlight.Pending : IntentHighlight.None;
     }
 
     /// <summary>给一只怪的节点挂上卡带（幂等）。</summary>
@@ -156,9 +165,8 @@ public partial class AeonglassIntentBelt : Control
         };
 
         parent.AddChild(belt);
-        // 让系统层能通知"进/出指向模式"（表现层注册，系统层不反向依赖）。
-        IntentBeltBridge.TargetingChanged = SetTargeting;
-        // 同一个接缝的另一半：系统层要开"抽牌堆顶选牌"面板时，由这里把请求落到**对应那只怪**的卡带上。
+        // 接缝：系统层要开"抽牌堆顶选牌"面板时，由这里把请求落到**对应那只怪**的卡带上。
+        // （另一个接缝 `IntentBeltBridge.TargetingChanged` 的注册随"点击链路"一起删了，见该系统层文件注释。）
         IntentBeltBridge.TopPickRequested ??= FindAndBeginTopPick;
         belt.Build();
         belt.SyncPosition();
@@ -175,7 +183,11 @@ public partial class AeonglassIntentBelt : Control
     }
 
     /// <summary>卡带销毁（怪死 / 换房间）时把自己登记过的意图节点撤掉，别在全局登记表里留悬挂节点。</summary>
-    public override void _ExitTree() => UnregisterOwnNodes();
+    public override void _ExitTree()
+    {
+        UnregisterOwnNodes();
+        AbortDeal();
+    }
 
     private void Build()
     {
@@ -222,6 +234,12 @@ public partial class AeonglassIntentBelt : Control
         // 瞄准期间：自己按鼠标位置命中测试并上报给本体瞄准管理器（拖拽期间 MouseEntered 不来）。
         UpdateTargetingHover();
 
+        // 牌堆小卡：等它挂进树、格子排版出尺寸之后再量（建的时候量不到真实变换）。
+        ResolvePendingChips();
+
+        // 发牌特效：每只怪每场战斗一次（触发时机见 AeonglassIntentBelt.Deal 的 Trigger）。
+        StepDeal(delta);
+
         if (_numberTimer >= NumberRefreshInterval)
         {
             _numberTimer = 0f;
@@ -249,7 +267,7 @@ public partial class AeonglassIntentBelt : Control
             return;
         }
 
-        // 锚点没动就直接返回（一帧只做两次 Vector2 比较，不再问容器最小尺寸）。
+        // 锚点没动、行宽没脏就直接返回（一帧只做几次 Vector2 比较，不再问容器最小尺寸）。
         if (_anchorCached
             && _anchorPos == _anchor.Position
             && _anchorSize == _anchor.Size
@@ -285,7 +303,15 @@ public partial class AeonglassIntentBelt : Control
 
         var x = _anchor.Position.X + (_anchor.Size.X - _rowWidth) * 0.5f + BeltOffset.X;
         var y = _anchor.Position.Y - SlotHeight - RowGap + BeltOffset.Y;
-        Position = new Vector2(x, y);
+        // 视觉保持：卡面定位改成解析式之后，卡面比"老位置"整体往左上挪了 CardVisualHold 那么多；
+        // 加上它 ⇒ 你按老位置调好的卡带不用重调。设成 (0,0) 就按公式算（卡带会整体往左上跳）。
+        Position = new Vector2(x, y) + CardVisualHold;
+
+        // 牌堆小卡/预览面板相对卡带原点摆 ⇒ 减掉保持量，它们留在原地（不然会跟着卡带一起跳）。
+        if (_pileRow is not null)
+        {
+            _pileRow.Position = PileRowOffset - CardVisualHold;
+        }
     }
 
     /// <summary>
@@ -318,17 +344,13 @@ public partial class AeonglassIntentBelt : Control
                       || _lastRevision != state.Revision
                       || _lastCounts != counts
                       || _lastHandHash != handHash
-                      || !ReferenceEquals(_lastPendingRef, state.Pending)
-                      || !ReferenceEquals(_lastSelectedRef, SelectedCard)
-                      || _lastTargeting != TargetingActive;
+                      || !ReferenceEquals(_lastPendingRef, state.Pending);
 
         _lastHadState = true;
         _lastRevision = state.Revision;
         _lastCounts = counts;
         _lastHandHash = handHash;
         _lastPendingRef = state.Pending;
-        _lastSelectedRef = SelectedCard;
-        _lastTargeting = TargetingActive;
         return changed;
     }
 
@@ -367,17 +389,18 @@ public partial class AeonglassIntentBelt : Control
     /// </remarks>
     private void UpdateTargetingHover()
     {
-        if (MegaCrit.Sts2.Core.Nodes.Combat.NTargetManager.Instance is not { IsInSelection: true } manager)
+        // 只在"正在打我们的指向卡"时动手：别的卡（攻击 / 指向队友 / 自身）的瞄准一点不碰。
+        if (MegaCrit.Sts2.Core.Nodes.Combat.NTargetManager.Instance is not { IsInSelection: true } manager
+            || !IntentTargetRegistry.AimingOurCard)
         {
             _reportedHover = null;
             return;
         }
 
-        var mouse = GetViewport().GetMousePosition();
         Node? hit = null;
         foreach (var view in _views)
         {
-            if (view.Card is { } node && view.ContainsPoint(mouse))
+            if (view.Card is { } node && view.ContainsMouse())
             {
                 hit = node;
                 break;
@@ -389,12 +412,13 @@ public partial class AeonglassIntentBelt : Control
             // 每帧重报：管理器那边可能被别的事件清掉 HoveredNode，重报一次最稳（代价只是一条信号）。
             manager.OnNodeHovered(hit);
         }
-        else if (_reportedHover is { } previous)
+        else if (_reportedHover is { } previous && IntentTargetRegistry.IsNotedHovered(previous))
         {
+            // ⚠️ 只有"管理器现在记着的确实是我们这张"才撤：多条卡带同帧轮询，随便撤会撤掉别的怪刚上报的那张。
             manager.OnNodeUnhovered(previous);
+            IntentTargetRegistry.ForgetHovered(previous);
         }
 
         _reportedHover = hit;
     }
-
 }

@@ -68,6 +68,10 @@ internal static class DeckModule
                     return;
                 }
 
+                // 新局开始先把上一局的配对/订阅清干净：RunEndedEvent 不覆盖"主菜单 → 放弃游戏"这类结束路径
+                //（2026-10-16 实测：那样结束后配对会残留到下一局）。ReleaseAll 幂等，重复调无副作用。
+                DeckTwins.ReleaseAll();
+
                 foreach (var player in evt.RunState.Players)
                 {
                     DeckSeeding.EnsureInitialized(player);
@@ -94,12 +98,55 @@ internal static class DeckModule
                 foreach (var player in Players())
                 {
                     DeckSeeding.EnsureInitialized(player);
+                    // 兜底：万一第二副牌堆是"播种之后才建出来"的，这里把盯堆补上（幂等）。
+                    DeckTwins.EnsurePileWatch(player);
                 }
             }
             catch (Exception ex)
             {
                 Const.Logger.Warn(
                     $"[{Const.ModId}] {Const.Prefix.Decks} 战斗开始时补播种失败（已忽略）：{ex.GetType().Name}");
+            }
+        });
+
+        // 读档继续：配对表不随存档走 ⇒ 先清残留，再按存档里的牌把孪生重连一次（否则读档后镜像静默失效）。
+        RitsuLibFramework.SubscribeLifecycle<RunLoadedEvent>(evt =>
+        {
+            try
+            {
+                if (!Enabled)
+                {
+                    return;
+                }
+
+                DeckTwins.ReleaseAll();
+
+                foreach (var player in evt.RunState.Players)
+                {
+                    DeckSeeding.RelinkAfterLoad(player);
+                }
+
+                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Decks} 读档继续：孪生已按存档重连");
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Decks} 读档重连失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
+            }
+        });
+
+        // 换 run：孪生镜像的事件订阅必须跟着一起放掉，否则会留下"幽灵镜像"（旧牌仍被镜像）并长期持有卡对象。
+        RitsuLibFramework.SubscribeLifecycle<RunEndedEvent>(_ =>
+        {
+            try
+            {
+                DeckTwins.ReleaseAll();
+                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Decks} 跑局结束：孪生配对与事件订阅已释放");
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Decks} 跑局结束释放订阅失败（已忽略）：{ex.GetType().Name}: {ex.Message}");
             }
         });
 

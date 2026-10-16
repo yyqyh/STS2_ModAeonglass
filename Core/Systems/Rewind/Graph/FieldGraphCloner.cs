@@ -68,11 +68,17 @@ internal static class FieldGraphCloner
 
         if (IsGenericHashSet(type))
         {
-            var copy = (IList)CreateContainer(type, typeof(HashSet<>))!;
+            // ⚠️ `HashSet<T>` **不实现 `IList`**（2026-10-16 实测炸过：卡上的 `_keywords` 是
+            //    `HashSet<CardKeyword>` ⇒ 这里的 `(IList)` 强转抛 InvalidCastException，
+            //    而异常顺着 `CaptureTurnStart` 穿进本体 `CombatManager.StartTurn` ⇒
+            //    日志 "turn loop died … the combat is stuck"，战斗卡死、回合结束按键不出现）。
+            //    ⇒ 只能按 `Add(T)` 反射逐个加（方法句柄缓存，见 <see cref="AddMethod" />）。
+            var copy = CreateContainer(type, typeof(HashSet<>))!;
             visited[value] = copy;
+            var add = AddMethod(type);
             foreach (var item in (IEnumerable)value)
             {
-                copy.Add(Clone(item, owner, policy, visited));
+                add?.Invoke(copy, [Clone(item, owner, policy, visited)]);
             }
 
             return copy;
@@ -147,8 +153,8 @@ internal static class FieldGraphCloner
         var type = destination.GetType();
         if (IsGenericHashSet(type) && source.GetType() == type)
         {
-            type.GetMethod("Clear")?.Invoke(destination, null);
-            var add = type.GetMethod("Add");
+            ClearMethod(type)?.Invoke(destination, null);
+            var add = AddMethod(type);
             foreach (var item in (IEnumerable)source)
             {
                 add?.Invoke(destination, [Clone(item, null, policy, visited)]);
@@ -162,6 +168,37 @@ internal static class FieldGraphCloner
 
     internal static bool IsGenericHashSet(Type type) =>
         type.IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>);
+
+    private static readonly Dictionary<Type, MethodInfo?> AddCache = [];
+
+    private static readonly Dictionary<Type, MethodInfo?> ClearCache = [];
+
+    /// <summary>`HashSet&lt;T&gt;.Add(T)` 的句柄（集合不是 `IList`，只能反射加元素；句柄缓存）。</summary>
+    private static MethodInfo? AddMethod(Type type)
+    {
+        if (AddCache.TryGetValue(type, out var cached))
+        {
+            return cached;
+        }
+
+        var element = type.IsGenericType ? type.GetGenericArguments()[0] : typeof(object);
+        var add = type.GetMethod("Add", [element]);
+        AddCache[type] = add;
+        return add;
+    }
+
+    /// <summary>`HashSet&lt;T&gt;.Clear()` 的句柄（缓存，别每帧去查）。</summary>
+    private static MethodInfo? ClearMethod(Type type)
+    {
+        if (ClearCache.TryGetValue(type, out var cached))
+        {
+            return cached;
+        }
+
+        var clear = type.GetMethod("Clear");
+        ClearCache[type] = clear;
+        return clear;
+    }
 
     internal static object? CreateContainer(Type type, Type openGeneric)
     {

@@ -1,5 +1,6 @@
-using Godot;
+﻿using Godot;
 
+using System.Diagnostics;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Helpers;
@@ -21,6 +22,60 @@ namespace STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
 public partial class AeonglassIntentBelt : Control
 {
 
+    /// <summary>牌堆小标的几何只打一行（整个进程一次），调标签位置时对着它改。</summary>
+    private static bool LoggedPileChipGeometry;
+
+    /// <summary>重建次数（只服务"性能探针"那行日志；默认关，见设置 json 的 <c>DebugIntentBeltLog</c>）。</summary>
+    private int _rebuildCount;
+
+    /// <summary>
+    /// 一张抽/弃小卡：**建一次常驻**（2026-10-15 池化），之后刷新只改内容。
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ `Cell`（挂进 `_pileRow` 的那个 wrapper）建的时候还没进树、量不到真实变换 ⇒
+    /// 缩放/居中/摆标签都推迟到挂进树、排版出尺寸之后（见 <see cref="ResolvePendingChips" />）。
+    /// </remarks>
+    private sealed class PileChipSlot
+    {
+        /// <summary>true = 抽牌堆那一张。</summary>
+        public bool IsDraw;
+
+        /// <summary>true = 借的本体牌堆按钮外观；false = 自绘兜底（拿不到本体场景时）。</summary>
+        public bool Vanilla;
+
+        /// <summary>挂进 <paramref name="_pileRow" /> 的格子（鼠标事件也挂它）。</summary>
+        public Control Cell = null!;
+
+        /// <summary>图标真身（本体按钮 / 自绘面板）。</summary>
+        public Control Icon = null!;
+
+        /// <summary>我们自己写的数量标签（只有借用本体外观时才有）。</summary>
+        public Label? Count;
+
+        /// <summary>凋萎数量标签（两版都有，0 张时不可见）。</summary>
+        public Label? Wither;
+
+        /// <summary>自绘兜底版的"抽 3"文本。</summary>
+        public Label? FallbackText;
+    }
+
+    /// <summary>待排版的小卡（建好但还没量到尺寸 ⇒ 推迟做缩放/居中/摆标签）。</summary>
+    private readonly List<PileChipSlot> _pendingChips = [];
+
+    /// <summary>抽 / 弃两张**常驻**小卡（懒建；之后只改内容，不再重建）。</summary>
+    private PileChipSlot? _drawChip;
+    private PileChipSlot? _discardChip;
+
+    /// <summary>
+    /// **抽/弃小卡的图标相对格子的额外偏移**（格子本地单位）—— 图标位置不对就改这一行。
+    /// </summary>
+    /// <remarks>
+    /// <para>默认 <c>(0, 0)</c>：图标由 <c>UiGeometry.FitAndCenterIn</c> **实测**居中，通常不用动。</para>
+    /// <para>X 正 = 右、Y 正 = 下；单位是格子本地单位（屏幕位移 = 这个值 × 相机缩放）。
+    /// 「数量」「凋萎 N」两个标签是照图标真身矩形摆的，会跟着一起走，不用另调。</para>
+    /// </remarks>
+    private static readonly Vector2 PileChipIconNudge = new(0f, 0f);
+
     /// <summary>
     /// 抽 / 弃牌堆指示器：优先用**本体的玩家牌堆按钮外观**（<c>combat_piles_container</c> 里的
     /// <c>%DrawPile</c> / <c>%DiscardPile</c> 子树），拿不到就退回自绘小标。
@@ -29,51 +84,86 @@ public partial class AeonglassIntentBelt : Control
     /// ⚠️ 不能用本体那套的 <c>Initialize(player)</c> —— 那会把计数绑到**玩家**的牌堆上；
     /// 我们只是借它的外观，数量自己写。所以：实例化 → 把节点摘出来 → 找它的第一个 Label 写数量。
     /// </remarks>
-    private void AddPileIndicator(bool isDraw, string title, IReadOnlyList<IntentCard> pile)
+    /// <summary>
+    /// 刷出抽 / 弃两张小卡（**池化**：第一次建节点，之后每次只改内容）。
+    /// </summary>
+    /// <remarks>
+    /// 旧版每次 `UpdateRow` 都 `ClearPileRow()` + 重新 `Instantiate` 本体牌堆场景 + 重建标签，
+    /// 每次手牌变化都付一遍场景实例化与节点释放的成本；现在两张卡常驻、只更新文本/显隐/tooltip/预览。
+    /// </remarks>
+    private void RefreshPileChips(EnemyIntentState state)
     {
-        var chip = BuildVanillaPileVisual(isDraw, pile.Count, pile.Count(c => c.IsVoid));
-        if (chip is null)
-        {
-            chip = BuildPileChip(title, pile);
-        }
-        else
-        {
-            chip.TooltipText = PileTooltip(title, pile);
-        }
+        RefreshPileChip(isDraw: true, "抽", state.Deck);
+        RefreshPileChip(isDraw: false, "弃", state.Discard);
+    }
 
-        _pileRow.AddChild(chip);
-
-        // 用户 2026-10-12：牌堆**点开看预览**（点开/再点关）。
-        chip.MouseFilter = MouseFilterEnum.Stop;
-        chip.MouseDefaultCursorShape = CursorShape.PointingHand;
-        var captured = chip;
-        chip.GuiInput += @event =>
+    private void RefreshPileChip(bool isDraw, string title, IReadOnlyList<IntentCard> pile)
+    {
+        var slot = isDraw ? _drawChip : _discardChip;
+        if (slot is null || !GodotObject.IsInstanceValid(slot.Cell))
         {
-            if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
+            slot = BuildPileChipSlot(isDraw, title, pile);
+            if (slot is null)
             {
-                // 同一个牌堆再点一次 = 关；点另一个 = 换成那个。
-                if (_popupIsDrawPile == isDraw)
-                {
-                    ClosePilePopup();
-                    _popupIsDrawPile = null;
-                    return;
-                }
+                return;
+            }
 
+            if (isDraw)
+            {
+                _drawChip = slot;
+            }
+            else
+            {
+                _discardChip = slot;
+            }
+
+            _pileRow.AddChild(slot.Cell);
+            WirePileChip(slot, title);
+            // 顺序固定：抽在前、弃在后（MoveChild 到同一位置是空操作）。
+            _pileRow.MoveChild(slot.Cell, Math.Clamp(isDraw ? 0 : 1, 0, Math.Max(0, _pileRow.GetChildCount() - 1)));
+        }
+
+        UpdatePileChip(slot, title, pile);
+    }
+
+    /// <summary>点开预览（点开/再点关）+ 鼠标离开就消失 —— 只接一次线，点击时**取当前数据**（池化后不能再用建卡时的快照）。</summary>
+    private void WirePileChip(PileChipSlot slot, string title)
+    {
+        var cell = slot.Cell;
+        var isDraw = slot.IsDraw;
+        cell.MouseFilter = MouseFilterEnum.Stop;
+        cell.MouseDefaultCursorShape = CursorShape.PointingHand;
+
+        cell.GuiInput += @event =>
+        {
+            if (@event is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
+            {
+                return;
+            }
+
+            // 同一个牌堆再点一次 = 关；点另一个 = 换成那个。
+            if (_popupIsDrawPile == isDraw)
+            {
+                ClosePilePopup();
+                _popupIsDrawPile = null;
+                return;
+            }
+
+            if (CurrentPile(isDraw) is { } live)
+            {
                 _popupIsDrawPile = isDraw;
-                ShowPilePopup(title, pile, _pileRow);
+                ShowPilePopup(title, live, _pileRow);
             }
         };
 
-        // 用户 2026-10-12：「卡组详细界面…鼠标离开就消失」——
-        // 鼠标离开小标时，若不在面板矩形内就直接关掉（移到面板上不算离开）。
-        chip.MouseExited += () =>
+        cell.MouseExited += () =>
         {
             if (_pilePopup is not { } panel || !GodotObject.IsInstanceValid(panel))
             {
                 return;
             }
 
-            var mouse = chip.GetViewport()?.GetMousePosition() ?? Vector2.Zero;
+            var mouse = cell.GetViewport()?.GetMousePosition() ?? Vector2.Zero;
             if (!panel.GetGlobalRect().HasPoint(mouse))
             {
                 ClosePilePopup();
@@ -82,72 +172,68 @@ public partial class AeonglassIntentBelt : Control
         };
     }
 
-    private void ClosePilePopup()
+    /// <summary>这一侧牌堆的**当前**内容（拿不到就给空表）。</summary>
+    private IReadOnlyList<IntentCard> CurrentPile(bool isDraw)
     {
-        if (_pilePopup is { } existing)
+        if (_creature is not null && IntentDeck.TryGet(_creature, out var state))
         {
-            if (GodotObject.IsInstanceValid(existing))
-            {
-                existing.QueueFreeSafely();
-            }
+            return isDraw ? state.Deck : state.Discard;
+        }
 
-            _pilePopup = null;
+        return [];
+    }
+
+    /// <summary>只改内容：数量 / 凋萎 / tooltip；预览面板开着就顺手用新内容重建。</summary>
+    private void UpdatePileChip(PileChipSlot slot, string title, IReadOnlyList<IntentCard> pile)
+    {
+        var count = pile.Count.ToString();
+        var witherCount = pile.Count(c => c.IsVoid);
+
+        slot.Cell.TooltipText = PileTooltip(title, pile);
+
+        if (slot.Vanilla)
+        {
+            WriteCountLabel(slot.Icon, count);
+            if (slot.Count is { } label)
+            {
+                label.Text = count;
+            }
+        }
+        else if (slot.FallbackText is { } fallback)
+        {
+            fallback.Text = $"{title}{count}";
+        }
+
+        if (slot.Wither is { } wither)
+        {
+            wither.Text = $"凋萎 {witherCount}";
+            wither.Visible = witherCount > 0;
+        }
+
+        if (_popupIsDrawPile == slot.IsDraw)
+        {
+            ShowPilePopup(title, pile, _pileRow);
         }
     }
 
-    /// <summary>牌堆预览：在牌堆行下面弹一个小面板，列出这一堆里有什么（同堆再点关、换堆换内容）。</summary>
-    private void ShowPilePopup(string title, IReadOnlyList<IntentCard> pile, Control anchor)
+
+    /// <summary>
+    /// 造一张抽/弃小卡：优先借本体玩家牌堆按钮的外观（数量自己填），拿不到就退回自绘小标。
+    /// </summary>
+    /// <remarks>只在**第一次**需要这一侧时调（之后走 <see cref="UpdatePileChip" /> 只改内容）。</remarks>
+    private PileChipSlot? BuildPileChipSlot(bool isDraw, string title, IReadOnlyList<IntentCard> pile)
     {
-        ClosePilePopup();
-
-        var panel = new PanelContainer();
-        panel.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+        var vanilla = BuildVanillaPileSlot(isDraw, pile.Count, pile.Count(c => c.IsVoid));
+        if (vanilla is not null)
         {
-            BgColor = new Color(0f, 0f, 0f, 0.88f),
-            BorderColor = new Color(1f, 1f, 1f, 0.35f),
-            BorderWidthTop = 1,
-            BorderWidthBottom = 1,
-            BorderWidthLeft = 1,
-            BorderWidthRight = 1,
-            ContentMarginLeft = 6,
-            ContentMarginRight = 6,
-            ContentMarginTop = 4,
-            ContentMarginBottom = 4,
-        });
-
-        var box = new VBoxContainer();
-        panel.AddChild(box);
-        box.AddChild(UiFactory.MakeLabel($"{title}牌堆（{pile.Count}）", 11, Colors.White));
-        foreach (var card in pile.Take(24))
-        {
-            box.AddChild(UiFactory.MakeLabel($"· {card.Describe()}", 10, new Color(1f, 1f, 1f, 0.82f)));
+            return vanilla;
         }
 
-        if (pile.Count == 0)
-        {
-            box.AddChild(UiFactory.MakeLabel("（空）", 10, new Color(1f, 1f, 1f, 0.6f)));
-        }
-
-        AddChild(panel);
-        panel.Position = anchor.Position + new Vector2(0f, anchor.Size.Y + 2f) + _pileRow.Position;
-        panel.ZIndex = 200;
-        panel.MouseFilter = MouseFilterEnum.Stop;
-        _pilePopup = panel;
-
-        // 鼠标从面板上移开也关（面板要收鼠标事件，否则收不到 Exited）。
-        panel.MouseExited += () =>
-        {
-            var mouse = panel.GetViewport()?.GetMousePosition() ?? Vector2.Zero;
-            if (!panel.GetGlobalRect().HasPoint(mouse))
-            {
-                ClosePilePopup();
-                _popupIsDrawPile = null;
-            }
-        };
+        return BuildFallbackPileSlot(isDraw, title, pile);
     }
 
     /// <summary>把本体玩家牌堆按钮的外观子树拿来用（数量自己填）；任何一步失败都返回 null。</summary>
-    private static Control? BuildVanillaPileVisual(bool isDraw, int count, int witherCount)
+    private PileChipSlot? BuildVanillaPileSlot(bool isDraw, int count, int witherCount)
     {
         try
         {
@@ -176,17 +262,7 @@ public partial class AeonglassIntentBelt : Control
             };
             wrapper.AddChildSafely(pile);
 
-            var size = pile.Size;
-            if (size.X > 1f && size.Y > 1f)
-            {
-                var scale = Mathf.Min(wrapper.CustomMinimumSize.X / size.X, SlotHeight / size.Y);
-                pile.Scale = new Vector2(scale, scale);
-                pile.Position = (wrapper.CustomMinimumSize - size * scale) * 0.5f;
-            }
-
             // 数量 Label：**贴在图标右下角**（用户 2026-10-12："数字和图标没在一起" ⇒ 之前锚在槽位角上、离图标太远）。
-            // 位置按"图标在槽位里居中"算：图标右下角 = 槽位中心 + 图标显示尺寸的一半，再往内收一点。
-            var iconSize = size * (pile.Scale.X > 0f ? pile.Scale.X : 1f);
             var countLabel = new Label
             {
                 Name = "AeonglassPileCount",
@@ -198,31 +274,40 @@ public partial class AeonglassIntentBelt : Control
             countLabel.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.85f));
             countLabel.AddThemeConstantOverride("outline_size", 4);
             wrapper.AddChild(countLabel);
-            // 收进来的那点内边距（10/12）就是微调用的两个数字。
-            countLabel.Position = wrapper.CustomMinimumSize * 0.5f + iconSize * 0.5f - new Vector2(-25f, -80f);
             countLabel.ZIndex = 10;
 
             // 用户 2026-10-12：「加一个显示，抽弃」—— 这一堆里**凋萎有几张**，抽牌堆与弃牌堆都显示。
-            // 0 张时不画（不占地方）。位置：贴在图标**上边**（数字在下面，两者不打架）；
-            // 末行那两个数字（-6 / -14）就是左右 / 上下的微调旋钮。
-            if (witherCount > 0)
+            // 位置：贴在图标**上边**（数字在下面，两者不打架）；末行那两个数字（-6 / -14）就是微调旋钮。
+            // ⚠️ 池化后**永远建**（0 张时只 `Visible = false`）—— 否则第一次没凋萎、之后就永远显示不出来。
+            var witherLabel = new Label
             {
-                var wither = new Label
-                {
-                    Name = "AeonglassPileWither",
-                    Text = $"凋萎 {witherCount}",
-                    MouseFilter = MouseFilterEnum.Ignore,
-                };
-                wither.AddThemeFontSizeOverride("font_size", 9);
-                wither.AddThemeColorOverride("font_color", new Color("C9A0FF"));
-                wither.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.85f));
-                wither.AddThemeConstantOverride("outline_size", 4);
-                wrapper.AddChild(wither);
-                wither.Position = wrapper.CustomMinimumSize * 0.5f - iconSize * 0.5f + new Vector2(-6f, -14f);
-                wither.ZIndex = 10;
-            }
+                Name = "AeonglassPileWither",
+                Text = $"凋萎 {witherCount}",
+                MouseFilter = MouseFilterEnum.Ignore,
+                Visible = witherCount > 0,
+            };
+            witherLabel.AddThemeFontSizeOverride("font_size", 9);
+            witherLabel.AddThemeColorOverride("font_color", new Color("C9A0FF"));
+            witherLabel.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.85f));
+            witherLabel.AddThemeConstantOverride("outline_size", 4);
+            wrapper.AddChild(witherLabel);
+            witherLabel.ZIndex = 10;
 
-            return wrapper;
+            // ⚠️ 缩放/居中/摆标签**不能在这里做**：此刻 wrapper 还没挂进 `_pileRow`（调用方下一行才 AddChild），
+            //    `GetGlobalTransformWithCanvas()` 量到的是无效变换 ⇒ 图标与两个标签全偏（实测踩到）。
+            //    所以只登记，等挂进树、格子排版出尺寸之后由 `ResolvePendingChips` 收尾。
+            var slot = new PileChipSlot
+            {
+                IsDraw = isDraw,
+                Vanilla = true,
+                Cell = wrapper,
+                Icon = pile,
+                Count = countLabel,
+                Wither = witherLabel,
+            };
+
+            _pendingChips.Add(slot);
+            return slot;
         }
         catch (Exception ex)
         {
@@ -230,6 +315,22 @@ public partial class AeonglassIntentBelt : Control
                 $"[{Const.ModId}] {Const.Prefix.Intent} 借用玩家牌堆外观失败（退回自绘小标）：{ex.GetType().Name}: {ex.Message}");
             return null;
         }
+    }
+
+    /// <summary>自绘兜底小标（拿不到本体外观时）：一个带边框的小面板 + "抽 3" 文本。</summary>
+    private static PileChipSlot? BuildFallbackPileSlot(bool isDraw, string title, IReadOnlyList<IntentCard> pile)
+    {
+        var chip = BuildPileChip(title, pile);
+        return chip is null
+            ? null
+            : new PileChipSlot
+            {
+                IsDraw = isDraw,
+                Vanilla = false,
+                Cell = chip,
+                Icon = chip,
+                FallbackText = chip.GetChildren().OfType<Label>().FirstOrDefault(),
+            };
     }
 
     /// <summary>
@@ -333,6 +434,12 @@ public partial class AeonglassIntentBelt : Control
     {
         if (state is null)
         {
+            // 发牌特效放着放着"手牌空了"：立刻收尾（卡反正要消失，别让它停在半透明）。
+            if (_dealing)
+            {
+                FinishDeal();
+            }
+
             foreach (var view in _views)
             {
                 view.SetBaseHighlight(IntentHighlight.None);
@@ -341,7 +448,7 @@ public partial class AeonglassIntentBelt : Control
 
             _views.Clear();
             UnregisterOwnNodes();
-            ClearPileRow();
+            ClosePilePopup();
             Visible = false;
             _rowWidthDirty = true;
 
@@ -359,7 +466,11 @@ public partial class AeonglassIntentBelt : Control
         Visible = true;
         UnregisterOwnNodes();
         var openKind = _popupIsDrawPile;
-        ClearPileRow();
+        ClosePilePopup();
+
+        // 性能探针：从"确定要重建"这一刻起计时（上面那几处早退不算），计数器 + Stopwatch 只在开关打开时才读。
+        var watch = Stopwatch.StartNew();
+        _rebuildCount++;
 
         if (AeonglassSettingStore.Current.DebugIntentBeltLog)
         {
@@ -421,24 +532,8 @@ public partial class AeonglassIntentBelt : Control
                 _registeredNodes.Add(node);
             }
 
-            if (TargetingActive && card.Playable)
-            {
-                // 指向模式：可行动的那几张可点，点中即结算。
-                var target = card;
-                var index = i;
-                view.SetTargeting(() =>
-                {
-                    // 诊断日志：点的是第几张、哪一张 —— "效果作用到别的牌上"这类问题靠它一眼定位。
-                    Const.Logger.Info(
-                        $"[{Const.ModId}] {Const.Prefix.Intent} 指向点击：手牌第 {index} 张 {target.Describe()}");
-                    IntentTargeting.TrySubmit(_creature!, target);
-                });
-            }
-            else
-            {
-                // 不在指向模式（或这张不可行动）：撤掉点击回调，免得"随手点一下"也提交意图操作。
-                view.ClearTargeting();
-            }
+            // 指向不再走"卡带点击"：现在用**本体卡牌选目标那套**（见 Core/Patches/IntentTargetingPatches.cs），
+            // 所以这里不再挂点击回调（原来那套 intent 点名链路实测 0 调用，2026-10-15 已删）。
         }
 
         // 归位：按手牌顺序把槽位排一遍（MoveChild 到同一位置是空操作，代价可忽略）。
@@ -463,6 +558,9 @@ public partial class AeonglassIntentBelt : Control
         _views.Clear();
         _views.AddRange(slots);
 
+        // 发牌特效进行中：把"当前扫描位置对应的显现进度"重新摊到复用/新建的视图上（换牌不闪回半透明）。
+        ReapplyDealReveal();
+
         // 溢出提示（+N）：复用同一个节点，永远排在卡面之后。
         var extra = state.Hand.Count - slots.Count;
         if (extra > 0)
@@ -481,19 +579,20 @@ public partial class AeonglassIntentBelt : Control
             label.GetParent()?.RemoveChildSafely(label);
         }
 
-        // 牌堆行（第一张卡正下方）：抽 / 弃 两格，用**玩家牌堆那种**样式（只有两个小节点，照旧重建）。
-        AddPileIndicator(isDraw: true, "抽", state.Deck);
-        AddPileIndicator(isDraw: false, "弃", state.Discard);
+        // 牌堆行（第一张卡正下方）：抽 / 弃 两格，用**玩家牌堆那种**样式。
+        // ⚠️ 池化（2026-10-15）：两张卡建一次常驻，之后只改内容 —— 不再每次更新都 Instantiate + QueueFree。
+        RefreshPileChips(state);
 
         // 一次性诊断（每场战斗每只怪一行）：卡带出图时把"用了哪张锚点、行宽多少、落在哪"打出来，
         // 位置不对时对着这一行看数值即可（不是每帧，代价可忽略）。
-        if (!_loggedReady)
+        if (!_loggedReady && AeonglassSettingStore.DebugVerboseLogs)
         {
             _loggedReady = true;
             Const.Logger.Info(
                 $"[{Const.ModId}] {Const.Prefix.Intent} 卡带就绪：monster={state.MonsterId} 卡面 {slots.Count} 张"
                 + $"｜锚点 local pos={_anchor?.Position} size={_anchor?.Size}"
-                + $"｜行宽={_rowWidth:0.#}｜卡带 pos={Position}｜父={GetParent()?.Name}");
+                + $"｜行宽={_rowWidth:0.#}｜卡带 pos={Position}｜父={GetParent()?.Name}"
+                + $"｜相机缩放={GetGlobalTransformWithCanvas().Scale.X:0.###}（本地单位 × 它 = 屏幕像素）");
         }
 
         // 预览面板如果开着 ⇒ 用**当前**内容重建一次。
@@ -504,19 +603,18 @@ public partial class AeonglassIntentBelt : Control
         }
 
         _rowWidthDirty = true;
-    }
 
-    /// <summary>清掉牌堆行与它的 popup（增量更新前先收干净）。</summary>
-    private void ClearPileRow()
-    {
-        foreach (var child in _pileRow.GetChildren())
+        // 发牌特效：卡带第一次出图（= 进入战斗后的首次有牌）时起一次，之后不再放。
+        BeginDealIfNeeded(state);
+
+        // 性能探针（默认关）：重建次数 + 耗时 —— 这条链路里唯一贵的操作就是重建（视图/卡面/登记），
+        // 以后要收窄刷新粒度或池化前，先看这两行数据。
+        if (AeonglassSettingStore.Current.DebugIntentBeltLog)
         {
-            child.QueueFree();
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 卡带重建 #{_rebuildCount}｜槽位 {slots.Count}/{state.Hand.Count}"
+                + $"｜耗时 {watch.Elapsed.TotalMilliseconds:0.##} ms");
         }
-
-        _pilePopup?.QueueFree();
-        _pilePopup = null;
-        _popupIsDrawPile = null;
     }
 
     /// <summary>

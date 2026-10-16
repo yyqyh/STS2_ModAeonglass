@@ -10,6 +10,7 @@
         <AssemblyName>STS2_Aeonglass</AssemblyName>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>true</ImplicitUsings>
+
         <Nullable>enable</Nullable>
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <NoWarn>CS0436</NoWarn>
@@ -24,11 +25,18 @@
         <!-- 默认导出 PCK：本地化 / 图片 / 场景（含 spine 骨架）都靠它才生效。
              只改 C# 想快点时：dotnet build -p:RunPckExport=false
              只验编译（不碰 Godot）：dotnet build -p:STS2_SKIP_PCK_EXPORT=1 -->
-        <RunPckExport Condition="'$(RunPckExport)' == ''">true</RunPckExport>
+        <RunPckExport Condition="'$(RunPckExport)' == ''">false</RunPckExport>
     </PropertyGroup>
 
     <!-- 引用设置：全部 <Private>false</Private> —— 运行时由游戏本体带，不复制。 -->
     <ItemGroup>
+        <!--
+          headless 测试工程（在仓库外的 ..\STS2_Aeonglass.Tests\）需要读到本 mod 的 internal 机制入口
+          （SandResourceRegistry / GapStore / StasisStore / DeckPiles / Hysteresis / RiotSwap / IntentMoves
+          / WitherPool / RewindFacade 等）才能做机制级断言。只影响可见性：不改运行时行为、不改 PCK。
+        -->
+        <InternalsVisibleTo Include="STS2_Aeonglass_Tests" />
+
         <Reference Include="0Harmony">
             <HintPath>$(Sts2DataDir)\0Harmony.dll</HintPath>
             <Private>false</Private>

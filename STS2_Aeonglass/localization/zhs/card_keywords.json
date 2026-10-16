@@ -1,8 +1,8 @@
 {
   "STS2_AEONGLASS_KEYWORD_WITHER.title": "凋萎",
-  "STS2_AEONGLASS_KEYWORD_WITHER.description": "只出现在怪物手牌里。怪物行动结束后，若它还在怪物手牌中：你损失 X 点生命，随后它被消耗。",
+  "STS2_AEONGLASS_KEYWORD_WITHER.description": "只出现在敌人的[gold]手牌[/gold]中。\n该敌人行动结束后，如果这张牌还在它的[gold]手牌[/gold]中，则你失去X点生命，然后将其[gold]消耗[/gold]。",
   "STS2_AEONGLASS_KEYWORD_HYSTERESIS.title": "迟滞",
-  "STS2_AEONGLASS_KEYWORD_HYSTERESIS.description": "此牌不参与洗牌.",
+  "STS2_AEONGLASS_KEYWORD_HYSTERESIS.description": "此牌不参与洗牌。",
   "STS2_AEONGLASS_KEYWORD_STASIS.title": "搁浅",
-  "STS2_AEONGLASS_KEYWORD_STASIS.description": "打出后离开牌组，停在[gold]空域[/gold]"
+  "STS2_AEONGLASS_KEYWORD_STASIS.description": "打出后离开你的[gold]牌组[/gold]，停在[gold]空域[/gold]。"
 }

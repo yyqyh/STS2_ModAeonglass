@@ -32,7 +32,11 @@ public sealed class AeonglassAdvanceIntent() : ModCardTemplate(1, CardType.Skill
     protected override Task OnPlay(
         MegaCrit.Sts2.Core.GameActions.Multiplayer.PlayerChoiceContext choiceContext,
         CardPlay cardPlay)
-        => IntentActionCard.ApplyPointed(Owner, "提前", (_, creature, card) => IntentMoves.Advance(creature, card));
+        => IntentActionCard.ApplyPointed(
+            Owner,
+            cardPlay.Target,
+            "提前",
+            (_, creature, card) => IntentMoves.Advance(creature, card));
 
     /// <summary>v2：升级改为获得[保留]（原版现成 API，见本体「恩膏」）。</summary>
     protected override void OnUpgrade() => AddKeyword(CardKeyword.Retain);

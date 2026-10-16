@@ -129,8 +129,6 @@ internal static class Const
         /// <summary>本 mod 的资源根（= ModId 同名目录）。</summary>
         public const string Root = "res://" + ModId;
 
-        public const string LocalizationRoot = Root + "/localization";
-
         /// <summary>
         /// <b>本体</b>资源的路径（不是我们自己的美术）。同样只在这里出现一次。
         /// </summary>
@@ -149,12 +147,6 @@ internal static class Const
         {
             /// <summary>战斗外观场景（<c>Visuals</c> / <c>Bounds</c> / <c>CenterPos</c> / <c>IntentPos</c>）。</summary>
             public const string CombatVisualsScene = Root + "/scenes/combat/aeonglass_combat.tscn";
-
-            /// <summary>战斗 Spine 骨架数据（<c>.skel</c> + <c>.atlas</c>）。</summary>
-            public const string CombatSkeletonData = Root + "/scenes/combat/spine/aeonglass_data.tres";
-
-            /// <summary>Skeleton 源文件目录（只看路径，代码不直接引用）。</summary>
-            public const string SpineDir = Root + "/images/character/spine/";
 
             /// <summary>战斗能量计数器场景。</summary>
             public const string EnergyCounterScene = Root + "/scenes/combat/energy_counters/aeonglass_energy_counter.tscn";
@@ -191,9 +183,6 @@ internal static class Const
 
             /// <summary>选人界面未解锁立绘（132×195）。</summary>
             public const string CharacterSelectLockedIcon = ImageDir + "aeonglass_select_locked.png";
-
-            /// <summary>选人界面背景（1920×1080）。</summary>
-            public const string CharacterSelectBackground = ImageDir + "aeonglass_select_background.png";
 
             /// <summary>选人界面背景场景。</summary>
             public const string CharacterSelectBgScene = Root + "/scenes/screens/char_select/char_select_bg_aeonglass.tscn";
@@ -279,9 +268,6 @@ internal static class Const
                 /// <summary>L1 玻璃壳 + 上下金盖 + 宝珠底座（静止，最底层）。</summary>
                 public const string Shell = Dir + "aeonglass_sand_counter_layer_1_shell.png";
 
-                /// <summary>L4 颈部流沙（静态贴图，靠 Y 向滚动做"流沙"）。</summary>
-                public const string Stream = Dir + "aeonglass_sand_counter_layer_4_stream.png";
-
                 /// <summary>L5 宝珠 + 光晕（既有蓝色光晕，也靠 modulate 变红 / 闪白）。</summary>
                 public const string Orb = Dir + "aeonglass_sand_counter_layer_5_orb.png";
 
@@ -308,9 +294,6 @@ internal static class Const
 
             /// <summary>牌堆按钮的图标（空槽，同名覆盖即换图）。</summary>
             public static string PileIcon(string stem) => Root + "/images/ui/piles/" + stem + ".png";
-
-            /// <summary>转场遮罩贴图（2560×1200 透明空槽）。</summary>
-            public const string Transition = ImageDir + "aeonglass_transition.png";
 
             /// <summary>能量计数器的五个图层（128×128 透明空槽，出图后同名覆盖）。</summary>
             public static class Energy
@@ -361,8 +344,6 @@ internal static class Const
             /// <summary>门内滚动烟雾（"流动的时间"）。</summary>
             public const string Smoke = Dir + "aeonglass_scrolling_smoke.png";
 
-            /// <summary>碎片粒子。</summary>
-            public const string Shards = Dir + "aeonglass_shard_particles.png";
         }
 
         /// <summary>
@@ -457,6 +438,53 @@ internal static class Const
 
             /// <summary>双卡组 第二副牌组（"非生效那一副"的常驻牌堆）。</summary>
             public const string DeckBStem = "deck_b";
+        }
+
+        /// <summary>
+        /// **跑局预载清单**：交给 <c>CharacterModel.ExtraAssetPaths</c>，让本体的跑局预载把我们一起读进来
+        /// （现在是"首次用到才加载"，领域层那张 2.69MB 的图正好压在"进战斗"那一帧）。
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// ① 只列**代码里直接读**的资源 + 我们自己的 UI 场景；角色 <c>AssetPaths</c> 已经覆盖的
+        /// （战斗外观 / 能量计数器 / 火堆 / 商店 / 选人背景 / 图标）不重复列；**选人界面专用图不列**。
+        /// </para>
+        /// <para>
+        /// ② 依赖 Godot 的递归加载：列 <c>.tscn</c> 会连带读它的 <c>ext_resource</c>
+        /// ⇒ 场景内部的贴图（沙砾计数器 5 层、传送门自带美术）**不必逐张列**。
+        /// </para>
+        /// <para>
+        /// ③ ⚠️ 加新美术时：能被场景带进来的就别加这里；只有"代码直接 <c>Load</c>"的才加。
+        /// 实际交给本体前会先过一遍存在性检查（见 <c>AssetPreload.Verified</c>），缺失按美术缺失忽略。
+        /// </para>
+        /// </remarks>
+        public static class Preload
+        {
+            /// <summary>跑局（含战斗）会用到、且本体不会自动预载的那些。</summary>
+            public static readonly string[] RunAndCombat =
+            [
+                // 我们自己的 UI 场景（代码里按路径实例化）
+                Ui.GapPortalScene,
+                Ui.CollapseButtonArtScene,
+                Ui.SandCounterScene,
+                Ui.SandCounterArtScene,
+                Ui.SandCardCostScene,
+                Ui.DomainScene,
+
+                // 代码里直接 Load 的贴图
+                Vfx.Ray,
+                Vfx.Glob,
+                Vfx.Smoke,
+                Ui.PileIcon(CardPiles.EmptyZoneStem),
+                Ui.PileIcon(CardPiles.TimeGapStem),
+                Ui.PileIcon(CardPiles.DeckBStem),
+                Ui.PileIcon("deck_a"),      // 顶栏"当前生效那一副"的按钮图标（DeckButtonIcons 直接读）
+
+                // 卡框材质（AeonglassFrameMaterial 直接读）
+                CardFrame.Attack,
+                CardFrame.Skill,
+                CardFrame.Power,
+            ];
         }
     }
 

@@ -13,6 +13,13 @@ internal sealed class NoVfxInFlightGate(Func<bool> strictMode) : IRewindGateChec
 {
     public string Name => "无卡牌特效";
 
+    /// <summary>
+    /// <b>只管回档，不管打点</b>（2026-10-16）：本闸门拦的是"卡面动画在飞时回档会看着断"，
+    /// 而回合开始抓快照只读模型状态、与动画无关。实测它会把打点一起挡掉
+    /// （`NCardTrailVfx.FadeOut` 一直在飞 ⇒ 一局 5 次打点只成 2 次 ⇒ 回溯目标退化成更早的回合）。
+    /// </summary>
+    public bool AppliesToCapture => false;
+
     public GateCheck Check()
     {
         if (!strictMode())

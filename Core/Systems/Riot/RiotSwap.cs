@@ -170,7 +170,20 @@ internal static partial class RiotSwap
             }
         }
 
-        return pair.Discard.Cards.Any(card => card is AeonglassRiot);
+        // ⚠️ 别写成 LINQ `Any`：`Cards` 是 `IReadOnlyList<CardModel>` ⇒ `Any` 走接口枚举、
+        //    每次调用都要**装箱一个枚举器**。而这条判定在"每次读抽/弃牌堆"时都会走
+        //    （getter postfix → Redirect → SyncSwap → IsActive），是全角色全时刻的热路径。
+        //    索引遍历零分配，语义逐字相同。
+        var cards = pair.Discard.Cards;
+        for (var i = 0; i < cards.Count; i++)
+        {
+            if (cards[i] is AeonglassRiot)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

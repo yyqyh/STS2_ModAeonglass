@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Helpers;
@@ -9,7 +9,9 @@ using MegaCrit.Sts2.Core.Nodes.Combat;
 using MegaCrit.Sts2.Core.Nodes.HoverTips;
 
 using STS2_Aeonglass.Core.Content.Cards.Token;
+using STS2_Aeonglass.Core.Presentation.Art;
 using STS2_Aeonglass.Core.Systems.Intent;
+using STS2_Aeonglass.Core.Config;
 
 namespace STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
 /// <summary>一张「意图卡」的视图：<b>真卡外壳</b>（本体 <c>NCard</c>）+ 我们填进去的内容。</summary>
@@ -20,7 +22,7 @@ namespace STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
 /// ④ ⚠️ 能"一个注册类撑起每张意图一张真卡"的前提：本体 <c>Title / PortraitPath</c> 是 virtual —— 本体若改可见性这里会塌。
 /// </remarks>
 
-internal sealed class AeonglassIntentCardView
+internal sealed partial class AeonglassIntentCardView
 {
     /// <summary>要隐藏的节点（唯一名，与本体 <c>NCard._Ready</c> 里取的一致）。</summary>
     private static readonly string[] HiddenChrome =
@@ -38,12 +40,53 @@ internal sealed class AeonglassIntentCardView
         "%PortraitBorder",
     ];
 
+    /// <summary>
+    /// **卡面真身**节点的候选路径（本体画卡图的那一族；命中判定与调试黄框都以它为准）。
+    /// </summary>
+    /// <remarks>
+    /// 为什么要认节点而不是认"卡的矩形"：卡节点本身的 <c>Size</c> 实测是 <c>(0,0)</c>（卡图是子节点画的），
+    /// 所以"卡节点矩形"跟"看得见的卡面"根本不是一回事 —— 实测差一格（约 39 单位）+ 20 单位上下。
+    /// </remarks>
+    private static readonly string[] ArtNodePaths =
+    [
+        "%PortraitBorder",
+        "%Portrait",
+        "%PortraitCanvasGroup",
+        "%Highlight",
+    ];
+
     private readonly NCard _card;
     private readonly Control _wrapper;
     private readonly RichTextLabel? _number;
+
+    /// <summary>卡面真身节点（<see cref="Create" /> 里解析一次；空 = 本体改了卡场景，走槽位兜底）。</summary>
+    private readonly List<Control> _artNodes = [];
+
     private Vector2 _slotSize = Vector2.One;
     private Vector2 _baseScale = Vector2.One;
-    private Vector2 _baseSize = Vector2.One;
+
+    /// <summary>
+    /// 真卡的**基准位置**（不含悬停抬起）：让"真卡画出来的矩形中心"落在"槽位中心"。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 推导（2026-10-15 定稿，**解析式、不做测量**）：Godot 绕轴心缩放 ⇒
+    /// 绘制矩形 = <c>Position + pivot·(1−s)</c> 起、大小 <c>卡面×s</c>；而 <c>pivot = 卡面/2</c> ⇒
+    /// 绘制矩形中心 <c>= Position + pivot</c>（**与缩放无关**，也与倾斜无关 —— 倾斜绕中心转）。
+    /// 要它落在槽位中心 ⇒ <c>Position = 槽位/2 − 卡面/2 = (槽位 − 卡面) / 2</c>。
+    /// </para>
+    /// <para>
+    /// ⚠️ 减的是**未缩放的卡面尺寸**（<c>NCard.defaultSize</c> = 300×422），不是"卡面 × 缩放"。
+    /// 早先写成 <c>(槽位 − 卡面×缩放)/2</c> ⇒ 卡面被 <c>pivot·(1−s)</c> ≈ (132,185) 顶到右下，
+    /// "看到的卡"和"槽位命中框"分家（"指着卡点不中"的根因就在这）。
+    /// </para>
+    /// </remarks>
+    private Vector2 _basePosition;
+
+    /// <summary>是否已经"贴合槽位"过一次（尺寸没量到时为 false，下次悬停 / 换绑会补）。</summary>
+    private bool _fitted;
+
+    private bool _loggedPlacement;
 
     /// <summary>高光那张（怪物将要打出的 / 我们选中的）比别人**大 20%**（用户 2026-10-12）。</summary>
     private const float EmphasisScale = 1.2f;
@@ -68,6 +111,47 @@ internal sealed class AeonglassIntentCardView
 
     /// <summary>悬停时抬到最前，避免被右邻卡遮住。</summary>
     private const int HoverZIndex = 10;
+
+    /// <summary>
+    /// **指向判定的命中余量**（槽位本地单位，向四周外扩）。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 高光态（1.2×）的卡面比槽位大：横向溢 3.6、纵向溢 4（左右上下对称）⇒ **4 就是"刚好盖住卡面"**，
+    /// 再小会在卡的边缘露一条缝（"看着在卡上却不算"），再大就开始吃相邻卡的空隙。
+    /// </para>
+    /// </remarks>
+    private const float HitMargin = 4f;
+
+    /// <summary>
+    /// **"看到的卡"相对槽位的额外偏移**（槽位本地单位）—— 表现与选中若有偏差就改这一行。
+    /// </summary>
+    /// <remarks>
+    /// <para>默认 <c>(0, 0)</c>：卡面由 <see cref="_basePosition" /> 的解析式定位到槽位中心，两边同心，通常不用动。</para>
+    /// <para>
+    /// 真要微调（例：觉得卡面该再往右 2px）就改这里 —— **命中框会跟着一起挪**
+    /// （<see cref="WrapperHitRect" /> 带这份偏移），所以"看到的卡 = 能点的卡"始终成立。
+    /// </para>
+    /// <para>X 正 = 右、Y 正 = 下；单位是槽位本地单位（屏幕位移 = 这个值 × 相机缩放）。</para>
+    /// <para>⚠️ 它动的是**卡面 + 命中框一起**（观感会跟着动）。只想挪命中框见 <see cref="HitNudge" />。</para>
+    /// </remarks>
+    private static readonly Vector2 ArtNudge = new(0, 0);
+
+    /// <summary>
+    /// **命中框相对"节点几何"的偏移**（槽位本地单位）—— "我看到的卡"和"能点的框"对不上时填这里。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 与 <see cref="ArtNudge" /> 的区别：`ArtNudge` 把卡面 + 命中框**一起**挪（观感会动）；
+    /// 这个只挪**命中框**（卡面一动不动）→ "卡画在这儿、框在那儿"时用它对齐最省事、也最安全。
+    /// </para>
+    /// <para>
+    /// 怎么算：屏幕上差几 px ÷ 相机缩放 = 这里的值（相机缩放 = "本地单位 → 屏幕像素"的比，
+    /// 卡带就绪那行日志里的 <c>相机缩放=</c> 就是它）。<b>X 正 = 框往右、Y 正 = 框往下。</b>
+    /// </para>
+    /// <para>例：你看到"卡比框偏左 40、偏上 20"（本地单位）⇒ 填 <c>(40, 20)</c>，框就贴到卡上。</para>
+    /// </remarks>
+    private static readonly Vector2 HitNudge = new(0, 0);
 
     /// <summary>
     /// 卡面上那个数字**希望显示成多大**（屏幕像素；用户 2026-10-12：原来太小）。
@@ -105,8 +189,8 @@ internal sealed class AeonglassIntentCardView
     /// <summary>字号那行日志**整个进程只打一次**（原来是每个视图打一次 ⇒ 刷屏）。</summary>
     private static bool _loggedNumberSize;
 
-    /// <summary>我们选中时的高光色（沙漏青）。</summary>
-    private static readonly Color SelectedColor = new("7FE7DD");
+    /// <summary>我们选中时的高光色（沙漏青）—— 唯一色源在 <see cref="AeonglassUiPalette.Cyan" />。</summary>
+    private static Color SelectedColor => AeonglassUiPalette.Cyan;
 
     private AeonglassIntentCardView(NCard card, Control wrapper, RichTextLabel? number)
     {
@@ -117,6 +201,88 @@ internal sealed class AeonglassIntentCardView
 
     /// <summary>占位用的槽位节点（容器按它的最小尺寸排版；真卡缩放在里面，不影响布局）。</summary>
     internal Control Wrapper => _wrapper;
+
+    /// <summary>解析卡面真身节点（见 <see cref="ArtNodePaths" />）；换绑模型后卡场景不变，所以只需一次。</summary>
+    private void ResolveArtNodes()
+    {
+        _artNodes.Clear();
+
+        if (!GodotObject.IsInstanceValid(_card))
+        {
+            return;
+        }
+
+        foreach (var path in ArtNodePaths)
+        {
+            if (_card.GetNodeOrNull<Control>(path) is { } node)
+            {
+                _artNodes.Add(node);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 把**卡面真身**的矩形中心挪到**槽位**中心 —— 让"看得见的卡"落在"Godot 能 pick 的那块矩形"里。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// ⚠️ 为什么必须这样做：卡面整棵子树 `MouseFilter = Ignore` ⇒ Godot 的 picking 只能落到**槽位**上，
+    /// 于是"能不能选中"由槽位决定（实测：指卡面选不中、指槽位能选中）。所以唯一稳的解法是
+    /// **把卡面摆进槽位**，而不是把判定挪到卡面上。
+    /// </para>
+    /// <para>
+    /// 差值在视口坐标里量（卡面中心 vs 槽位中心），换算成槽位本地单位补进 <c>_card.Position</c>；
+    /// 对齐后残差 ≈ 0 ⇒ 反复调用是幂等的（尺寸后到也没关系，下次悬停再补）。
+    /// </para>
+    /// </remarks>
+    private void AlignArtToSlot()
+    {
+        if (!IsAlive || !GodotObject.IsInstanceValid(_wrapper) || _wrapper.Size.X <= 1f || _wrapper.Size.Y <= 1f)
+        {
+            return;
+        }
+
+        if (ActiveArtNode() is not { } art || art.Size.X <= 1f || art.Size.Y <= 1f)
+        {
+            return;
+        }
+
+        var slotXform = _wrapper.GetGlobalTransformWithCanvas();
+        var scale = slotXform.Scale;
+        if (Mathf.Abs(scale.X) < 0.0001f || Mathf.Abs(scale.Y) < 0.0001f)
+        {
+            return;
+        }
+
+        var slotCenter = slotXform * (_wrapper.Size * 0.5f);
+        var artCenter = art.GetGlobalTransformWithCanvas() * (art.Size * 0.5f);
+        var delta = new Vector2((slotCenter.X - artCenter.X) / scale.X, (slotCenter.Y - artCenter.Y) / scale.Y);
+
+        if (_hovered)
+        {
+            // 抬起（HoverLift）是额外位移：量的时候先抵掉，别把它吃进基准位置。
+            delta.Y -= HoverLift;
+        }
+
+        if (delta.LengthSquared() < 0.01f)
+        {
+            _fitted = true;
+            return;
+        }
+
+        _card.Position += delta;
+        _basePosition = _card.Position + new Vector2(0f, _hovered ? HoverLift : 0f);
+        _fitted = true;
+
+        // 表现层诊断（每张卡一次）⇒ 归「详细诊断日志」开关。
+        if (!_loggedPlacement && AeonglassSettingStore.DebugVerboseLogs)
+        {
+            _loggedPlacement = true;
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 卡面对齐槽位：卡面节点={art.Name} {art.Size}"
+                + $"｜补位={delta}（卡面中心 → 槽位中心）｜基准={_basePosition}");
+        }
+    }
 
     /// <summary>卡节点（布局 / 点击都直接用它）。</summary>
     internal NCard Card => _card;
@@ -164,6 +330,7 @@ internal sealed class AeonglassIntentCardView
             }
 
             var view = new AeonglassIntentCardView(card, wrapper, number);
+            view.ResolveArtNodes();
             view.ConnectEngineHover();
             view.ResizeTo(slotSize);
             view.SetInteractable(false);
@@ -180,20 +347,37 @@ internal sealed class AeonglassIntentCardView
     /// <summary>缩放到卡带槽位的尺寸（= 上一版的卡牌大小，等比、取小的那一维）。</summary>
     private void ResizeTo(Vector2 slotSize)
     {
-        var current = _card.GetCurrentSize();
-        if (current.X <= 1f || current.Y <= 1f || slotSize.X <= 1f || slotSize.Y <= 1f)
+        var raw = RawCardSize();
+        if (raw.X <= 1f || raw.Y <= 1f || slotSize.X <= 1f || slotSize.Y <= 1f)
         {
             return;
         }
 
-        var scale = Mathf.Min(slotSize.X / current.X, slotSize.Y / current.Y);
+        // ⚠️ 用**未缩放**的卡面尺寸算缩放：`GetCurrentSize()` 是 `defaultSize × 自己的 Scale`，
+        //    再算一遍会把已经缩过的尺寸当成原始尺寸（第二次调用就会把卡放大回全尺寸）。
+        var scale = Mathf.Min(slotSize.X / raw.X, slotSize.Y / raw.Y);
         _slotSize = slotSize;
-        _baseSize = current * scale;
         _baseScale = new Vector2(scale, scale);
-        ApplyScale(1f);
 
         // 悬停要轻微倾斜：轴心设在卡面中心（不设的话会绕左上角转，像"翻页"而不是"抬手牌"）。
-        _card.PivotOffset = current * 0.5f;
+        _card.PivotOffset = raw * 0.5f;
+
+        // 基准位置：解析式（见 _basePosition 的推导）—— 绘制矩形中心 = Position + 轴心 = 槽位中心。
+        // 加上玩家的 ArtNudge 微调（命中框带同一份偏移 ⇒ "看到的卡 = 能点的框"始终成立）。
+        _basePosition = ((slotSize - raw) * 0.5f) + ArtNudge;
+        _fitted = true;
+        ApplyScale(1f);
+        // 解析式摆的是"卡节点矩形"，但真正看得见的卡面是子节点画的 ⇒ 再实测把**卡面**摆到槽位中心
+        //（必须放在 ApplyScale 之后：ApplyScale 会用 _basePosition 覆写 Position）。
+        AlignArtToSlot();
+
+        if (!_loggedPlacement)
+        {
+            _loggedPlacement = true;
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Intent} 意图卡定位（解析式）：槽位={slotSize} 卡面(未缩放)={raw} "
+                + $"缩放={scale:0.###} 基准={_basePosition} 轴心={_card.PivotOffset}｜绘制矩形中心 = 基准 + 轴心 = 槽位中心");
+        }
 
         // 字号按缩放反算：目标屏幕像素 ÷ 缩放 ⇒ 看起来就是 TargetNumberPixels 那么大。
         if (_number is not null && scale > 0.0001f)
@@ -224,197 +408,16 @@ internal sealed class AeonglassIntentCardView
             return;
         }
 
-        _card.Scale = _baseScale * factor;
-        // ⚠️ 位置**不乘 factor**：卡的轴心（<c>PivotOffset</c>）设在卡面中心 ⇒ 缩放是"绕中心变大"，
-        //    视觉中心恒在 <c>position + baseSize/2</c>。若这里再按 factor 反算一次，放大时卡会往左上漂
-        //    （实测就是"悬停后位置不对"）。
-        _card.Position = (_slotSize - _baseSize) * 0.5f;
+        _card.Scale = _baseScale * factor * RevealScale();
+        // 轴心在卡面中心 ⇒ 缩放/倾斜都是"绕中心"，中心恒在 基准 + 轴心；悬停抬起是额外的一点点位移。
+        // 发牌显现的上浮偏移也要一起进位置表达式，否则悬停补间会把上浮吃掉。
+        _card.Position = _basePosition + RevealOffset() + new Vector2(0f, _hovered ? -HoverLift : 0f);
     }
 
-    // ==================== 悬停：金色背光 + 放大 + 抬起 + 轻微倾斜 ====================
 
-    /// <summary>
-    /// 造一层金色背光：**复制本体那个 <c>%Highlight</c> 节点**（自带 shader 与 AnimShow/AnimHide），
-    /// 并给它一份**独立但不深拷**的 <c>ShaderMaterial</c>。
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// ① 必须在<b>第一次悬停时</b>才建（不在创建卡视图时建）：复制材质 + 首帧上屏的开销挪出"进战斗"那一帧，
-    /// 进战斗不再因为这条装饰而卡一下。
-    /// </para>
-    /// <para>
-    /// ② <c>Duplicate()</c> 用**默认参数**（不深拷子资源）：材质实例独立 ⇒ 两层的 <c>width</c> 参数互不干扰，
-    /// 但 <c>Shader</c> 本体共享 ⇒ 不会给每张卡多编译一份 shader 管线（`Duplicate(true)` 会，那正是卡顿的来源之一）。
-    /// </para>
-    /// </remarks>
-    private void EnsureHoverBacklight()
-    {
-        if (_hoverLayer is { } existing && GodotObject.IsInstanceValid(existing))
-        {
-            return;
-        }
-
-        if (_card.CardHighlight is not { } source || source.GetParent() is not { } parent)
-        {
-            return;
-        }
-
-        try
-        {
-            var layer = (NCardHighlight)source.Duplicate();
-            if (layer.Material is ShaderMaterial shared)
-            {
-                layer.Material = (ShaderMaterial)shared.Duplicate();
-            }
-
-            layer.Name = "HoverBacklight";
-            layer.Modulate = NCardHighlight.gold;
-            layer.MouseFilter = Control.MouseFilterEnum.Ignore;
-
-            parent.AddChildSafely(layer);
-            parent.MoveChild(layer, Math.Min(source.GetIndex() + 1, parent.GetChildCount() - 1));
-            layer.AnimHideInstantly();
-
-            _hoverLayer = layer;
-        }
-        catch (Exception ex)
-        {
-            Const.Logger.Warn(
-                $"[{Const.ModId}] {Const.Prefix.Intent} 悬停背光层创建失败（只影响悬停观感）：{ex.GetType().Name}: {ex.Message}");
-        }
-    }
-
-    /// <summary>槽位序号（每行重排后由卡带告知，用于决定倾斜方向）。</summary>
-    internal void SetSlot(int index, int count)
-    {
-        _slotIndex = index;
-        _slotCount = Math.Max(1, count);
-
-        if (_hovered)
-        {
-            AnimateToTarget();
-        }
-    }
-
-    /// <summary>
-    /// 悬停开 / 关：金色背光（淡入淡出）+ 放大 + 抬起 + 轻微倾斜，全部走**同一条 Tween**。
-    /// </summary>
-    /// <remarks>
-    /// 三档语义互不覆盖：红（将打出）/ 青（我们选中）走本体的 <c>%Highlight</c> 原层，
-    /// 悬停走这里复制出来的金色层 —— 所以"将打出 + 悬停"两处光可以同时亮着。
-    /// </remarks>
-    internal void SetHovered(bool hovered)
-    {
-        if (!IsAlive || _hovered == hovered)
-        {
-            return;
-        }
-
-        _hovered = hovered;
-        _wrapper.ZIndex = hovered ? HoverZIndex : 0;
-
-        // 背光层是**第一次悬停才建**的（把复制材质/首次上屏的成本挪出"进战斗"那一帧）。
-        if (hovered)
-        {
-            EnsureHoverBacklight();
-        }
-
-        if (_hoverLayer is { } layer && GodotObject.IsInstanceValid(layer))
-        {
-            if (hovered)
-            {
-                layer.AnimShow();
-            }
-            else
-            {
-                layer.AnimHide();
-            }
-        }
-
-        if (hovered)
-        {
-            ShowHoverTips();
-        }
-        else
-        {
-            NHoverTipSet.Remove(_wrapper);
-        }
-
-        AnimateToTarget();
-    }
-
-    /// <summary>悬停时弹卡面自带的 tips（模型没有 tips 就不弹；不新增本地化键）。</summary>
-    private void ShowHoverTips()
-    {
-        try
-        {
-            var tips = _card.Model?.HoverTips;
-            if (tips is null || !tips.Any())
-            {
-                return;
-            }
-
-            NHoverTipSet.CreateAndShow(_wrapper, tips);
-        }
-        catch (Exception ex)
-        {
-            Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Intent} 意图 tips 失败（已忽略）：{ex.GetType().Name}");
-        }
-    }
-
-    /// <summary>当前应有的放大倍率：强调（红/青）与悬停取较大者，两者同时命中再叠一点。</summary>
-    private float CurrentFactor()
-    {
-        var emphasis = _highlight != IntentHighlight.None;
-        return (emphasis, _hovered) switch
-        {
-            (true, true) => HoverPlusEmphasisFactor,
-            (true, false) => EmphasisScale,
-            (false, true) => HoverFactor,
-            _ => 1f,
-        };
-    }
-
-    /// <summary>悬停倾斜：左半往左倒、右半往右倒（像摊开的手牌）。</summary>
-    private float CurrentTiltDeg()
-    {
-        if (!_hovered || _slotCount <= 1)
-        {
-            return 0f;
-        }
-
-        var middle = (_slotCount - 1) * 0.5f;
-        var offset = _slotIndex - middle;
-        return Mathf.Sign(offset) * HoverTiltDeg;
-    }
-
-    /// <summary>把"缩放 / 抬起 / 倾斜"三个目标值一次性补间过去（进快出慢）。</summary>
-    private void AnimateToTarget()
-    {
-        if (!IsAlive)
-        {
-            return;
-        }
-
-        var factor = CurrentFactor();
-        var targetScale = _baseScale * factor;
-        // 同样：轴心在中心 ⇒ 位置只按"未缩放大小"居中，抬起是额外的一点点位移。
-        var targetPosition = ((_slotSize - _baseSize) * 0.5f) + new Vector2(0f, _hovered ? -HoverLift : 0f);
-        var targetRotation = Mathf.DegToRad(CurrentTiltDeg());
-        var seconds = _hovered ? HoverInSeconds : HoverOutSeconds;
-
-        _visualTween?.Kill();
-        _visualTween = _wrapper.CreateTween().SetParallel();
-        _visualTween.TweenProperty(_card, "scale", targetScale, seconds)
-            .SetEase(Tween.EaseType.Out)
-            .SetTrans(Tween.TransitionType.Expo);
-        _visualTween.TweenProperty(_card, "position", targetPosition, seconds)
-            .SetEase(Tween.EaseType.Out)
-            .SetTrans(Tween.TransitionType.Expo);
-        _visualTween.TweenProperty(_card, "rotation", targetRotation, seconds)
-            .SetEase(Tween.EaseType.Out)
-            .SetTrans(Tween.TransitionType.Expo);
-    }
+    /// <summary>卡面的**未缩放**尺寸（`NCard.GetCurrentSize()` 是"未缩放尺寸 × 自己的 Scale"，不能当原始尺寸用）。</summary>
+    private Vector2 RawCardSize() =>
+        _card.Size.X > 1f && _card.Size.Y > 1f ? _card.Size : NCard.defaultSize;
 
     /// <summary>
     /// 绑定一张意图：卡图 = 意图的图，文字 = 只剩数字。
@@ -461,17 +464,63 @@ internal sealed class AeonglassIntentCardView
     internal IntentCard? Identity => _identity;
 
     /// <summary>
-    /// 某个画布坐标是否落在这张卡上。
+    /// 鼠标现在是否压在这张卡上。
     /// </summary>
     /// <remarks>
-    /// 给"瞄准期间自己命中测试"用 —— **不能只靠 <c>MouseEntered</c>**：本体这类卡的瞄准是
-    /// "按住拖到目标再松开"（<c>TargetMode.ReleaseMouseToTarget</c>），拖动期间鼠标被卡节点占住，
-    /// 我们的槽位收不到进入事件 ⇒ 瞄准管理器拿不到 <c>HoveredNode</c> ⇒ 一松手就取消。
+    /// <para>
+    /// 用 <c>Control.GetLocalMousePosition()</c> 换算（Godot 自己会把父级缩放/位移、画布变换都算进去），
+    /// 比"自己拿 <c>GetMousePosition()</c> 去比 <c>GetGlobalRect()</c>"稳 —— 卡带在受相机缩放的子树里，
+    /// 两个空间一旦不一致命中测试就会永远落空。
+    /// </para>
+    /// <para>
+    /// 两道判定都算命中：① 槽位矩形外扩 <see cref="HitMargin" />；② 真卡自己的矩形（悬停时会抬起/放大/倾斜，
+    /// 它自己的局部坐标已经把那些变换算进去了）。
+    /// </para>
     /// </remarks>
-    internal bool ContainsPoint(Vector2 canvasPoint) =>
-        GodotObject.IsInstanceValid(_wrapper)
-        && _wrapper.Visible
-        && _wrapper.GetGlobalRect().HasPoint(canvasPoint);
+    internal bool ContainsMouse()
+    {
+        if (!GodotObject.IsInstanceValid(_wrapper) || !_wrapper.Visible)
+        {
+            return false;
+        }
+
+        // ⚠️ **只认槽位**（2026-10-15 实测定案）：卡面那棵子树是 `MouseFilter=Ignore`，Godot 的 picking
+        // 永远打不到卡面节点，只能落到槽位上 ⇒ "能不能选中"实际由**槽位这块矩形**决定
+        //（实测：指卡面选不中、指槽位能选中）。所以命中区以槽位为准，卡面由 <see cref="AlignArtToSlot" /> 摆进槽位里。
+        return WrapperHitRect().HasPoint(_wrapper.GetLocalMousePosition());
+    }
+
+    /// <summary>
+    /// 当前用来判定的**卡面节点**：优先"可见且尺寸有效"，其次"尺寸有效"，都没有则 null。
+    /// </summary>
+    /// <remarks>
+    /// ⚠️ 必须和描边用同一个节点：`%PortraitBorder` 被我们**隐藏**了（`HiddenChrome`），
+    /// 它的矩形和真正看得见的 `%Portrait` 不保证重合 —— 描边拿到隐藏节点就会出现"框贴住了、判定在别处"。
+    /// </remarks>
+    private Control? ActiveArtNode()
+    {
+        Control? sized = null;
+        foreach (var art in _artNodes)
+        {
+            if (!GodotObject.IsInstanceValid(art) || art.Size.X <= 1f || art.Size.Y <= 1f)
+            {
+                continue;
+            }
+
+            if (art.Visible)
+            {
+                return art;
+            }
+
+            sized ??= art;
+        }
+
+        return sized;
+    }
+
+    /// <summary>槽位本地空间里的命中矩形（= 槽位 + <see cref="ArtNudge" /> + <see cref="HitNudge" /> + <see cref="HitMargin" /> 外扩）。</summary>
+    private Rect2 WrapperHitRect() =>
+        new Rect2(ArtNudge + HitNudge, _wrapper.Size).Grow(HitMargin);
 
     /// <summary>挂进（或挪回）卡带的槽位行 —— 复用同一个视图时按顺序调用它即可。</summary>
     internal void AttachTo(Node parent)
@@ -543,16 +592,12 @@ internal sealed class AeonglassIntentCardView
         _highlight = IntentHighlight.None;
         _visualTween?.Kill();
         _visualTween = null;
+
+        // ⚠️ 新模型可能换了一副卡面尺寸 ⇒ 重新贴合槽位 + 重新对齐（对齐是**实测**的，不依赖旧尺寸）。
+        ResizeTo(_slotSize);
         ApplyScale(1f);
         _card.Rotation = 0f;
         Bind(card, owner, numberOverride);
-    }
-
-    /// <summary>退出指向模式：撤掉点击回调与手型光标（否则不在指向模式里点卡也会提交一次意图操作）。</summary>
-    internal void ClearTargeting()
-    {
-        _onClicked = null;
-        SetInteractable(false);
     }
 
     /// <summary>
@@ -623,7 +668,9 @@ internal sealed class AeonglassIntentCardView
             // 悬停表现（金色背光 + 放大 + 抬起 + 倾斜）与"上报给本体瞄准"是两件事，互不依赖。
             SetHovered(true);
 
-            if (NTargetManager.Instance is { IsInSelection: true } manager)
+            // ⚠️ 上报只限"正在打我们的指向卡"：别人的瞄准（攻击 / 指队友 / 自身）一点不碰。
+            if (IntentTargetRegistry.AimingOurCard
+                && NTargetManager.Instance is { IsInSelection: true } manager)
             {
                 manager.OnNodeHovered(_card);
             }
@@ -633,7 +680,8 @@ internal sealed class AeonglassIntentCardView
         {
             SetHovered(false);
 
-            if (NTargetManager.Instance is { IsInSelection: true } manager)
+            if (IntentTargetRegistry.AimingOurCard
+                && NTargetManager.Instance is { IsInSelection: true } manager)
             {
                 manager.OnNodeUnhovered(_card);
             }
@@ -733,6 +781,16 @@ internal sealed class AeonglassIntentCardView
 
         if (_highlight == highlight)
         {
+            // ⚠️ 同一档不重做；但"**无高光**"这一档必须每次确保真的收起 ——
+            //    本体 `%Highlight.AnimFlash()`（发牌红闪用它）会把背光**留在显示状态**，
+            //    只靠"档位没变就 return"收不回来 ⇒ 实测"发牌结束后全部是红背光"。
+            if (highlight == IntentHighlight.None
+                && _card.CardHighlight is { } stuck
+                && (stuck.Visible || stuck.Modulate.A > 0.01f))
+            {
+                stuck.AnimHide();
+            }
+
             return;
         }
 

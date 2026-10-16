@@ -27,11 +27,20 @@ public sealed class RewindGateGroup
 
     public void Add(IRewindGateCheck check) => _checks.Add(check);
 
-    public GateResult Evaluate()
+    /// <param name="forCapture">
+    /// <c>true</c> = 这次是<b>回合开始打点</b>（抓快照）而不是回档 ⇒ 跳过"只对回档成立"的闸门
+    /// （见 <see cref="IRewindGateCheck.AppliesToCapture" />）。
+    /// </param>
+    public GateResult Evaluate(bool forCapture = false)
     {
         var results = new List<GateCheck>(_checks.Count);
         foreach (var check in _checks)
         {
+            if (forCapture && !check.AppliesToCapture)
+            {
+                continue;
+            }
+
             GateCheck result;
             try
             {

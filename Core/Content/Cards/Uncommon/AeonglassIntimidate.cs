@@ -28,7 +28,11 @@ public sealed class AeonglassIntimidate() : ModCardTemplate(1, CardType.Skill, C
     protected override Task OnPlay(
         MegaCrit.Sts2.Core.GameActions.Multiplayer.PlayerChoiceContext choiceContext,
         CardPlay cardPlay)
-        => IntentActionCard.ApplyPointed(Owner, "威吓", (_, creature, card) => IntentMoves.Postpone(creature, card));
+        => IntentActionCard.ApplyPointed(
+            Owner,
+            cardPlay.Target,
+            "威吓",
+            (_, creature, card) => IntentMoves.Postpone(creature, card));
 
     /// <summary>v2：升级改为获得[保留]。</summary>
     protected override void OnUpgrade() => AddKeyword(CardKeyword.Retain);

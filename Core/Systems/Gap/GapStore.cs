@@ -139,11 +139,48 @@ internal static class GapStore
         var count = 0;
         foreach (var card in gap.Cards.ToList())
         {
+            // 合并模式：静默移出不撤卡面 ⇒ 显式摘一下（否则"清空"后面上还留着旧卡面）。
+            GapViewPile.DetachVisual(card);
             gap.RemoveInternal(card, true);
             count++;
         }
 
         return count;
+    }
+
+    /// <summary>
+    /// 把一张牌放进间隙：合并模式走 <c>CardPileCmd</c>（框架的额外手牌补丁会**当场挂上卡面**），
+    /// 失败或非合并模式退回静默入堆（内容永远正确）。
+    /// </summary>
+    /// <remarks>
+    /// 2026-10-16 实测 Bug：单牌堆模式下"静默入堆"不会自己出卡面 —— 坍缩后间隙区一直空着，
+    /// 要等下一场战斗容器重新挂堆才冒出来（用户口径："间隙没有立即刷新"）。
+    /// </remarks>
+    internal static async Task<bool> PutIntoGapAsync(Player player, CardPile gap, CardModel card)
+    {
+        if (GapViewPile.IsMerged && player.Creature.CombatState is not null)
+        {
+            try
+            {
+                var result = await CardPileCmd.Add(card, gap, CardPilePosition.Bottom, null, skipVisuals: false);
+                if (result.success)
+                {
+                    return true;
+                }
+
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Gap} {card.Id.Entry} 可视入间隙失败（success=false）⇒ 退回静默入堆");
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Gap} {card.Id.Entry} 可视入间隙抛异常 ⇒ 退回静默入堆："
+                    + $"{ex.GetType().Name}: {ex.Message}");
+            }
+        }
+
+        gap.AddInternal(card, -1, true);
+        return false;
     }
 
     // ============================ ② 激活（用户口径）============================
@@ -160,6 +197,7 @@ internal static class GapStore
         var count = gap.Cards.Count;
         foreach (var card in gap.Cards.ToList())
         {
+            GapViewPile.DetachVisual(card);
             gap.RemoveInternal(card, true);
         }
 

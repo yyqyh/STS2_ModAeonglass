@@ -20,4 +20,41 @@ internal static class UiGeometry
             Mathf.IsZeroApprox(uiScale.X) ? 1f : nodeScale.X / uiScale.X,
             Mathf.IsZeroApprox(uiScale.Y) ? 1f : nodeScale.Y / uiScale.Y);
     }
+
+    /// <summary>
+    /// 把 <paramref name="child" /> 等比缩到 <paramref name="box" /> 里并**实测居中**，返回图标在盒子本地坐标里的矩形。
+    /// </summary>
+    /// <param name="boxMinSize">
+    /// 盒子**将要**占的尺寸（<c>CustomMinimumSize</c>）。用传进来的值而不是 <c>box.Size</c>：
+    /// 容器还没排版时 <c>box.Size</c> 是 0，用它算出来的中心是错的。
+    /// </param>
+    /// <remarks>
+    /// ⚠️ **不能**写 <c>child.Position = (boxMinSize - size * scale) / 2</c>：本体的卡牌/牌堆按钮自己带
+    /// <c>PivotOffset</c>（按下、悬停要绕中心缩），Godot 绕轴心缩放 ⇒ 位置会被顶出去
+    /// <c>pivot × (1 - scale)</c>。所以这里缩放完**量一次**（子节点屏幕中心 vs 盒子屏幕中心）再把差补回去，
+    /// 拿到的是"看得见的那个矩形"，标签就照它摆。
+    /// </remarks>
+    internal static Rect2 FitAndCenterIn(Control child, Control box, Vector2 boxMinSize)
+    {
+        var raw = child.Size;
+        if (raw.X <= 1f || raw.Y <= 1f || boxMinSize.X <= 1f || boxMinSize.Y <= 1f)
+        {
+            return new Rect2(Vector2.Zero, boxMinSize);
+        }
+
+        var scale = Mathf.Min(boxMinSize.X / raw.X, boxMinSize.Y / raw.Y);
+        child.Scale = new Vector2(scale, scale);
+
+        var boxXform = box.GetGlobalTransformWithCanvas();
+        var childXform = child.GetGlobalTransformWithCanvas();
+        var delta = (boxXform * (boxMinSize * 0.5f)) - (childXform * (raw * 0.5f));
+        var boxScale = boxXform.Scale;
+        if (!Mathf.IsZeroApprox(boxScale.X) && !Mathf.IsZeroApprox(boxScale.Y))
+        {
+            child.Position += new Vector2(delta.X / boxScale.X, delta.Y / boxScale.Y);
+        }
+
+        var iconSize = raw * scale;
+        return new Rect2(boxMinSize * 0.5f - iconSize * 0.5f, iconSize);
+    }
 }

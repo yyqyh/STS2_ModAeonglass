@@ -1,4 +1,5 @@
 using MegaCrit.Sts2.Core.Entities.Creatures;
+using MegaCrit.Sts2.Core.MonsterMoves.Intents;
 using MegaCrit.Sts2.Core.MonsterMoves.MonsterMoveStateMachine;
 
 using STS2_Aeonglass.Core.Systems.Wither;
@@ -14,7 +15,7 @@ namespace STS2_Aeonglass.Core.Systems.Intent;
 /// ③ 依赖：<c>IntentDeck</c>（三堆）+ <c>IntentOps</c>（状态机写入口）。
 /// ④ ⚠️ 候选只有"可行动的"意图（与表现层点选口径一致）；被移除的那张立刻进它的弃牌堆。
 /// </remarks>
-internal static class IntentMoves
+internal static partial class IntentMoves
 {
 
     /// <summary>「推迟」：把**第一张"可以行动的"**意图移到手牌**最后**。</summary>
@@ -223,4 +224,5 @@ internal static class IntentMoves
         state.Discard.Add(target);
         return IntentTurnFlow.Report($"剥夺 {target.MoveId}：手牌第 {index} 张 → 弃牌堆（弃牌堆 {state.Discard.Count} 张）", creature);
     }
+
 }

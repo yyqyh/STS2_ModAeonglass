@@ -68,6 +68,17 @@ public sealed class Aeonglass : ModCharacterTemplate<AeonglassCardPool, Aeonglas
     /// <summary>美术占位来源：本体铁甲战士。我们没填的 <c>AssetProfile</c> 字段都由它补齐。</summary>
     public override string? PlaceholderCharacterId => Const.PlaceholderCharacterId;
 
+    /// <summary>
+    /// 把我们**跑局/战斗会用到、本体又不会自动预载**的资源并进本体的预载集合（清单见 <see cref="Const.Paths.Preload" />）。
+    /// </summary>
+    /// <remarks>
+    /// 本体 <c>PreloadManager.LoadRunAssets</c> 会把 <c>CharacterModel.AssetPaths</c> 组成跑局预载集合
+    /// ⇒ 这些资源在**选人/开局阶段**就读好，不再"首次进战斗才读"（领域层那张 2.69MB 的图原先正压在开场那一帧）。
+    /// 走这条路的好处：会被本体正确计数、也随局结束正常卸载。
+    /// </remarks>
+    protected override IEnumerable<string> ExtraAssetPaths =>
+        STS2_Aeonglass.Core.Systems.Bootstrap.AssetPreload.Verified(Const.Paths.Preload.RunAndCombat);
+
     /// <summary>初始遗物：<b>沙漏之心</b>。</summary>
     /// <remarks>
     /// <para>

@@ -22,7 +22,7 @@ namespace STS2_Aeonglass.Core.Systems.Wither;
 /// ③ 依赖：<c>WitherPool</c>（计数与存储）+ <c>IntentDeck</c>/<c>IntentCard</c>。
 /// ④ ⚠️ 惩戒在"怪物行动之后"结算：先掉血、再消耗那张牌，然后才抽牌；掉血不回档。
 /// </remarks>
-internal static class WitherEffects
+internal static partial class WitherEffects
 {
 
     /// <summary>玩家往弃牌堆塞虚无（可塞多张）。</summary>
@@ -32,6 +32,16 @@ internal static class WitherEffects
         if (count <= 0)
         {
             return "skip: count<=0";
+        }
+
+        // 「时间主宰」（NEW-5）：本场不再被塞凋萎。放这里是**唯一收口点** —— 自动注入（IntentModule）、
+        // 以及「蔓生 / 播种 / 撒播 / 玉石俱焚 / 潮汐」全部走这一个方法。
+        if (Content.Powers.AeonglassTimeLordPower.BlocksWithers(
+                MonsterAccess.Combat?.PlayerCreatures?.FirstOrDefault()?.Player))
+        {
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Wither} 时间主宰在场 ⇒ 拒绝塞凋萎 ×{count}（本场停摆）");
+            return "skip: 时间主宰在场（本场不再被塞凋萎）";
         }
 
         // α or β（永时副）：「给予凋萎」额外 +1 张（仅当本局还没用过回溯）。
@@ -75,108 +85,6 @@ internal static class WitherEffects
         var text = $"塞虚无 ×{count} → 弃牌堆｜{state.Counts()}｜discard[{WitherPool.DescribePile(state.Discard)}]";
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} {text}");
         return text;
-    }
-
-    /// <summary>
-    /// 清掉这只怪**三个意图堆里的所有凋萎**（「净化」用），返回清掉几张。
-    /// </summary>
-    /// <remarks>
-    /// 与 <see cref="PurgeFromDiscard" /> 的区别：那个只动弃牌堆（挑一张），这个把**整只怪身上的污染**一次清空。
-    /// 只记一笔 <c>VoidsSpent</c>（与另外两个清法同口径，别双计）。
-    /// </remarks>
-    public static int PurgeAll(Creature creature)
-    {
-        if (!IntentDeck.TryGet(creature, out var state))
-        {
-            return 0;
-        }
-
-        var purged = 0;
-        foreach (var pile in new[] { state.Hand, state.Discard, state.Deck })
-        {
-            foreach (var card in pile.Where(c => c.IsVoid).ToList())
-            {
-                pile.Remove(card);
-                purged++;
-            }
-        }
-
-        state.VoidsSpent += purged;
-        if (purged > 0)
-        {
-            Const.Logger.Info(
-                $"[{Const.ModId}] {Const.Prefix.Wither} 净化：清空 {MonsterAccess.IdOf(creature)} 的全部凋萎 {purged} 张"
-                + $"｜{state.Counts()}");
-        }
-
-        IntentOps.Touch(state);
-        return purged;
-    }
-
-    /// <summary>
-    /// 从该怪**手牌**里拿走最多 <paramref name="count" /> 张凋萎（进"消耗"，不再参与循环）。
-    /// </summary>
-    /// <remarks>这是"净化"要用的写入口；"剥夺"走的是另一条（进弃牌堆、会被洗回）—— 两者语义不同，都留着。</remarks>
-    public static int PurgeFromHand(Creature creature, int count)
-    {
-        if (count <= 0 || !IntentDeck.TryGet(creature, out var state))
-        {
-            return 0;
-        }
-
-        var taken = 0;
-        foreach (var card in state.Hand.Where(c => c.IsVoid).ToList())
-        {
-            if (taken >= count)
-            {
-                break;
-            }
-
-            state.Hand.Remove(card);
-            // ⚠️ 只记一笔：`VoidsSpent` 的语义就是"结算/移除掉的凋萎"；
-            // 再往 `Consumed` 记一次会让守恒式（deck+hand+discard+consumed+voidsSpent==total）**双计**。
-            state.VoidsSpent++;
-            taken++;
-        }
-
-        if (taken > 0)
-        {
-            Const.Logger.Info(
-                $"[{Const.ModId}] {Const.Prefix.Wither} 净化：从手牌拿走 {taken} 张凋萎（剩 hand {WitherPool.WithersInHand(creature)}"
-                + $" / discard {WitherPool.WithersInDiscard(creature)}）");
-        }
-
-        IntentOps.Touch(state);
-        return taken;
-    }
-
-    /// <summary>
-    /// 从<b>怪物弃牌堆</b>清掉最多 <paramref name="count" /> 张凋萎（WTH-3 净化用），返回实际清掉几张。
-    /// </summary>
-    /// <remarks>只动弃牌堆：手牌里的凋萎照旧要走"行动后结算"那条路（<see cref="PurgeFromHand" /> 是另一条）。</remarks>
-    public static int PurgeFromDiscard(Creature creature, int count)
-    {
-        if (count <= 0 || !IntentDeck.TryGet(creature, out var state))
-        {
-            return 0;
-        }
-
-        var purged = 0;
-        foreach (var card in state.Discard.Where(c => c.IsVoid).Take(count).ToList())
-        {
-            state.Discard.Remove(card);
-            state.VoidsSpent++;
-            purged++;
-        }
-
-        if (purged > 0)
-        {
-            Const.Logger.Info(
-                $"[{Const.ModId}] {Const.Prefix.Wither} 净化：从弃牌堆清掉 {purged} 张凋萎｜{state.Counts()}");
-        }
-
-        IntentOps.Touch(state);
-        return purged;
     }
 
     /// <summary>

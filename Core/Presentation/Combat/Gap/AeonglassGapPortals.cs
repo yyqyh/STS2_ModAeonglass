@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Helpers;
@@ -10,6 +10,7 @@ using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Systems.Bootstrap;
 
 using STS2_Aeonglass.Core.Presentation.Support;
+using STS2_Aeonglass.Core.Presentation.Art;
 
 using STS2_Aeonglass.Core.Systems.Gap;
 namespace STS2_Aeonglass.Core.Presentation.Combat.Gap;
@@ -99,16 +100,67 @@ public partial class AeonglassGapPortals : Control
     /// <summary>开门闪光环的起始不透明度。</summary>
     private const float OpenFlashAlpha = 0.8f;
 
+    // ===== 青色漩涡（2026-10-15 用户口径：**开 / 关都先出漩涡**，门再变大 / 变小，最后漩涡消逝）=====
+
+    /// <summary>漩涡"出现"用时（秒）—— 比门快一点，先亮起来。</summary>
+    private const float VortexFadeInSeconds = 0.14f;
+
+    /// <summary>漩涡"消逝"用时（秒）。</summary>
+    private const float VortexFadeOutSeconds = 0.3f;
+
+    /// <summary>漩涡粒子数。</summary>
+    private const int VortexAmount = 56;
+
+    /// <summary>漩涡粒子寿命（秒）。</summary>
+    private const float VortexLifeSeconds = 0.5f;
+
+    /// <summary>粒子绕门心的角速度范围（度/秒，负 = 一个固定旋向）。</summary>
+    private const float VortexOrbitMin = 190f;
+    private const float VortexOrbitMax = 420f;
+
+    /// <summary>粒子起始环半径 = 门设计尺寸的短边 × 这个比例。</summary>
+    private const float VortexRadiusFactor = 0.42f;
+
+    /// <summary>径向加速度（"吸进去"用负值、"吐出来"用正值）。</summary>
+    private const float VortexRadialAccel = 150f;
+
+    /// <summary>粒子大小范围。</summary>
+    private const float VortexScaleMin = 0.3f;
+    private const float VortexScaleMax = 0.85f;
+
+    /// <summary>漩涡粒子贴图（复用现有 vfx 资源）。</summary>
+    private static readonly string VortexTexturePath = Const.Paths.Vfx.Glob;
+
+    /// <summary>漩涡贴图缓存（进程内一次）。</summary>
+    private static Texture2D? _vortexTexture;
+
+    /// <summary>开门闪光环的贴图缓存（进程内一次；原来每次开门都 <c>ResourceLoader.Load</c> 一遍）。</summary>
+    private static Texture2D? _flashTexture;
+
+    /// <summary>开门闪光环贴图（<c>Ray</c>）。</summary>
+    private static Texture2D? FlashTexture()
+    {
+        if (_flashTexture is { } cached && GodotObject.IsInstanceValid(cached))
+        {
+            return cached;
+        }
+
+        _flashTexture = ResourceLoader.Load<Texture2D>(Const.Paths.Vfx.Ray, null, ResourceLoader.CacheMode.Reuse);
+        return _flashTexture;
+    }
+
+    /// <summary>漩涡材质缓存：key = 吸/吐 + 环半径（四舍五入到整数像素）。</summary>
+    private static readonly Dictionary<(bool SuckIn, int Radius), ParticleProcessMaterial> VortexMaterials = [];
+
     // ================================================================
 
     /// <summary>重新找容器 / 重新对位的间隔（秒）。</summary>
     private const float RescanInterval = 0.25f;
 
     /// <summary>
-    /// 开门/闪光环用的青色。<b>门本体的染色在 <c>.tscn</c> 里</b>（那份才算数），
-    /// 这里这份只给"开门闪光环"用 —— 换配色时两边一起改，保持一致。
+    /// 开门/闪光环用的青色 —— 唯一色源在 <see cref="AeonglassUiPalette.Cyan" />（门本体的染色在 <c>.tscn</c> 里，换配色时两边一起改）。
     /// </summary>
-    private static readonly Color PortalTint = new("7FE7DD");
+    private static Color PortalTint => AeonglassUiPalette.Cyan;
 
     private PackedScene? _scene;
     private NModExtraHand? _container;
@@ -425,8 +477,13 @@ public partial class AeonglassGapPortals : Control
         return true;
     }
 
-    /// <summary>开门：门**出现**（淡入 + 从小张开）+ 套一层"张开"的闪光环；await 到动画结束。</summary>
-    internal async Task PlayOpenAsync(bool right, float seconds)
+    /// <summary>
+    /// 开门：**青色漩涡先出现 → 门从小张开（漩涡继续转）→ 漩涡消逝**；await 到整段结束。
+    /// </summary>
+    /// <param name="suckIn">
+    /// <c>true</c> = 漩涡往中心吸（坍缩：把牌吸进门）；<c>false</c> = 往外吐（唤回：牌从门里出来）。
+    /// </param>
+    internal async Task PlayOpenAsync(bool right, float seconds, bool suckIn = true)
     {
         var portal = Portal(right);
         if (portal is null)
@@ -445,6 +502,11 @@ public partial class AeonglassGapPortals : Control
             layer.Modulate = ClosedTint(baseTint);
         }
 
+        // ① 青色漩涡先出现
+        var vortex = SpawnVortex(portal, suckIn);
+        await FadeVortexInAsync(vortex);
+
+        // ② 门从小变大（漩涡还在转，跟着门一起长大）
         SpawnOpenFlash(portal, seconds);
 
         var tween = portal.CreateTween().SetParallel();
@@ -458,10 +520,16 @@ public partial class AeonglassGapPortals : Control
         }
 
         await tween.AwaitFinished(this);
+
+        // ③ 漩涡消逝（消完才交回给卡牌动画）
+        await FadeVortexOutAsync(vortex);
     }
 
-    /// <summary>关门：缩掉 + 淡出（非常驻模式下关门后就整道门不可见了）。</summary>
-    internal async Task PlayCloseAsync(bool right, float seconds)
+    /// <summary>
+    /// 关门：**青色漩涡先出现 → 门从大到小（同时淡出）→ 漩涡消逝**；非常驻模式下关完门就整道不可见。
+    /// </summary>
+    /// <param name="suckIn">同 <see cref="PlayOpenAsync" />：吸进去 / 吐出来。</param>
+    internal async Task PlayCloseAsync(bool right, float seconds, bool suckIn = true)
     {
         var portal = Portal(right);
         if (portal is null)
@@ -472,6 +540,11 @@ public partial class AeonglassGapPortals : Control
         var layers = Layers(right);
         KillPortalTween(right);
 
+        // ① 漩涡先出现
+        var vortex = SpawnVortex(portal, suckIn);
+        await FadeVortexInAsync(vortex);
+
+        // ② 门从大到小
         var tween = portal.CreateTween().SetParallel();
         SetPortalTween(right, tween);
         tween.TweenProperty(portal, "scale", Vector2.One * ClosedScale, seconds)
@@ -485,7 +558,11 @@ public partial class AeonglassGapPortals : Control
         tween.Chain().TweenCallback(Callable.From(() => portal.Visible = AlwaysVisible));
 
         await tween.AwaitFinished(this);
+
+        // ③ 漩涡消逝
+        await FadeVortexOutAsync(vortex);
     }
+
 
     /// <summary>"没张开"时的缩放（常驻模式下就是常态缩放）。</summary>
     private static float ClosedScale => AlwaysVisible ? PortalScale : PortalScale * HiddenScale;
@@ -529,8 +606,7 @@ public partial class AeonglassGapPortals : Control
     /// </summary>
     private static void SpawnOpenFlash(Control portal, float seconds)
     {
-        var texture = ResourceLoader.Load<Texture2D>(Const.Paths.Vfx.Ray, null, ResourceLoader.CacheMode.Reuse);
-        if (texture is null)
+        if (FlashTexture() is not { } texture)
         {
             return;
         }

@@ -20,16 +20,6 @@ namespace STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
 public partial class AeonglassIntentBelt : Control
 {
 
-    /// <summary>设置"我们选中的"那张意图（青色高光）。传 null 清掉。</summary>
-    internal static void SetSelected(IntentCard? card) => SelectedCard = card;
-
-    /// <summary>切指向模式（由系统层通过 <c>IntentBeltBridge</c> 调；每 0.2s 的刷新会跟上）。</summary>
-    internal static void SetTargeting(bool on)
-    {
-        TargetingActive = on;
-        SelectedCard = null;
-    }
-
     /// <summary>
     /// 接缝实现：按节点名找到 <paramref name="creature" /> 的卡带，把选牌面板开在它身上。
     /// </summary>
@@ -120,7 +110,8 @@ public partial class AeonglassIntentBelt : Control
             box.AddChild(row);
             panel.AddChild(box);
             AddChild(panel);
-            panel.Position = TopPickOffset;
+            // 与牌堆小卡同口径：减掉"视觉保持量"，面板留在玩家原来看到的位置。
+            panel.Position = TopPickOffset - CardVisualHold;
             _picker = panel;
 
             Const.Logger.Info(

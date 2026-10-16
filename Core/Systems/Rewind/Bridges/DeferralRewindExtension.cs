@@ -1,3 +1,4 @@
+using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Systems.Deferral;
 using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 using STS2_Aeonglass.Core.Systems.Rewind.Policy;
@@ -25,9 +26,13 @@ internal sealed class DeferralRewindExtension : IRewindExtension
     {
         var snapshot = DeferralLedger.Snapshot();
         draft.Put(DraftKey, snapshot);
-        Const.Logger.Info(
-            $"[{Const.ModId}] {Const.Prefix.Deferral} 延宕：回溯 capture（欠账 / 窗口已入快照）"
-            + $"｜{string.Join(" / ", Players().Select(DeferralLedger.Describe))}");
+        // 每次快照都打 ⇒ 归「详细诊断日志」开关（默认关）。
+        if (AeonglassSettingStore.DebugVerboseLogs)
+        {
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Deferral} 延宕：回溯 capture（欠账 / 窗口已入快照）"
+                + $"｜{string.Join(" / ", Players().Select(DeferralLedger.Describe))}");
+        }
     }
 
     public void OnBeforeRestore(RewindContext ctx)

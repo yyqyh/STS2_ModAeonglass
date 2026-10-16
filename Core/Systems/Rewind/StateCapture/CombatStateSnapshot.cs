@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Combat.History;
 using MegaCrit.Sts2.Core.Entities.Cards;
@@ -23,9 +25,21 @@ internal sealed partial class CombatStateSnapshot : ISnapshot
 
     private const string RelicKind = "relic";
 
+    /// <summary>战斗堆里的卡（2026-10-16 · B4）。</summary>
+    private const string CardKind = "card";
+
+    /// <summary>卡身上的附魔 / 苦痛（与 <see cref="CardKind" /> 同一个模型族；<c>AbstractModel</c> ⇒ 按引用保留，必须单独抓）。</summary>
+    private const string EnchantmentKind = "enchantment";
+
+    /// <inheritdoc cref="EnchantmentKind" />
+    private const string AfflictionKind = "affliction";
+
     private readonly RewindScope _scope;
     private readonly List<Entry> _models = [];
     private readonly List<CombatHistoryEntry> _historyEntries = [];
+
+    /// <summary>本快照抓过的战斗卡（恢复时判"这张卡还在不在战斗里"、自比对时按它对答案）。</summary>
+    private readonly List<CardModel> _cards = [];
 
     private Dictionary<PileType, List<CardModel>> _piles = [];
     private Dictionary<Creature, Vitals> _allies = [];
@@ -74,6 +88,39 @@ internal sealed partial class CombatStateSnapshot : ISnapshot
         if (scope.RestorePiles)
         {
             snapshot._piles = PileOps.Capture(player);
+
+            // 2026-10-16（B4）：卡级状态也进快照 —— 五堆里每张卡各一条；卡身上的附魔 / 苦痛再各一条
+            //（它们是 `AbstractModel` ⇒ 在图里按引用保留，只抓卡的话只能还原"引用"、抓不到层数）。
+            //
+            // ⚠️ 这里抓的是**战斗副本**（`combat.CloneCard` 出来的那些），不是牌组母本 ⇒
+            //    回档写回卡级字段**不会**牵动 `DeckTwins` 的孪生镜像（配对表里挂的是母本）。
+            // ⚠️ 不抓 `DynamicVarSet` 内部数值（策略里按引用保留）：卡面派生数值靠恢复后的重算 + UI 刷新补齐，
+            //    这条边界记在体检报告 §8。
+            var stopwatch = Stopwatch.StartNew();
+            foreach (var card in snapshot._piles.Values.SelectMany(pile => pile))
+            {
+                snapshot._cards.Add(card);
+                snapshot.AddModel(CardKind, card);
+
+                if (card.Enchantment is { } enchantment)
+                {
+                    snapshot.AddModel(EnchantmentKind, enchantment);
+                }
+
+                if (card.Affliction is { } affliction)
+                {
+                    snapshot.AddModel(AfflictionKind, affliction);
+                }
+            }
+
+            stopwatch.Stop();
+            // 耗时只在"详细诊断日志"开着时报（每次快照一行；用来实测 B4 的开销）。
+            if (Core.Config.AeonglassSettingStore.DebugVerboseLogs)
+            {
+                Const.Logger.Info(
+                    $"[{Const.ModId}] {Const.Prefix.Rewind} 快照抓卡：{snapshot._cards.Count} 张"
+                    + $"（模型条目共 {snapshot._models.Count}，含附魔/苦痛）｜耗时 {stopwatch.Elapsed.TotalMilliseconds:0.##} ms");
+            }
         }
 
         if (scope.RestoreCombatHistory)

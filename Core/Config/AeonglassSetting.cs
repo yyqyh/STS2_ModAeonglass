@@ -12,15 +12,18 @@ namespace STS2_Aeonglass.Core.Config;
 public sealed class AeonglassSetting
 {
     /// <summary>
-    /// <b>战斗内控制面板（默认开）</b> —— 所有机制的测试 / 操作按钮都收在这<b>一个</b>面板里（按机制分页）。
+    /// <b>战斗内控制面板（默认开，<span style="color:red">已于 2026-10-16 删除</span>）</b> ——
+    /// 曾经把所有机制的测试 / 操作按钮收在一个面板里（按机制分页）。
     /// </summary>
     /// <remarks>
     /// <para>
-    /// 2026-10-13 统一：原先每个机制一个面板（沙砾 / 时空裂隙 / 意图与凋萎 / 回溯 / 双卡组 各一份，外加一个外观调试面板，
-    /// 一共 7 个开关）。现在只有<b>一个</b>面板 + 页签，本项就是"面板出不出"的<b>唯一</b>开关。
+    /// ⚠️ <b>2026-10-16：控制面板整块删除</b>（`Core/Presentation/ControlPanel/` 12 个文件 + `CombatUiMountPatch` 的挂载行）。
+    /// 它是调试期工具：各机制手动测试按钮、外观实时调参、详细日志开关。删除后的替代是——
+    /// 机制测试走<b>控制台</b>，日志开关改设置 json（见 <see cref="DebugVerboseLogs" />），外观调参回落到常量/资源文件。
     /// </para>
     /// <para>
-    /// 页签按<b>机制总开关</b>出现（时之沙 关掉就没有「沙砾」页，以此类推）；关掉本项 = 一个节点都不建。
+    /// 本属性是<b>已存盘的设置键</b>，删掉会丢老配置里的值 ⇒ <b>保留属性、代码里已无读取处</b>
+    /// （与 <see cref="DebugUnlimitedPerCombat" /> 同口径）。将来若要做"正式玩家用面板"，从这里接回。
     /// </para>
     /// </remarks>
     public bool ControlPanel { get; set; } = true;
@@ -365,6 +368,10 @@ public sealed class AeonglassSetting
     /// <para>
     /// ⚠️ 这是**测试开关**：正式发布前应关掉（各机制自己的上限开关仍然独立保留，改这里不影响它们）。
     /// </para>
+    /// <para>
+    /// ⚠️ 2026-10-15 现状：**代码里已无任何读取处**（设置页也只剩「关于」）—— 属性**保留**，
+    /// 因为它是**已存盘的设置键**，删掉会丢用户存档里的值、也破坏键名兼容口径。要恢复每场次数限制时再把它接回上限判定。
+    /// </para>
     /// </remarks>
     public bool DebugUnlimitedPerCombat { get; set; } = true;
 
@@ -376,4 +383,20 @@ public sealed class AeonglassSetting
     /// （设置页目前只留了「关于」，要改就直接编辑设置 json）。
     /// </remarks>
     public bool DebugIntentBeltLog { get; set; }
+
+    /// <summary>
+    /// <b>【调试】详细诊断日志总开关（默认关）</b>。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 2026-10-16 加：把几类"每次调用都打"的**诊断**行挂到它后面 —— 卡面对齐槽位、回溯 capture（三条接缝）、
+    /// 盯堆 +1、乱流每回合读数、意图 卡带就绪 / 发牌特效。默认关时 log 行数约降到三分之一（便于排查）。
+    /// </para>
+    /// <para>
+    /// **不归它管**（永远可见）：机制判定与结算、坍缩/唤回结算、孪生镜像、配对完成、文件预载、所有 Warn/Error。
+    /// ⚠️ 控制面板已于 2026-10-16 删除、设置页也只剩「关于」⇒ 本开关**只能改设置 json**
+    /// （`mod_data/STS2_Aeonglass/STS2_Aeonglass_settings.json` 里的 `DebugVerboseLogs`）；改完<b>立刻生效</b>，不需重启。
+    /// </para>
+    /// </remarks>
+    public bool DebugVerboseLogs { get; set; }
 }

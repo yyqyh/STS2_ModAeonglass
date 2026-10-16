@@ -30,6 +30,9 @@ internal static class RewindUiRefresh
                 case RelicModel relic:
                     Reflect.Invoke(relic, InvokeDisplayAmountChanged);
                     break;
+                // ⚠️ 2026-10-16（B4）：卡模型**没有** `InvokeDisplayAmountChanged` 这个入口（本体给卡用的是
+                //    `PlayerCombatState.RecalculateCardValues()` + 状态追踪器广播）⇒ 这里不写 card 分支；
+                //    卡面刷新由 `CombatStateSnapshot.TryRestore` 第 7.5 步的重算 + 下面这次"状态变了"广播负责。
             }
         }
 

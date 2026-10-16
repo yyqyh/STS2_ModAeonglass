@@ -46,10 +46,8 @@ public sealed class AeonglassDialNudge() : ModCardTemplate(0, CardType.Skill, Ca
     {
     }
 
-    /// <summary>升级档的抽/弃两档卡面装不下 ⇒ 用「升级追加句」注入（键见 cards.json 的 <c>.upgraded</c>）。</summary>
-    protected override void AddExtraArgsToDescription(LocString description)
-    {
-        base.AddExtraArgsToDescription(description);
-        CardTextArgs.InjectUpgradeClause(description, this, IsUpgraded);
-    }
+    // 2026-10-16：升级追加句改成**本体写法**（cards.json 的 description 里写
+    // `{IfUpgraded:show:…}`，见 `ShowIfUpgradedFormatter`）⇒ 这里不再注入 `{UpgradeText}`。
+    // 好处：不依赖我们自己的注入时机（漏调一次就会在卡面上报格式化错），且升级预览时本体会把
+    // 升级句自动加绿。旧写法与键口径见 git 历史（`<卡id>.upgraded` 已并入 description）。
 }

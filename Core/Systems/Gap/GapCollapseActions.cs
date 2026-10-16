@@ -149,8 +149,9 @@ internal static class GapCollapseActions
             //   所以在这里把"来源副"记到副本上（随存档走，见 DeckOrigin）。
             DeckOrigin.Stamp(copy, planSides[i]);
 
-            // 存储牌堆是 **Headless** 的 ⇒ 这里静默写就行（显示由 GapViewPile 镜像负责）。
-            gap.AddInternal(copy, -1, true);
+            // 入间隙：合并模式走 CardPileCmd（框架的额外手牌补丁会当场挂卡面），
+            // 非合并模式 / 可视失败时退回静默入堆（存储牌堆是 Headless 的，内容照样对）。
+            await GapStore.PutIntoGapAsync(player, gap, copy);
 
             // 带着表现移出手牌（走 CardPileCmd 的既有流程；再加一次内容刷新兜底，防"幻影"）。
             await CardPileCmd.RemoveFromCombat(card, skipVisuals: false);

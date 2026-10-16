@@ -64,12 +64,20 @@ public sealed class AeonglassMutualRuin()
         }
 
         var model = ModelDb.Card<AeonglassWitherCard>();
+        // ⚠️ 必须用 CombatState.CreateCard（登记进本次战斗），不能用 RunState.CreateCard：
+        //    后者只登记进 run，这张卡一进战斗牌堆（或之后被「净化 / 时间主宰」消耗）就会抛
+        //    "must be added to a CombatState before adding it to this pile"（2026-10-16 由 headless 测试抓到）。
+        if (player.Creature.CombatState is not { } combat)
+        {
+            return 0;
+        }
+
         var placed = 0;
         for (var i = 0; i < count; i++)
         {
             try
             {
-                var card = player.RunState.CreateCard(model, player);
+                var card = combat.CreateCard(model, player);
                 await CardPileCmd.Add(card, PileType.Discard, CardPilePosition.Bottom);
                 placed++;
             }

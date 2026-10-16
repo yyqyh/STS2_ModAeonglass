@@ -3,6 +3,7 @@ using MegaCrit.Sts2.Core.Combat.History;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.MonsterMoves.MonsterMoveStateMachine;
 
 using STS2_Aeonglass.Core.Systems.Rewind.Graph;
 using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
@@ -49,6 +50,7 @@ internal sealed partial class CombatStateSnapshot
     public void Release()
     {
         _models.Clear();
+        _cards.Clear();
         _piles.Clear();
         _historyEntries.Clear();
         _allies.Clear();
@@ -59,6 +61,7 @@ internal sealed partial class CombatStateSnapshot
     }
 
     internal sealed record Entry(string Kind, AbstractModel Model, FieldGraphSnapshot Graph);
+
 
     public bool TryRestore(IRewindLog log, out string error)
     {
@@ -110,9 +113,18 @@ internal sealed partial class CombatStateSnapshot
 
         foreach (var entry in _models)
         {
-            var stillThere = entry.Kind == PowerKind
-                ? player.Creature.Powers.Contains((PowerModel)entry.Model)
-                : relics.Contains((RelicModel)entry.Model);
+            // 2026-10-16（B4）：卡 / 附魔 / 苦痛也进 _models 了 ⇒ 这里按 kind 分派"还在不在"，
+            // 不能再默认"不是 power 就是 relic"（那会对卡做 InvalidCastException）。
+            var stillThere = entry.Kind switch
+            {
+                PowerKind => player.Creature.Powers.Contains((PowerModel)entry.Model),
+                RelicKind => relics.Contains((RelicModel)entry.Model),
+                CardKind => entry.Model is CardModel card && card.Pile is not null,
+                EnchantmentKind or AfflictionKind => _cards.Any(captured =>
+                    ReferenceEquals(captured.Enchantment, entry.Model)
+                    || ReferenceEquals(captured.Affliction, entry.Model)),
+                _ => true,
+            };
 
             // 快照后被移除的模型暂不补回（后续里程碑）。
             if (!stillThere)
@@ -177,13 +189,31 @@ internal sealed partial class CombatStateSnapshot
             HandUiSync.Sync(player);
         }
 
+        // 7.5) 卡级字段是**静默写回**（不走 setter、不发事件），而 `DynamicVarSet` 又按引用保留
+        //      ⇒ 派生数值要显式重算一次。放在自比对**之前**：校验的是"最终状态"，不是"写完还没重算"的中间态。
+        //      （本体骨架 `PlayerCombatState.RecalculateCardValues()` 会重算每张卡的附魔数值。）
+        if (_scope.RestorePiles)
+        {
+            combat.RecalculateCardValues();
+        }
+
         log.Info(
-            $"restored {_models.Count - skipped} model(s) (power +{alignment.ReAdded}/-{alignment.Removed}), "
+            $"restored {_models.Count - skipped} model(s)（含卡 {_cards.Count}）(power +{alignment.ReAdded}/-{alignment.Removed}), "
             + $"{pileResult.Restored} card(s) (+{pileResult.Dropped} dropped), skipped {skipped}");
         log.Info($"rng now: {RngOps.DescribeLive()}");
         log.Info($"powers: {powersBefore} → {CombatAccess.DescribePowers()}");
         log.Info($"vitals: {vitalsBefore} → {CombatAccess.DescribeVitals()} ({vitalsApplied} creature(s))");
 
+        // 8) 自比对：只查"快照真的存过的东西"，不一致就让事务回滚（2026-10-16）
+        var problems = CollectVerifyProblems();
+        if (problems.Count > 0)
+        {
+            log.Error($"回档后自比对失败：{string.Join("; ", problems)}");
+            error = string.Join("; ", problems);
+            return false;
+        }
+
+        log.Info("回档后自比对：power 层数 / 生物 hp·block / 怪状态机 / 卡级（等级·耗能·附魔）四项一致 ✔");
         error = string.Empty;
         return true;
     }

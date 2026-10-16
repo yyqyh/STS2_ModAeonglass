@@ -39,6 +39,27 @@ public sealed class FieldGraphSnapshot
 
     public static FieldGraphSnapshot Capture(object root, IGraphPolicy policy) => new(root, policy);
 
+    /// <summary>
+    /// 只读：取某个字段**抓到的那份值**（恢复后自比对用 —— 见 <c>CombatStateSnapshot.CollectVerifyProblems</c>）。
+    /// </summary>
+    /// <remarks>按字段名匹配（同一张图里字段名唯一）；没抓到就返回 false。</remarks>
+    internal bool TryGetCaptured(string fieldName, out object? value)
+    {
+        foreach (var (field, captured) in _values)
+        {
+            if (!string.Equals(field.Name, fieldName, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            value = captured;
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
+
     /// <summary>恢复。必须传同一个根实例，否则直接失败（安全阀）。</summary>
     public bool TryRestore(object root, IGraphPolicy policy, out string error)
     {

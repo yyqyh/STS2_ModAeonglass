@@ -62,8 +62,18 @@ internal static class CardTextArgs
     /// 往卡面注入「升级档追加句」：本地化键 <c>&lt;卡id&gt;.upgraded</c>，只在<b>已升级</b>时出现。
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// ⚠️ <b>2026-10-16 起本方法 0 调用（保留作接缝，不要照它写新卡）</b>：升级追加句已统一改成
+    /// <b>本体写法</b> —— 直接在 <c>cards.json</c> 的 <c>description</c> 里写
+    /// <c>{IfUpgraded:show:升级文本|未升级文本}</c>（见本体 <c>ShowIfUpgradedFormatter</c>）。
+    /// 原因：注入式写法要求"卡面渲染时有人调用本方法"，漏调一次就会在卡面上报
+    /// <c>No source extension could handle the selector named "UpgradeText"</c>（实测踩过，两张卡中招）；
+    /// 本体写法不依赖调用时机，升级预览时还会自动把升级句加绿。
+    /// </para>
+    /// <para>
     /// 卡面描述里写一个 <c>{UpgradeText}</c> 即可；没升级 / 取不到条目都注入空串（卡面不会留占位符）。
     /// 追加句里的数值占位符会按该卡的 <c>DynamicVars</c> 当前值解析（见 <see cref="ResolvePlaceholders" />）。
+    /// </para>
     /// </remarks>
     public static void InjectUpgradeClause(LocString description, CardModel card, bool isUpgraded)
     {

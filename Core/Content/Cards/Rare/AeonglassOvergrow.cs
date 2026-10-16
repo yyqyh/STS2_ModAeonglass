@@ -53,10 +53,6 @@ public sealed class AeonglassOvergrow() : ModCardTemplate(-1, CardType.Skill, Ca
     {
     }
 
-    /// <summary>升级改的是公式 ⇒ 卡面用「升级追加句」写清楚（键见 cards.json 的 <c>.upgraded</c>）。</summary>
-    protected override void AddExtraArgsToDescription(LocString description)
-    {
-        base.AddExtraArgsToDescription(description);
-        CardTextArgs.InjectUpgradeClause(description, this, IsUpgraded);
-    }
+    // 2026-10-16：升级追加句改成**本体写法**（cards.json 的 description 里写 `{IfUpgraded:show:…}`）
+    // ⇒ 这里不再注入 `{UpgradeText}`（口径与理由见 AeonglassDialNudge 的同名注释）。
 }

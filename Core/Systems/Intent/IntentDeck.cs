@@ -61,6 +61,27 @@ internal static class IntentDeck
         IntentRules.MasterEnabled && IntentRules.ManagedRollMove && creature is not null &&
         States.TryGetValue(creature, out var state) && state.IntentCount > 0;
 
+    /// <summary>
+    /// 丢掉一张"解析不到本体 <c>MoveState</c>"的坏卡（怪被替换 / 状态机重建后可能发生）。
+    /// </summary>
+    /// <remarks>
+    /// 走"按消耗记账"：从手牌移除 + 记进 <c>Consumed</c> ⇒ 守恒式
+    /// （deck + hand + discard + consumed + voidsSpent == total）继续成立。
+    /// 由 <c>IntentDecision.Apply</c> 的兜底循环调用 —— 掉一张、重判一次，所以不会每回合重复失败。
+    /// </remarks>
+    internal static void DropStale(EnemyIntentState state, IntentCard card)
+    {
+        if (!state.Hand.Remove(card))
+        {
+            return;
+        }
+
+        state.Consumed.Add(card.MoveId);
+        Const.Logger.Warn(
+            $"[{Const.ModId}] {Const.Prefix.Intent} 意图卡 {card.MoveId} 在本体状态机里不存在 ⇒ 移出循环（按消耗记账）"
+            + $"｜{state.Counts()}");
+    }
+
     /// <summary>惰性构建：第一次需要这只怪的意图时现场建，不依赖任何入口是否被覆盖。</summary>
     public static EnemyIntentState Ensure(Creature creature)
     {

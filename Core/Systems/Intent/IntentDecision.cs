@@ -78,9 +78,29 @@ internal static class IntentDecision
 
     internal static void Apply(Creature creature, EnemyIntentState state, Decision decision)
     {
-        ApplyCore(creature, state, decision);
+        // 有界兜底：解析不到 MoveState 的坏卡逐张移出循环并**重新判定**，最多试"手牌数 + 1"轮 ——
+        // 既修掉"复读上一招"（旧实现：原生掷招已被跳过，Pending 留空 ⇒ NextMove 停在上一次的招式），
+        // 又保证不会死循环。全坏 ⇒ 落到"无意图→晕眩"（与空手口径一致，不新增状态）。
+        //
+        // 被否决的替代（2026-10-16）：① 放行原生掷招 —— 会推进 StateLog 与分支权重，污染我们排好的牌堆语义；
+        // ② 只把 Pending 留空 —— 就是被修掉的那个 bug。
+        var budget = state.Hand.Count + 1;
+        var current = decision;
+        for (var attempt = 0; attempt < budget; attempt++)
+        {
+            if (current.Card is null || IntentCycle.Resolve(creature, current.Card) is not null)
+            {
+                ApplyCore(creature, state, current);
+                IntentOps.Touch(state);
+                return;
+            }
 
-        // 版本 +1：卡带靠它判断"要不要重画"（写入口在这里收口，所以只此一处）。
+            IntentDeck.DropStale(state, current.Card);
+            current = Decide(state);
+        }
+
+        // 安全网（正常不可达：每轮都掉一张，手牌必然先空掉并走上面的"无意图"分支）。
+        ApplyCore(creature, state, new Decision("无意图→晕眩", null, "手牌里的意图卡全部解析不到（已逐张移出循环）"));
         IntentOps.Touch(state);
     }
 
@@ -107,8 +127,10 @@ internal static class IntentDecision
         var move = IntentCycle.Resolve(creature, card);
         if (move is null)
         {
+            // 正常不可达（Apply 已先判过）：万一走到这里也绝不能把 Pending 留空 —— 那是"复读上一招"。
+            IntentDeck.DropStale(state, card);
             state.Pending = null;
-            state.Decision += "｜解析不到 MoveState（跳过）";
+            state.Decision += $"｜解析不到 MoveState ⇒ 移出循环并眩晕｜{IntentOps.StunForced(creature)}";
             return;
         }
 

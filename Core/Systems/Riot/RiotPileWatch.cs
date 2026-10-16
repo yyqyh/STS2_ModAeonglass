@@ -93,7 +93,9 @@ internal static class RiotPileWatch
         }
 
         // 乱流进弃牌堆 ⇒ 立刻对调；出去 ⇒ 立刻还原。这两条是状态切换的主入口。
-        pair.Discard.CardAdded += card =>
+        // ⚠️ 这些处理器是**在本体牌堆方法体内同步回调**的（`CardPile.Add/RemoveInternal` 等）
+        //    ⇒ 一律包兜底：异常只记日志，绝不穿进本体的抽/弃/洗流程（纪律见 Core/Patches/README.md）。
+        pair.Discard.CardAdded += card => Guarded("弃牌堆加入", () =>
         {
             if (card is AeonglassRiot)
             {
@@ -101,21 +103,35 @@ internal static class RiotPileWatch
             }
 
             RiotSwap.SyncSwap(state, pair);
-        };
+        });
 
-        pair.Discard.CardRemoveFinished += () => RiotSwap.SyncSwap(state, pair);
+        pair.Discard.CardRemoveFinished += () => Guarded("弃牌堆移出收尾", () => RiotSwap.SyncSwap(state, pair));
 
         // 它也可能被挪进"物理抽牌堆"（对调生效时被打出 / 弃掉）⇒ 同样重新判定。
-        pair.Draw.CardAdded += _ => RiotSwap.SyncSwap(state, pair);
-        pair.Draw.CardRemoveFinished += () => RiotSwap.SyncSwap(state, pair);
+        pair.Draw.CardAdded += _ => Guarded("抽牌堆加入", () => RiotSwap.SyncSwap(state, pair));
+        pair.Draw.CardRemoveFinished += () => Guarded("抽牌堆移出收尾", () => RiotSwap.SyncSwap(state, pair));
 
         // 明细取证：牌从哪张（物理）堆离开 —— 这是判断"对调到底有没有作用在牌上"的硬证据。
         // 对调生效时：开局抽 5 张 ⇒ 连出 5 行「从 弃牌堆(物理) 取走 …」（画面上就是"弃牌堆 → 手牌"那条动画）；
         //              弃牌 ⇒ 一行「从 抽牌堆(物理) 取走 …」（打出的牌落进物理抽牌堆）。
-        pair.Draw.CardRemoved += card => NoteMove(state, "抽牌堆(物理)", card);
-        pair.Discard.CardRemoved += card => NoteMove(state, "弃牌堆(物理)", card);
+        pair.Draw.CardRemoved += card => Guarded("抽牌堆移出明细", () => NoteMove(state, "抽牌堆(物理)", card));
+        pair.Discard.CardRemoved += card => Guarded("弃牌堆移出明细", () => NoteMove(state, "弃牌堆(物理)", card));
 
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Riot} 已盯住 {player.NetId} 的抽/弃牌堆（进/出都记一行）");
+    }
+
+    /// <summary>把"跑在本体牌堆流程里"的回调包成永不外泄：异常只降级（记一行 Warn）。</summary>
+    private static void Guarded(string what, Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Riot} 牌堆回调异常（{what}，已忽略）：{ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     /// <summary>战斗开始 / 回合开始：核对状态并报一次物理堆快照。</summary>
@@ -129,10 +145,27 @@ internal static class RiotPileWatch
 
         RiotSwap.SyncSwap(state, pair);
 
-        Const.Logger.Info(
-            $"[{Const.ModId}] {Const.Prefix.Riot} {why}：状态={(pair.Swapped ? "对调中" : "原版")}"
-            + $"｜抽牌堆(物理) {pair.Draw.Cards.Count} / 弃牌堆(物理) {pair.Discard.Cards.Count}"
-            + $"（游戏看到的：抽 {state.DrawPile.Cards.Count} / 弃 {state.DiscardPile.Cards.Count}）");
+        // 契约断言（只读，见 RiotSwap.FieldSwap 的 ⑤）：槽位对象报的是**物理身份** ——
+        // 对调中应为 Discard/Draw、原版应为 Draw/Discard。**只在不符合时报警**（默认安静，避免每回合刷一行）。
+        var expectedDraw = pair.Swapped ? PileType.Discard : PileType.Draw;
+        var expectedDiscard = pair.Swapped ? PileType.Draw : PileType.Discard;
+        if (state.DrawPile.Type != expectedDraw || state.DiscardPile.Type != expectedDiscard)
+        {
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Riot} 槽位 Type 契约不符：抽槽位={state.DrawPile.Type}（期望 {expectedDraw}）"
+                + $"，弃槽位={state.DiscardPile.Type}（期望 {expectedDiscard}）｜状态={(pair.Swapped ? "对调中" : "原版")}");
+        }
+
+        // 每回合的完整读数（含上面的断言值）⇒ 归「详细诊断日志」开关。
+        if (AeonglassSettingStore.DebugVerboseLogs)
+        {
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Riot} {why}：状态={(pair.Swapped ? "对调中" : "原版")}"
+                + $"｜抽牌堆(物理) {pair.Draw.Cards.Count} / 弃牌堆(物理) {pair.Discard.Cards.Count}"
+                + $"（游戏看到的：抽 {state.DrawPile.Cards.Count} / 弃 {state.DiscardPile.Cards.Count}）"
+                + $"｜槽位对象Type {state.DrawPile.Type}/{state.DiscardPile.Type}"
+                + $"（期望 {(pair.Swapped ? "Discard/Draw" : "Draw/Discard")}）");
+        }
     }
 
     private static void NoteMove(PlayerCombatState state, string pileName, CardModel card)

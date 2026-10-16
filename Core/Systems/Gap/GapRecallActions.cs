@@ -172,7 +172,8 @@ internal static class GapRecallActions
             // 同时保证它还挂在本次战斗上，免得留下"半个实例"。
             if (!gap.Cards.Contains(card))
             {
-                gap.AddInternal(card, -1, true);
+                // 回填也走统一入口：合并模式下卡面当场回到间隙区（失败退回静默）。
+                await GapStore.PutIntoGapAsync(player, gap, card);
             }
 
             try

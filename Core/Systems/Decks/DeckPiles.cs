@@ -74,6 +74,45 @@ internal static class DeckPiles
     /// <summary>指定卡组的张数。</summary>
     public static int CountOf(Player player, int index) => PileOfIndex(player, index)?.Cards.Count ?? 0;
 
+    /// <summary>
+    /// 「时之终章」用：把<b>非生效那一副</b>的每张母本各复制一份（战斗级副本）。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 用户 2026-10-16 口径：本场战斗两副卡组共同使用，<b>结束后正常</b> —— 所以复制而不是搬运：
+    /// 走 <c>CombatState.CloneCard</c>（与时空裂隙同一套），本体会清掉副本的 <c>DeckVersion</c>
+    /// ⇒ 副本是纯战斗件，落进哪个堆都不会写回任一副牌组；母本始终躺在 <c>deck_b</c> 里不动。
+    /// </para>
+    /// <para>
+    /// 双卡组关掉（牌堆没注册）时返回空表 ⇒ 调用方退化成"只洗本副"，不会崩。
+    /// </para>
+    /// </remarks>
+    public static List<CardModel> CopyInactiveDeckIntoCombat(Player player, CombatState combat)
+    {
+        var source = InactivePileOf(player);
+        if (source is null || source.Cards.Count == 0)
+        {
+            return [];
+        }
+
+        var copies = new List<CardModel>(source.Cards.Count);
+        foreach (var master in source.Cards.ToList())
+        {
+            try
+            {
+                copies.Add(combat.CloneCard(master));
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Decks} 副卡组复制 {master.Id.Entry} 失败（跳过这张）："
+                    + $"{ex.GetType().Name}: {ex.Message}");
+            }
+        }
+
+        return copies;
+    }
+
     /// <summary>卡组显示名。</summary>
     public static string NameOf(int index) => index == 1 ? "B" : "A";
 

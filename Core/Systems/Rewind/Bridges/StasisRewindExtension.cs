@@ -5,6 +5,8 @@ using MegaCrit.Sts2.Core.Models;
 using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 using STS2_Aeonglass.Core.Systems.Rewind.Policy;
 
+using STS2_Aeonglass.Core.Config;
+
 using STS2_Aeonglass.Core.Systems.Stasis;
 
 namespace STS2_Aeonglass.Core.Systems.Rewind.Bridges;
@@ -31,9 +33,13 @@ internal sealed class StasisRewindExtension : IRewindExtension
         var entries = CaptureEntries();
         draft.Put(DraftKey, entries);
 
-        Const.Logger.Info(
-            $"[{Const.ModId}] {Const.Prefix.Stasis} 回溯 capture：搁浅 {entries.Count} 张 "
-            + $"[{string.Join(",", entries.Select(e => $"{e.Card.Id.Entry}@{e.CombatsLeft}"))}]");
+        // 每次快照都打 ⇒ 归「详细诊断日志」开关（默认关）。
+        if (AeonglassSettingStore.DebugVerboseLogs)
+        {
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Stasis} 回溯 capture：搁浅 {entries.Count} 张 "
+                + $"[{string.Join(",", entries.Select(e => $"{e.Card.Id.Entry}@{e.CombatsLeft}"))}]");
+        }
     }
 
     public void OnBeforeRestore(RewindContext ctx)

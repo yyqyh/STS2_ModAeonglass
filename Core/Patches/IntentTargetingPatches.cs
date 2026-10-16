@@ -157,14 +157,18 @@ internal static class IntentTargetingPatches
 
             try
             {
-                if (ours)
-                {
-                    Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 瞄准结束（cancel={cancel}）");
-                }
-
                 if (!cancel)
                 {
                     IntentTargetRegistry.CommitHovered();
+                }
+
+                // 诊断：把"这一瞄准到底有没有落到意图卡上"一起打出来 ——
+                // 「待取意图=无」= 鼠标从没压到卡带上的卡（或轮询/上报没生效）；「=有」= 选到了，后面该出牌。
+                if (ours)
+                {
+                    Const.Logger.Info(
+                        $"[{Const.ModId}] {Const.Prefix.Intent} 瞄准结束（cancel={cancel}）"
+                        + $"｜待取意图={(IntentTargetRegistry.PendingReady ? "有" : "无")}");
                 }
             }
             catch (Exception ex)

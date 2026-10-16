@@ -67,14 +67,12 @@ public sealed class AeonglassPurify() : ModCardTemplate(1, CardType.Attack, Card
             .Execute(choiceContext);
     }
 
-    /// <summary>升级只扩"消耗范围"（伤害公式不变）⇒ 卡面用升级追加句写清楚。</summary>
+    /// <summary>升级只扩"消耗范围"（伤害公式不变）。</summary>
+    /// <remarks>
+    /// 2026-10-16：升级追加句改成**本体写法**（cards.json 的 description 里写 `{IfUpgraded:show:…}`）
+    /// ⇒ 这里不再注入 `{UpgradeText}`（口径与理由见 AeonglassDialNudge 的注释）。
+    /// </remarks>
     protected override void OnUpgrade()
     {
-    }
-
-    protected override void AddExtraArgsToDescription(MegaCrit.Sts2.Core.Localization.LocString description)
-    {
-        base.AddExtraArgsToDescription(description);
-        CardTextArgs.InjectUpgradeClause(description, this, IsUpgraded);
     }
 }

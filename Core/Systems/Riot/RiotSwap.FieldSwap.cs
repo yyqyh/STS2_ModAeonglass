@@ -21,6 +21,13 @@ namespace STS2_Aeonglass.Core.Systems.Riot;
 /// ② 调用时机：牌堆事件、回合开始、读属性时的保险丝；抽牌窗口内推迟。
 /// ③ 依赖：<c>RiotSwap</c> 的共享状态（真身缓存、字段句柄）。
 /// ④ ⚠️ 只改字段、不动 UI；写失败要退回落点并清掉可能写了一半的字段。
+/// ⑤ <b>契约（2026-10-16 明确，别"顺手修正"）</b>：对调生效期间，占据抽 / 弃<b>槽位</b>的那张 <c>CardPile</c>
+///    报的是它<b>构造时的 <c>Type</c>（物理身份）</b>，不是槽位身份 —— 也就是生效时
+///    <c>state.DrawPile.Type == PileType.Discard</c>、<c>state.DiscardPile.Type == PileType.Draw</c>。
+///    本体按 <c>pile.Type</c> 分支的 20+ 处（<c>CardPileCmd</c> / <c>CardSelectCmd</c> / <c>SfxCmd</c> /
+///    <c>ForgeCmd</c> / <c>CardCmd</c>）因此看到的是"物理堆" —— 这正是既定观感（卡跟着物理堆走、无额外动画）；
+///    改成"逻辑身份"（连 <c>Type</c> 的后备字段一起换）会改变动画 / 音效落点，需重新与用户对齐口径。
+///    只读断言见 <c>RiotPileWatch.ReportState</c> 的槽位 Type 字段。
 /// </remarks>
 internal static partial class RiotSwap
 {

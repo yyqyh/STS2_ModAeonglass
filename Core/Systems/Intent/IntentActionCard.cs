@@ -14,12 +14,23 @@ namespace STS2_Aeonglass.Core.Systems.Intent;
 
 internal static class IntentActionCard
 {
-    /// <summary>**当前形态：原版卡牌指向** —— 玩家点的那张意图卡由侧表带回。</summary>
-    public static Task ApplyPointed(Player player, string verb, Func<Player, Creature, IntentCard, string> action)
+    /// <summary>
+    /// **当前形态：原版卡牌指向** —— 玩家点的那张意图卡由侧表带回。
+    /// </summary>
+    /// <param name="pointed">
+    /// 指向链路换回来的那只怪（= 意图卡所属的怪，来自 <c>cardPlay.Target</c>）。
+    /// ⚠️ 多怪场里**必须**用它：以前退化成"第一只活怪"，点 B 怪的意图会落到 A 怪身上（`IntentMoves` 找不到那张牌 → 整卡白打）。
+    /// </param>
+    public static Task ApplyPointed(
+        Player player,
+        Creature? pointed,
+        string verb,
+        Func<Player, Creature, IntentCard, string> action)
     {
         try
         {
-            if (MonsterAccess.LivingEnemies.FirstOrDefault() is not { } target)
+            var target = pointed is { IsAlive: true } ? pointed : MonsterAccess.LivingEnemies.FirstOrDefault();
+            if (target is null)
             {
                 Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 卡牌「{verb}」：场上没有活着的怪（什么都不做）");
                 return Task.CompletedTask;

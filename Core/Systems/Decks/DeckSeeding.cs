@@ -69,6 +69,11 @@ internal static class DeckSeeding
         }
 
         pile.InvokeContentsChanged();
+        // 上一局的配对可能没被释放（RunEndedEvent 不覆盖"主菜单 → 放弃游戏"）⇒ 播种前先清一遍残留。
+        DeckTwins.PruneForeignPairs(player);
+        // 移牌镜像的入口：盯住两副牌堆的"离开"事件（不再打 CardPile.RemoveInternal 补丁）。
+        // ⚠️ 放在配对**之前**：这样"孪生配对完成…盯堆"那行读到的才是真实值（上一版恒读到注册前的旧值）。
+        DeckTwins.EnsurePileWatch(player);
         LinkSeededTwins(player, seededCards);
         DeckState.MarkInitialized(player);
 
@@ -114,5 +119,32 @@ internal static class DeckSeeding
         Const.Logger.Info(
             $"[{Const.ModId}] {Const.Prefix.Decks} 孪生配对完成：{linked} 对（共 {DeckTwins.Count} 对）"
             + $"｜{DeckTwins.Describe()}");
+    }
+
+    /// <summary>
+    /// 读档继续（<c>RunLoadedEvent</c>）时把孪生**重连**一次。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 为什么需要：配对表是**运行时**表、不随存档走；而 <c>DecksInitialized</c> 存在遗物上、读档回来是 true
+    /// ⇒ 播种会被幂等闸挡住，于是读档后镜像会静默失效。这里按"非生效副的牌 × 生效副的同名牌"重配一次。
+    /// </para>
+    /// <para>幂等：<c>LinkSeededTwins</c> 只挑"还没配对"的生效副牌做候选，已配对的不会重复连。</para>
+    /// </remarks>
+    public static void RelinkAfterLoad(Player player)
+    {
+        if (!DeckModule.Enabled || !DeckPiles.IsReady || player.Character is not Aeonglass)
+        {
+            return;
+        }
+
+        var pile = DeckPiles.InactivePileOf(player);
+        if (pile is null || pile.Cards.Count == 0)
+        {
+            return;
+        }
+
+        DeckTwins.EnsurePileWatch(player);
+        LinkSeededTwins(player, pile.Cards.ToList());
     }
 }

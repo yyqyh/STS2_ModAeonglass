@@ -41,6 +41,11 @@ internal static class MechanismBootstrap
         // ⚠️ **无条件注册**：接线（生命周期订阅 + 盯弃牌堆）永远装，总开关只 gate 运行时行为 ——
         // 否则"先在设置页打开开关"不会生效（实测：调用卡牌测试没效果）。
         Register("乱流（抽弃互换）", enabled: true, Riot.RiotPileWatch.Register);
+
+        // NEW-5 / NEW-8 两张卡的"卡外触发"（不挂在卡自己身上：一个要判遭遇与凋萎数，一个要盯手牌堆）。
+        // 都是接线（订阅生命周期事件），角色门在运行时判 ⇒ 无条件注册。
+        Register("时间主宰（NEW-5 彩蛋卡发放）", enabled: true, Wither.TimeLordTrigger.Register);
+        Register("锚定之物（NEW-8 起手落点 + 进手牌触发）", enabled: true, Cards.AnchoredTrigger.Register);
     }
 
     /// <summary>注册单个机制模块（带开关判断与独立的错误隔离）。</summary>

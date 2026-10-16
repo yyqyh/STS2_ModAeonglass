@@ -2,6 +2,14 @@
 
 《杀戮尖塔 2》可玩角色 mod：**永世沙漏（Aeonglass）** —— 把原版 Act 3 boss 转成玩家角色。
 
+## 参考资料
+
+- **RitsuLib 教程站**（外部）：`https://tutorials.sts2modding.com/docs/04-ritsulib/` —— 章节含"自定义卡牌堆 / 顶栏按钮 /
+  额外角标 / **自定义目标** / 次要资源 / 生命周期事件 / 补丁系统 / 节点附加 / 视觉·特效与动画"等。
+  要点与本项目对照记在项目文档 `项目文档\STS2_Aeonglass\参考链接.md`（含"自定义目标对我们指向实现的意义"）。
+- 本地离线同源：RitsuLib 源码 `base\STS2-RitsuLib\src\` 与中文文档 `base\STS2-RitsuLib\docs\pages\guide\`；
+  本体反编译 `mod\orign\src\`；参考 mod 酒狐 `base\STS2_WineFox-1.2.18\`。
+
 ## 当前进度
 
 **第 ① 步：人物模型**（已完成；已实机通过）

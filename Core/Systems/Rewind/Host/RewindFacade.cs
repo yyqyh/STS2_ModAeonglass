@@ -28,7 +28,9 @@ internal sealed partial class RewindFacade
     {
         Log = new RewindLog(
             capacity: 200,
-            sink: line => MegaCrit.Sts2.Core.Logging.Log.Info($"[{Const.ModId}] {line}"));
+            // 2026-10-16：宿主 sink 补上机制前缀 —— 之前 `rewind lab ready / capture #N / combat started|ended`
+            // 这些行没有 `[回溯]`（lint 抓不到，因为前缀该加在 sink 这一层），实机排查时不好按机制过滤。
+            sink: line => MegaCrit.Sts2.Core.Logging.Log.Info($"[{Const.ModId}] {Const.Prefix.Rewind} {line}"));
 
         Ring = new SnapshotRing(capacity: 5);
         State = new RewindState();
@@ -75,7 +77,11 @@ internal sealed partial class RewindFacade
 
     public bool RewindInProgress { get; private set; }
 
-    public GateResult EvaluateGates() => Gates.Evaluate();
+    /// <param name="forCapture">
+    /// <c>true</c> = 这次评估是给<b>回合开始打点</b>用的 ⇒ 跳过"只对回档成立"的闸门
+    /// （见 <c>IRewindGateCheck.AppliesToCapture</c>）；回档侧一律用默认的 <c>false</c>，口径不变。
+    /// </param>
+    public GateResult EvaluateGates(bool forCapture = false) => Gates.Evaluate(forCapture);
 
     public void OnCombatEnded()
     {
@@ -102,31 +108,45 @@ internal sealed partial class RewindFacade
     /// <summary>拍一份快照。闸门不过就直接放弃（不做半成品快照）。</summary>
     public ISnapshot? CaptureNow(string label)
     {
-        var gate = EvaluateGates();
-        if (!gate.Ok)
+        // ⚠️ 抓拍是**跑在本体流程里**的（回合开始的同步回调直接调到这里）⇒ 整流包兜底：
+        //    抓拍失败只等于"这一回合没有快照"（回溯会报"没有上一回合快照"），
+        //    绝不能让异常穿进本体回合循环（2026-10-16 实测：异常一路冒到 CombatManager.StartTurn，
+        //    日志 "turn loop died … the combat is stuck"，战斗卡死、回合结束按键不出现）。
+        try
         {
-            Log.Info($"capture skipped: {gate.FirstFailureName} - {gate.FirstFailureReason}");
+            // 打点专用评估：跳过"VFX 屏障"这类只对回档成立的闸门（它会把每次卡面特效在飞的打点全挡掉）。
+            var gate = EvaluateGates(forCapture: true);
+            if (!gate.Ok)
+            {
+                Log.Info($"capture skipped: {gate.FirstFailureName} - {gate.FirstFailureReason}");
+                return null;
+            }
+
+            var turn = CombatAccess.CurrentTurnNumber();
+            var id = Ring.NextId(turn, label);
+            var draft = new SnapshotDraft(id);
+            Extensions.Capture(draft);
+
+            var snapshot = CombatStateSnapshot.Capture(id, Scope);
+            if (snapshot is null)
+            {
+                Log.Warn("capture skipped: no local player");
+                return null;
+            }
+
+            // 扩展草稿必须随这份快照一起带着 —— 否则恢复时拿不到"当时"的 搁浅 搁浅内容 / 时空裂隙副本。
+            var aware = new ExtensionAwareSnapshot(snapshot, Extensions, draft.Parts);
+            Ring.Add(aware);
+            LastResult = $"拍摄 #{id.Index} @ T{turn}";
+            Log.Info($"capture {id} | {snapshot.Summary} | powers[{CombatAccess.DescribePowers()}]");
+            return aware;
+        }
+        catch (Exception ex)
+        {
+            LastResult = $"拍摄失败（已降级跳过）：{ex.GetType().Name}";
+            Log.Error($"capture failed（已降级跳过，本回合没有快照）：{ex.GetType().Name}: {ex.Message}");
             return null;
         }
-
-        var turn = CombatAccess.CurrentTurnNumber();
-        var id = Ring.NextId(turn, label);
-        var draft = new SnapshotDraft(id);
-        Extensions.Capture(draft);
-
-        var snapshot = CombatStateSnapshot.Capture(id, Scope);
-        if (snapshot is null)
-        {
-            Log.Warn("capture skipped: no local player");
-            return null;
-        }
-
-        // 扩展草稿必须随这份快照一起带着 —— 否则恢复时拿不到"当时"的 搁浅 搁浅内容 / 时空裂隙副本。
-        var aware = new ExtensionAwareSnapshot(snapshot, Extensions, draft.Parts);
-        Ring.Add(aware);
-        LastResult = $"拍摄 #{id.Index} @ T{turn}";
-        Log.Info($"capture {id} | {snapshot.Summary} | powers[{CombatAccess.DescribePowers()}]");
-        return aware;
     }
 
 }

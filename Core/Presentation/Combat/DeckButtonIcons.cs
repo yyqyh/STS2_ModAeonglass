@@ -71,10 +71,25 @@ internal static class DeckButtonIcons
             return;
         }
 
-        if (ResourceLoader.Load<Texture2D>(path) is { } texture)
+        // 贴图静态缓存：同一张图标不要每次都走一遍 ResourceLoader（切换卡组会反复调这里）。
+        if (!TextureCache.TryGetValue(path, out var texture) || !GodotObject.IsInstanceValid(texture))
+        {
+            texture = ResourceLoader.Load<Texture2D>(path);
+            if (texture is null)
+            {
+                return;
+            }
+
+            TextureCache[path] = texture;
+        }
+
+        if (GodotObject.IsInstanceValid(texture))
         {
             icon.Texture = texture;
         }
     }
+
+    /// <summary>图标贴图缓存（路径 → 贴图；进程内一次）。</summary>
+    private static readonly Dictionary<string, Texture2D> TextureCache = [];
 
 }

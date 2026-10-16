@@ -5,7 +5,6 @@ using MegaCrit.Sts2.Core.Nodes.Rooms;
 using STS2_Aeonglass.Core.Presentation.Combat;
 using STS2_Aeonglass.Core.Presentation.Combat.Gap;
 using STS2_Aeonglass.Core.Presentation.Combat.IntentBelt;
-using STS2_Aeonglass.Core.Presentation.ControlPanel;
 using STS2_Aeonglass.Core.Systems;
 
 using STS2_Aeonglass.Core.Systems.Bootstrap;
@@ -23,12 +22,13 @@ namespace STS2_Aeonglass.Core.Patches;
 /// </para>
 /// <para>
 /// 本补丁不关心任何机制逻辑：它只调各处的 <c>Host.Attach</c>，
-/// 而每个 <c>Host</c> 自己判断开关（统一控制面板看 <c>ControlPanel</c>，
-/// 意图卡带看 <c>IntentIntentBelt</c>）—— 所以"关掉"时这个补丁什么也不做。
+/// 而每个 <c>Host</c> 自己判断开关（意图卡带看 <c>IntentIntentBelt</c>）——
+/// 所以"关掉"时这个补丁什么也不做。
 /// </para>
 /// <para>
 /// <b>2026-10-13 收口</b>：沙砾 / 时空裂隙 / 意图与凋萎 / 回溯 / 双卡组 各自的按键面板 + 外观调试面板（6 个 Host）
-/// 已经并成一个 <see cref="ControlPanelHost" />；战斗内现在只挂"统一控制面板 + 意图卡带 + 传送门"三样。
+/// 当时并成了一个统一控制面板；**2026-10-16 该面板已整块删除**（调试期工具，乱流改从控制台拿、详细日志开关只留设置 json）
+/// ⇒ 战斗内现在只挂"坍缩/唤回按键 + 意图卡带 + 传送门 + 领域特效层"。
 /// </para>
 /// <para>
 /// ⚠️ <b>角色门（2026-10-12 补）</b>：
@@ -54,7 +54,6 @@ internal static class CombatUiMountPatch
             return;
         }
 
-        TryAttach("统一控制面板", () => ControlPanelHost.Attach(__instance));
         TryAttach("坍缩 / 唤回按键", () => AeonglassGapActionRowHost.Attach(__instance));
         TryAttach("意图卡带", () => AeonglassIntentBeltHost.Attach(__instance));
         TryAttach("间隙传送门", () => AeonglassGapPortals.Attach(__instance));

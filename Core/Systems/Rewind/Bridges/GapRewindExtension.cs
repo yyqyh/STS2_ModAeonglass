@@ -2,6 +2,8 @@ using STS2_Aeonglass.Core.Systems.Rewind.Kernel;
 using STS2_Aeonglass.Core.Systems.Rewind.Policy;
 using STS2_Aeonglass.Core.Systems.Bootstrap;
 
+using STS2_Aeonglass.Core.Config;
+
 using STS2_Aeonglass.Core.Systems.Gap;
 
 namespace STS2_Aeonglass.Core.Systems.Rewind.Bridges;
@@ -33,10 +35,14 @@ internal sealed class GapRewindExtension : IRewindExtension
 
         draft.Put(DraftKey, perPlayer);
 
-        Const.Logger.Info(
-            $"[{Const.ModId}] {Const.Prefix.Gap} 回溯 capture（只存副本，不回档）："
-            + $"{string.Join(",", perPlayer.Select(kv => $"{kv.Key}={kv.Value}"))} | "
-            + string.Join(" / ", BridgeAccess.Players().Select(GapStore.Describe)));
+        // 每次快照都打 ⇒ 归「详细诊断日志」开关（默认关；见 AeonglassSetting.DebugVerboseLogs）。
+        if (AeonglassSettingStore.DebugVerboseLogs)
+        {
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Gap} 回溯 capture（只存副本，不回档）："
+                + $"{string.Join(",", perPlayer.Select(kv => $"{kv.Key}={kv.Value}"))} | "
+                + string.Join(" / ", BridgeAccess.Players().Select(GapStore.Describe)));
+        }
     }
 
     public void OnBeforeRestore(RewindContext ctx)

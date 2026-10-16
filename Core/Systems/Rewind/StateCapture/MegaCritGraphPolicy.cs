@@ -3,6 +3,7 @@ using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Random;
 using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
 
@@ -33,7 +34,20 @@ internal sealed class MegaCritGraphPolicy : GraphPolicies
             or CombatState
             or RunState
             or CardPile
+            or Rng
             or DynamicVarSet;
 
-    // TODO(时空裂隙)：Rng / CardEnergyCost / DynamicVarSet 的特例克隆（先核对 0.111 构造签名）。
+    // ============================ 字段策略审计（2026-10-16，清掉旧 TODO）============================
+    // 旧 TODO 问的是"Rng / CardEnergyCost / DynamicVarSet 要不要特例克隆"。逐个核对 0.111 源码后的结论：
+    //
+    // ① Rng（`Core/Random/Rng.cs`）：**改为按引用保留**。RNG 的状态由 `RngOps` 单独抓（run 的 Rng 集 + 每只怪的
+    //    `MonsterModel.Rng` + 我们的 StsRng），图里若出现 Rng 只会拷出一份"脱离注册表的克隆"，写回去毫无意义。
+    // ② CardEnergyCost（`Core/Entities/Cards/CardEnergyCost.cs`）：**不需要特例**。它是 `CardModel` 的字段，
+    //    而**卡模型目前根本不进图**（`CombatStateSnapshot` 只抓 power 与遗物）⇒ 这条路现在走不到；真要抓卡，
+    //    它的 `_card` 反查是 `CardModel`（= `AbstractModel`）已被按引用保留，其余是 `_base` / `_localModifiers`
+    //    这类值字段，默认克隆即可。
+    // ③ DynamicVarSet（`Core/Localization/DynamicVars/DynamicVarSet.cs`）：**保持按引用保留**（= 不还原其内部数值）。
+    //    power 的层数以 `PowerModel._amount` 为准、那张字段已在图里（恢复后自比对也校验它，见
+    //    `CombatStateSnapshot.CollectVerifyProblems`）⇒ 保持现状；将来若出现"数值只放在 DynamicVars 里"的能力，
+    //    再单独给它做特例克隆。
 }

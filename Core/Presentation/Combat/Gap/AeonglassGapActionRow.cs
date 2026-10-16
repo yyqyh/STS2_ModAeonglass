@@ -35,8 +35,23 @@ internal sealed partial class AeonglassGapActionRow : Control
     /// <summary>入场起始偏移 —— 与本体 <c>NEnergyCounter._hidePosition</c> 一致（从左上外侧滑进来）。</summary>
     private static readonly Vector2 HideOffset = new(-480f, 128f);
 
+    /// <summary>
+    /// 「当前该显示哪个动作 / 能不能按」的<b>重算间隔</b>（秒）—— 也就是灰态的最坏滞后。
+    /// </summary>
+    /// <remarks>
+    /// 预测要建一份列表（<c>PlanRecall</c> 复制整堆、<c>PlanCollapse</c> 取前 N 张），每帧算一次纯属白扔垃圾。
+    /// 滞后无害：真按下去时 <c>AeonglassGapSequence</c> 会再判一次，被拒只写一行日志、不改状态。
+    /// </remarks>
+    private const float PlanRefreshInterval = 0.15f;
+
     private AeonglassGapActionButton _button = null!;
     private bool _loggedMissing;
+
+    /// <summary>缓存的原版能量计数器节点（失效时重找；不再每帧 <c>GetChildren()</c>）。</summary>
+    private NEnergyCounter? _orb;
+
+    /// <summary>plan 重算的节流计时（见 <see cref="PlanRefreshInterval" />）。</summary>
+    private float _planTimer;
 
     /// <summary>我们自己的入场补演（只在"被挂上时能量球已经到位"时才需要）。</summary>
     private bool _animStarted;
@@ -90,7 +105,13 @@ internal sealed partial class AeonglassGapActionRow : Control
         //    少了这一行就是"按钮整个消失" —— 2026-10-13 就是这么踩的。
         Visible = true;
 
-        RefreshState(player);
+        // plan（预测）节流重算（理由见 PlanRefreshInterval 注释）。
+        _planTimer -= (float)delta;
+        if (_planTimer <= 0f)
+        {
+            _planTimer = PlanRefreshInterval;
+            RefreshState(player);
+        }
     }
 
     /// <summary>
@@ -114,7 +135,13 @@ internal sealed partial class AeonglassGapActionRow : Control
             return;
         }
 
-        if (container.GetChildren().OfType<NEnergyCounter>().FirstOrDefault() is not { } orb)
+        if (_orb is null || !IsInstanceValid(_orb))
+        {
+            // 每帧 `GetChildren()` 会新建一个 Godot Array（+ 一次 LINQ 迭代）⇒ 只在这里扫一次并缓存。
+            _orb = FindOrb(container);
+        }
+
+        if (_orb is not { } orb)
         {
             if (!_loggedMissing)
             {
@@ -149,6 +176,20 @@ internal sealed partial class AeonglassGapActionRow : Control
 
         // 基准取"能量计数器容器"而不是能量球自己：球上的 position 会被它的动画改。
         GlobalPosition = container.GlobalPosition + offsetBelow + HideOffset * remaining;
+    }
+
+    /// <summary>在容器里找原版能量计数器（没有缓存 / 缓存失效时才调）。</summary>
+    private static NEnergyCounter? FindOrb(Control container)
+    {
+        foreach (var child in container.GetChildren())
+        {
+            if (child is NEnergyCounter orb)
+            {
+                return orb;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>Expo-out（本体那套入场曲线）。</summary>

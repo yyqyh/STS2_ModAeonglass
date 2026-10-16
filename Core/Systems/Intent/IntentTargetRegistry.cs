@@ -43,6 +43,15 @@ internal static class IntentTargetRegistry
     public static bool HasPending => _hovered is not null || _pending is not null;
 
     /// <summary>
+    /// 侧表里**已经确认**、等着卡牌来取的那一张在不在。
+    /// </summary>
+    /// <remarks>
+    /// 纯诊断用（日志）：和 <see cref="HasPending" /> 的区别是它**不看悬停**，
+    /// 所以"瞄准结束但没取到牌"能一眼分辨是"没压到卡"还是"压到了但没提交"。
+    /// </remarks>
+    public static bool PendingReady => _pending is not null;
+
+    /// <summary>
     /// 现在有没有登记在册的意图卡节点（= 这一场里我们的卡带确实在跑）。
     /// </summary>
     /// <remarks>
@@ -80,10 +89,7 @@ internal static class IntentTargetRegistry
         Nodes.Remove(node);
         Owners.Remove(node);
 
-        if (ReferenceEquals(_hovered, node))
-        {
-            _hovered = null;
-        }
+        ForgetHovered(node);
     }
 
     /// <summary>卡带重建 / 销毁时清掉（节点已被释放的那些顺手一起清）。</summary>
@@ -104,6 +110,19 @@ internal static class IntentTargetRegistry
     public static void NoteHovered(Node? node)
     {
         _hovered = IsIntentNode(node) ? node : null;
+    }
+
+    /// <summary>这个节点是不是"当前记着的那张"（卡带轮询撤悬停前用它挡一下，别撤掉别的卡带刚上报的那张）。</summary>
+    public static bool IsNotedHovered(Node? node) =>
+        node is not null && ReferenceEquals(_hovered, node);
+
+    /// <summary>撤掉"记着的悬停"（**只撤这一个节点**；鼠标移开我们这张卡时由卡带轮询调）。</summary>
+    public static void ForgetHovered(Node? node)
+    {
+        if (node is not null && ReferenceEquals(_hovered, node))
+        {
+            _hovered = null;
+        }
     }
 
     /// <summary>玩家确认了这次指向（由 patch 调）：把"最近指向的那张"变成待取的值。</summary>

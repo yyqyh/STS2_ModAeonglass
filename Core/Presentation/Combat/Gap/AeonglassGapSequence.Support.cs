@@ -80,6 +80,9 @@ internal static partial class AeonglassGapSequence
         await GapViewPile.SyncAsync(player);
         CombatUiRefresh.RefreshAll(player);
 
+        // 关门（用户 2026-10-15 口径：关也要先出青色漩涡、再门从大到小；漩涡消完这轮演出才算完）
+        await portals.PlayCloseAsync(FlyRight, CloseDuration);
+
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Gap} 坍缩演出结束（飞进门的卡面 {staged.Count} 张）");
     }
 

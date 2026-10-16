@@ -89,7 +89,24 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
     {
         base.ModifyShuffleOrder(player, cards, isInitialShuffle);
 
+        // 「锚定之物」（NEW-8）：起手那一洗把它从抽牌堆里摘出来、改放战斗弃牌堆（用户口径：起手进弃牌堆）。
+        // ⚠️ 必须在下面"迟滞"那一段**之前**：它自己也带迟滞（IHysteresisCard），若先被迟滞分支从
+        //    抽牌堆的**本体列表**里摘掉，这张牌会落到"哪个堆都不在"。
+        if (isInitialShuffle)
+        {
+            AnchoredTrigger.PlaceStartInDiscard(player, cards);
+        }
+
         if (cards.Count == 0)
+        {
+            return;
+        }
+
+        // ⚠️ 初始洗牌这一拍**不做迟滞**（2026-10-16 修）：初始洗牌传进来的是**抽牌堆本体列表**
+        //    （`CardPile.RandomizeOrderInternal` 把 `_cards` 直接递给 hook）⇒ 从这里 Remove 等于
+        //    "这张牌离开抽牌堆、又不落任何堆"（凭空消失）。迟滞的口径"留在弃牌堆"从第一次真正的洗牌
+        //    （弃牌堆 → 抽牌堆那一条）开始生效就够了。
+        if (isInitialShuffle)
         {
             return;
         }

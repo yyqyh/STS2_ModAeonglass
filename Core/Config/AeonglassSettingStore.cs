@@ -43,44 +43,21 @@ internal static class AeonglassSettingStore
     /// </remarks>
     public static bool DebugUnlimited => Current.DebugUnlimitedPerCombat;
 
-    /// <summary>把外观缩放写进设置并落盘（调试面板的「缩放 ±」按钮走这里）。</summary>
-    /// <remarks>
-    /// 设置页走的是 <c>ModSettingsValueBinding</c> 自己的写入通道；这里是<b>代码侧</b>的最小写入路径
-    /// （照 together 的 <c>SetSymbiosisEnabled</c>）：改内存模型 + 落盘，两边读的是同一份，所以界面会跟着变。
-    /// </remarks>
-    public static void SetScale(string? value)
+    /// <summary>
+    /// <b>详细诊断日志开关</b>（默认关）：卡面对齐槽位 / 回溯 capture / 盯堆 / 乱流每回合读数 /
+    /// 卡带就绪·发牌特效 这些"每次都打"的行读它。见 <see cref="AeonglassSetting.DebugVerboseLogs" />。
+    /// </summary>
+    public static bool DebugVerboseLogs => Current.DebugVerboseLogs;
+
+    /// <summary>翻转"详细诊断日志"并落盘（控制面板「调试」页走这里；改完立刻生效，不需重启）。</summary>
+    public static bool ToggleVerboseLogs()
     {
         Initialize();
 
         var store = RitsuLibFramework.GetDataStore(Const.ModId);
-        store.Modify<AeonglassSetting>(DataKey, settings => settings.Scale = NormalizeScale(value));
+        store.Modify<AeonglassSetting>(DataKey, settings => settings.DebugVerboseLogs = !settings.DebugVerboseLogs);
         store.Save(DataKey);
-    }
-
-    /// <summary>翻转外观朝向并落盘。</summary>
-    public static void ToggleScaleXPositive()
-    {
-        Initialize();
-
-        var store = RitsuLibFramework.GetDataStore(Const.ModId);
-        store.Modify<AeonglassSetting>(DataKey, settings => settings.ScaleXPositive = !settings.ScaleXPositive);
-        store.Save(DataKey);
-    }
-
-    /// <summary>把任意输入规整成合法的缩放值（非法一律回落到 0.12）。</summary>
-    public static string NormalizeScale(string? value)
-    {
-        if (float.TryParse(
-                value?.Trim(),
-                System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out var parsed)
-            && parsed > 0f)
-        {
-            return parsed.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
-        }
-
-        return "0.12";
+        return Current.DebugVerboseLogs;
     }
 
     public static void Initialize()

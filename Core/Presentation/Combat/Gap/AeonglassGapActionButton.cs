@@ -42,6 +42,9 @@ internal sealed partial class AeonglassGapActionButton : NButton
     private Label _label = null!;
     private bool _recall;
 
+    /// <summary>上一次真正写进 Label 的文案（自己缓存，取代每帧读 <c>_label.Text</c> —— 读 Godot 字符串要封送、每帧新建一个托管字符串）。</summary>
+    private string? _appliedText;
+
     public override void _Ready()
     {
         // ⚠️ 原版 NButton._Ready() 会直接抛（它要求子类走 ConnectSignals）——所以这里**不能**调 base._Ready()。
@@ -81,8 +84,9 @@ internal sealed partial class AeonglassGapActionButton : NButton
         _recall = recall;
 
         var text = recall ? AeonglassGapActionTexts.RecallText : AeonglassGapActionTexts.CollapseText;
-        if (_label.Text != text)
+        if (_appliedText != text)
         {
+            _appliedText = text;
             _label.Text = text;
         }
 

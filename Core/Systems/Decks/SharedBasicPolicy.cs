@@ -55,9 +55,11 @@ internal static class SharedBasicPolicy
             }
 
             bad++;
-            Const.Logger.Warn(
-                $"[{Const.ModId}] {Const.Prefix.Decks} P3-4 违规：共用基础牌 {card.Id.Entry} 带了「{reason}」"
-                + " —— 打出它会让两副 desync（一张离队、孪生还在）。请卡表侧把它移出共用池，或明确声明这是例外。");
+            // 2026-10-16：从 Warn 降为 Info —— 这是"数据侧待改"的提示，不是运行时故障，
+            // 不该每局刷一条警告。卡表侧（create/output/**）如把它移出共用池，这条会自动消失。
+            Const.Logger.Info(
+                $"[{Const.ModId}] {Const.Prefix.Decks} P3-4 提示：共用基础牌 {card.Id.Entry} 带了「{reason}」"
+                + " —— 打出它会让两副 desync（一张离队、孪生还在）。建议卡表侧把它移出共用池，或明确声明这是例外。");
         }
 
         if (bad == 0)

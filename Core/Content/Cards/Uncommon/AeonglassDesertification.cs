@@ -5,6 +5,7 @@ using MegaCrit.Sts2.Core.Models;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Cards.Token;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Intent;
@@ -22,19 +23,16 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassDesertification()
-    : ModCardTemplate(2, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
+    : AeonglassCardTemplate(
+        AeonglassCardSpec.Skill(2, CardRarity.Uncommon)
+            .UpgradeEnergy(-1))
 {
-    protected override HashSet<CardTag> CanonicalTags => [];
-
     protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         var upgraded = UpgradeEnemySide() + UpgradeOwnSide();
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 荒漠化：升级了 {upgraded} 张凋萎（敌人侧 + 自己侧）");
         return Task.CompletedTask;
     }
-
-    /// <summary>升级档：费用 −1（2 → 1）。</summary>
-    protected override void OnUpgrade() => EnergyCost.UpgradeBy(-1);
 
     private static int UpgradeEnemySide()
     {

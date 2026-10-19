@@ -1,12 +1,11 @@
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
-using MegaCrit.Sts2.Core.ValueProps;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.History;
 
@@ -22,18 +21,13 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ v2 去掉"只算攻击牌"的限定与硬上限 ⇒ <b>无上限、不限卡型</b>（与年轮同口径，越拖越强）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassNotch() : ModCardTemplate(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
+public sealed class AeonglassNotch() : AeonglassCardTemplate(
+    new AeonglassCardSpec(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
+        .DamageVar(BaseDamage, upgradeDelta: 3m)
+        .Var("PerAttack", PerAttack, upgradeDelta: 1m))
 {
     private const decimal BaseDamage = 8m;
     private const decimal PerAttack = 3m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-    [
-        new DamageVar(BaseDamage, ValueProp.Move),
-        new DynamicVar("PerAttack", PerAttack),
-    ];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -52,9 +46,4 @@ public sealed class AeonglassNotch() : ModCardTemplate(1, CardType.Attack, CardR
             .Execute(choiceContext);
     }
 
-    protected override void OnUpgrade()
-    {
-        DynamicVars.Damage.UpgradeValueBy(3m);
-        DynamicVars["PerAttack"].UpgradeValueBy(1m);
-    }
 }

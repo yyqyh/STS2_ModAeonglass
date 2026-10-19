@@ -4,7 +4,9 @@ using MegaCrit.Sts2.Core.Localization;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
+using STS2_Aeonglass.Core.Content.Keywords;
 
 namespace STS2_Aeonglass.Core.Content.Cards.Token;
 
@@ -22,7 +24,7 @@ namespace STS2_Aeonglass.Core.Content.Cards.Token;
 ///    本体属性 = <c>Unplayable</c> + <c>CardType.Status</c>（v2：卡框按状态牌画，「净化」升级档的"所有状态牌"也认它）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassTokenCardPool))]
-public sealed class AeonglassWitherCard : ModCardTemplate
+public sealed class AeonglassWitherCard : AeonglassCardTemplate
 {
     /// <summary>基础掉血（未强化）。</summary>
     public const int BaseHitPoints = 3;
@@ -34,20 +36,19 @@ public sealed class AeonglassWitherCard : ModCardTemplate
     /// <b>v2：凋萎是「状态牌」</b>（<c>CardType.Status</c>）—— 卡框按状态牌画，
     /// 也让「净化」升级档那句"消耗所有[状态牌]"天然把它包括进去。
     /// </summary>
-    public AeonglassWitherCard() : base(0, CardType.Status, CardRarity.Basic, TargetType.Self)
+    public AeonglassWitherCard() : base(
+        new AeonglassCardSpec(0, CardType.Status, CardRarity.Basic, TargetType.Self)
+            {
+                Playable = false,
+                MaxUpgradeLevel = 3,
+            }
+            .Keyword(WitherKeyword.Value)
+            .Keyword(CardKeyword.Ethereal))
     {
     }
 
-    /// <summary>不可打出（本体 <c>IsPlayable</c> 是 protected virtual，覆盖它即可）。</summary>
-    protected override bool IsPlayable => false;
-
-    /// <summary>可**多次**强化（用户 2026-10-12）：0 → 3 级 ⇒ 掉血 3 / 4 / 5 / 6。</summary>
-    public override int MaxUpgradeLevel => 3;
-
     /// <summary>这张凋萎当前的掉血量（结算时读它，不再写死 3）。</summary>
     public int HitPoints => BaseHitPoints + PerUpgrade * CurrentUpgradeLevel;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
 
     /// <summary>
     /// 这张卡的两个关键词：<c>None</c>（承载 mod 词条「凋萎」）+ <c>Ethereal</c>（规则 4b 的「虚无」）。
@@ -63,8 +64,6 @@ public sealed class AeonglassWitherCard : ModCardTemplate
     /// 每张只生效一次。它同时让卡面出现原版的「虚无」词条，与玩法一致。
     /// </para>
     /// </remarks>
-    public override IEnumerable<CardKeyword> CanonicalKeywords => [CardKeyword.None, CardKeyword.Ethereal];
-
     /// <summary>卡面只显示"凋萎：…X 点生命…"，X 随强化实时变（模板在 cards.json 里带 {Wither}）。</summary>
     protected override void AddExtraArgsToDescription(LocString description)
     {

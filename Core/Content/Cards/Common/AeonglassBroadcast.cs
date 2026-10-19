@@ -1,12 +1,10 @@
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 using STS2RitsuLib.Interop.AutoRegistration;
-using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
-using STS2_Aeonglass.Core.Systems.Intent;
 
 using STS2_Aeonglass.Core.Systems.Wither;
 namespace STS2_Aeonglass.Core.Content.Cards.Common;
@@ -22,13 +20,11 @@ namespace STS2_Aeonglass.Core.Content.Cards.Common;
 /// ④ ⚠️ 0 费件里属于"大效果"那一类（卡池体检表点名），强度要盯。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassBroadcast() : ModCardTemplate(0, CardType.Skill, CardRarity.Common, TargetType.AnyEnemy)
+public sealed class AeonglassBroadcast() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(0, CardRarity.Common, TargetType.AnyEnemy)
+        .Var("Wither", WitherBase, upgradeDelta: 1m))
 {
     private const decimal WitherBase = 2m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [new DynamicVar("Wither", WitherBase)];
 
     protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -43,5 +39,4 @@ public sealed class AeonglassBroadcast() : ModCardTemplate(0, CardType.Skill, Ca
         return Task.CompletedTask;
     }
 
-    protected override void OnUpgrade() => DynamicVars["Wither"].UpgradeValueBy(1m);
 }

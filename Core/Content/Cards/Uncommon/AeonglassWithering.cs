@@ -1,12 +1,12 @@
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.ValueProps;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Intent;
 
@@ -23,14 +23,12 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ 口径由卡池侧按"唯一读得通的解释"定为"只数目标那一个敌人"（不是全场）；凋萎现在会出现在抽/手/弃三处 ⇒ 升级档是实打实的加强。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassWithering() : ModCardTemplate(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy)
+public sealed class AeonglassWithering() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(1, CardRarity.Uncommon, TargetType.AnyEnemy)
+        .Var("PerWither", DamagePerWither))
 {
     /// <summary>每张凋萎换多少伤害（v2 定值 3）。</summary>
     private const decimal DamagePerWither = 3m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [new DynamicVar("PerWither", DamagePerWither)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -59,8 +57,4 @@ public sealed class AeonglassWithering() : ModCardTemplate(1, CardType.Skill, Ca
             .Execute(choiceContext);
     }
 
-    /// <summary>升级只改"数哪些堆"（公式不变，写在 <c>OnPlay</c> 里）。</summary>
-    protected override void OnUpgrade()
-    {
-    }
 }

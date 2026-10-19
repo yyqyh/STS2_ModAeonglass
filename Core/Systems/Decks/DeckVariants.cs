@@ -49,6 +49,9 @@ public sealed record DeckEffectBlock(string Key, Func<DeckEffectContext, Task> A
 /// </remarks>
 public interface IDeckVariantCard
 {
+    /// <summary>这张卡是否真的带差分（非差分卡即使实现了接口也应返回 false）。</summary>
+    bool HasVariant => true;
+
     /// <summary>当前这副下的差分效果块（按顺序执行；空数组 = 这一副没有额外效果）。</summary>
     IReadOnlyList<DeckEffectBlock> VariantBlocks(DeckSide side, DeckEffectContext context);
 
@@ -68,13 +71,15 @@ public static class DeckVariants
 
     /// <summary>取这张卡在当前副下的差分块（不是差分牌就返回空）。</summary>
     public static IReadOnlyList<DeckEffectBlock> BlocksOf(DeckEffectContext context)
-        => context.Card is IDeckVariantCard variant
+        => context.Card is IDeckVariantCard { HasVariant: true } variant
             ? variant.VariantBlocks(SideOf(context.Player, context.Card), context) ?? []
             : [];
 
     /// <summary>取当前副对应的文案 stem（不是差分牌返回 null）。</summary>
     public static string? TextStemOf(Player player, CardModel card)
-        => card is IDeckVariantCard variant ? variant.VariantTextStem(SideOf(player, card)) : null;
+        => card is IDeckVariantCard { HasVariant: true } variant
+            ? variant.VariantTextStem(SideOf(player, card))
+            : null;
 
     /// <summary>差分文案在 <c>cards</c> 表里的键后缀：<c>&lt;卡id&gt;.variant.a</c> / <c>.variant.b</c>。</summary>
     private const string VariantKeySuffix = ".variant.";
@@ -96,6 +101,11 @@ public static class DeckVariants
     /// </remarks>
     public static void InjectVariantText(LocString description, CardModel card)
     {
+        if (card is IDeckVariantCard { HasVariant: false })
+        {
+            return;
+        }
+
         // ⚠️ 图鉴 / 卡池预览拿到的这张卡是 **canonical 实例**，在它上面**读 Owner 会直接抛**
         // （`CanonicalModelException: Canonical model ... used in incorrect place`，get_Owner 里就 AssertMutable）。
         // 实测：图鉴网格 `NCardLibraryGrid.InitGrid` 会因此整块初始化失败，表现是"图鉴打不开 / 卡片数还少"。
@@ -113,12 +123,10 @@ public static class DeckVariants
 
         try
         {
-            // ⚠️ 必须用 GetRawText：GetFormattedText 会在**读的时候**就让本体格式化一遍，
-            // 而变体段里写的是我们自己的占位符（{VariantWither} 等）⇒ 本体会报
-            // "No source extension could handle the selector named ..."，卡面渲染直接失败
-            // （图鉴里表现为那几张差分卡被跳过）。原始文本拿到手后由我们自己解析（见 ResolvePlaceholders）。
-            var text = new LocString("cards", key).GetRawText();
-            description.Add("Variant", string.IsNullOrWhiteSpace(text) ? string.Empty : ResolvePlaceholders(card, text));
+            // 用 LocString 自己格式化：把这张卡的 DynamicVars 作为参数传进去，
+            // 这样 {Damage:diff()} / {VariantWither:diff()} 会走本体的 diff formatter，
+            // 升级预览时保留绿色/红色，而不是被替换成死数字。
+            description.Add("Variant", FormatVariant(card, key));
         }
         catch (Exception ex)
         {
@@ -137,11 +145,8 @@ public static class DeckVariants
             var key = card.Id.Entry + VariantKeySuffix + stem;
             try
             {
-                var text = new LocString("cards", key).GetRawText();
-                if (!string.IsNullOrWhiteSpace(text))
-                {
-                    parts.Add(ResolvePlaceholders(card, text));
-                }
+                var text = FormatVariant(card, key);
+                if (!string.IsNullOrWhiteSpace(text)) parts.Add(text);
             }
             catch (Exception ex)
             {
@@ -153,16 +158,34 @@ public static class DeckVariants
         return string.Join(" ", parts);
     }
 
-    /// <summary>
-    /// 把变体文案里的 <c>{名字}</c> / <c>{名字:任意后缀}</c> 换成该卡 <c>DynamicVars</c> 的当前值。
-    /// </summary>
-    /// <remarks>
-    /// 只认"名字在 <c>DynamicVars</c> 里存在"的占位符，其余原样留着（不猜、不吞）。
-    /// 值取 <c>BaseValue</c>（升级后的当前档），后缀（如 <c>:diff()</c>）忽略 —— 变体段只需要一个数字。
-    /// </remarks>
-    /// <remarks>实现已搬到 <c>Core/Systems/Cards/CardTextArgs</c>（"升级档追加句"也用同一份，别复制第二份）。</remarks>
-    private static string ResolvePlaceholders(CardModel card, string text) =>
-        Core.Systems.Cards.CardTextArgs.ResolvePlaceholders(card, text);
+    /// <summary>把变体原文按该卡的 DynamicVars 格式化（保留 :diff() 的升级变色）。</summary>
+    private static string FormatVariant(CardModel card, string key)
+    {
+        try
+        {
+            var text = new LocString("cards", key);
+            foreach (var pair in card.DynamicVars)
+            {
+                text.Add(pair.Value);
+            }
+
+            return text.GetFormattedText();
+        }
+        catch (Exception ex)
+        {
+            Const.Logger.Warn(
+                $"[{Const.ModId}] {Const.Prefix.Decks} 差分文案格式化失败（{key}）："
+                + $"{ex.GetType().Name}: {ex.Message} ⇒ 退回原文");
+            try
+            {
+                return new LocString("cards", key).GetRawText();
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+    }
 
     /// <summary>
     /// 跑差分块（**通用效果由卡自己先跑**，这里只跑"因副而异"的那部分）。

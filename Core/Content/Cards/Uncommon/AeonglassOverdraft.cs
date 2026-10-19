@@ -1,11 +1,11 @@
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Content.Powers;
 
@@ -21,15 +21,13 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ 2026-10-14 费用 1 → 0；2026-10-15 delta 挂账 2 → 1 ⇒ <b>净值 +1（升级 +2）</b>；0 费送 2 能量属"0 费大效果"，强度要盯。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassOverdraft() : ModCardTemplate(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
+public sealed class AeonglassOverdraft() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(0, CardRarity.Uncommon)
+        .Var("Gain", GainBase, upgradeDelta: 1m)
+        .Var("Debt", DebtBase))
 {
     private const decimal GainBase = 2m;
     private const decimal DebtBase = 1m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        [new DynamicVar("Gain", GainBase), new DynamicVar("Debt", DebtBase)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -40,6 +38,4 @@ public sealed class AeonglassOverdraft() : ModCardTemplate(0, CardType.Skill, Ca
         await PowerCmd.Apply<AeonglassEnergyDebtPower>(choiceContext, Owner.Creature, debt, Owner.Creature, this);
     }
 
-    /// <summary>只抬本回合能量（挂账固定 2）。</summary>
-    protected override void OnUpgrade() => DynamicVars["Gain"].UpgradeValueBy(1m);
 }

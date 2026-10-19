@@ -4,6 +4,7 @@ using MegaCrit.Sts2.Core.Models;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Intent;
 
@@ -20,11 +21,11 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// 本体的 <c>SingleCreatureTargeting</c>，否则拖完立刻结算、拿不到指向）；候选只有"可行动的"意图。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassIntimidate() : ModCardTemplate(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy),
+public sealed class AeonglassIntimidate() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(1, CardRarity.Uncommon, TargetType.AnyEnemy)
+        .UpgradeAddKeyword(CardKeyword.Retain)),
     IIntentTargetCard
 {
-    protected override HashSet<CardTag> CanonicalTags => [];
-
     protected override Task OnPlay(
         MegaCrit.Sts2.Core.GameActions.Multiplayer.PlayerChoiceContext choiceContext,
         CardPlay cardPlay)
@@ -34,6 +35,4 @@ public sealed class AeonglassIntimidate() : ModCardTemplate(1, CardType.Skill, C
             "威吓",
             (_, creature, card) => IntentMoves.Postpone(creature, card));
 
-    /// <summary>v2：升级改为获得[保留]。</summary>
-    protected override void OnUpgrade() => AddKeyword(CardKeyword.Retain);
 }

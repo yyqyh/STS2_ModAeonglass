@@ -31,7 +31,8 @@ namespace STS2_Aeonglass.Core.Content.Cards.Common;
 /// </para>
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassReturnTide() : AeonglassBlockTemplate(1, CardRarity.Common, 6m, 2m)
+public sealed class AeonglassReturnTide() : AeonglassCardTemplate(
+    AeonglassCardSpec.Block(1, CardRarity.Common, 6m, 2m))
 {
     protected override async Task OnPlayExtra(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {

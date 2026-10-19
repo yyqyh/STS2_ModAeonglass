@@ -1,12 +1,13 @@
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
 using STS2_Aeonglass.Core.Config;
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
+using STS2_Aeonglass.Core.Content.Keywords;
 using STS2_Aeonglass.Core.Systems.Cards;
 
 namespace STS2_Aeonglass.Core.Content.Cards.Rare;
@@ -33,16 +34,13 @@ namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 /// </para>
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassAnchored() : ModCardTemplate(6, CardType.Skill, CardRarity.Rare, TargetType.AllEnemies),
+public sealed class AeonglassAnchored() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(6, CardRarity.Rare, TargetType.AllEnemies)
+        .Keyword(CardKeyword.Retain)
+        .Keyword(HysteresisKeyword.Value)
+        .UpgradeRemoveKeyword(CardKeyword.Retain)),
     IHysteresisCard
 {
-    /// <summary>基础关键词：［保留］。</summary>
-    public override IEnumerable<CardKeyword> CanonicalKeywords => [CardKeyword.Retain];
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [];
-
     protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         Const.Logger.Info(
@@ -50,6 +48,4 @@ public sealed class AeonglassAnchored() : ModCardTemplate(6, CardType.Skill, Car
         return Task.CompletedTask;
     }
 
-    /// <summary>升级：去掉［保留］。</summary>
-    protected override void OnUpgrade() => RemoveKeyword(CardKeyword.Retain);
 }

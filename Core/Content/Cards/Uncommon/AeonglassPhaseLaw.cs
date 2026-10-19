@@ -1,9 +1,6 @@
-using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 
 using STS2RitsuLib.Interop.AutoRegistration;
-using STS2RitsuLib.Scaffolding.Content;
 
 using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
@@ -21,15 +18,6 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ 1 费每回合白拿 1 费，三档都在给东西、没有空档 ⇒ 卡池侧标"极强引擎"；要削只改能力里那三个常量。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassPhaseLaw() : AeonglassPowerCardTemplate(1, CardRarity.Uncommon)
-{
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-        => await PowerCmd.Apply<AeonglassPhaseLawPower>(choiceContext, Owner.Creature, 1m, Owner.Creature, this);
-
-    /// <summary>升级不变（delta 20261015：升级档与基础档同文）。</summary>
-    protected override void OnUpgrade()
-    {
-    }
-}
+public sealed class AeonglassPhaseLaw() : AeonglassCardTemplate(
+    AeonglassCardSpec.Power(1, CardRarity.Uncommon)
+        .Effect(CardEffects.ApplyPower<AeonglassPhaseLawPower>()));

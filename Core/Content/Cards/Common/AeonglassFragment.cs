@@ -18,4 +18,6 @@ namespace STS2_Aeonglass.Core.Content.Cards.Common;
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassFragment()
-    : AeonglassStasisAttackTemplate(1, CardRarity.Common, 12m, 6m, strandCombats: 1);
+    : AeonglassStasisCardTemplate(
+        AeonglassCardSpec.Attack(1, CardRarity.Common, 12m, 6m),
+        strandCombats: 1);

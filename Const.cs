@@ -80,6 +80,9 @@ internal static class Const
 
         public const string AlphaBeta = "[α or β]";
 
+        /// <summary>「冻结形态」（NEW-4）的记录 / 回放。</summary>
+        public const string FrozenForm = "[冻结形态]";
+
         /// <summary>引擎 / 宿主级消息（对应 Lab B 的 <c>[LabB]</c>）。</summary>
         public const string Host = "[HOST]";
     }
@@ -438,6 +441,12 @@ internal static class Const
 
             /// <summary>双卡组 第二副牌组（"非生效那一副"的常驻牌堆）。</summary>
             public const string DeckBStem = "deck_b";
+
+            /// <summary>
+            /// 冻结形态的记录牌堆：<c>RunPersistent + Headless</c>，随存档走、
+            /// 不进牌堆界面；回放在下场战斗的第一个玩家回合开始。
+            /// </summary>
+            public const string FrozenFormStem = "frozen_form_store";
         }
 
         /// <summary>

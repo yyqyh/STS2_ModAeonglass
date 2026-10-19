@@ -4,6 +4,7 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.AlphaBeta;
 
@@ -23,10 +24,10 @@ namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassAlphaBeta()
-    : ModCardTemplate(0, CardType.Skill, CardRarity.Rare, TargetType.Self)
+    : AeonglassCardTemplate(
+        AeonglassCardSpec.Skill(0, CardRarity.Rare)
+            .UpgradeAddKeyword(CardKeyword.Innate))
 {
-    protected override HashSet<CardTag> CanonicalTags => [];
-
     /// <summary>0 费、无立即效果（效果全是"带着它就有的"被动 + 回溯接缝）。</summary>
     protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -35,6 +36,4 @@ public sealed class AeonglassAlphaBeta()
         return Task.CompletedTask;
     }
 
-    /// <summary>升级 = 获得[固有]（本体关键词）。</summary>
-    protected override void OnUpgrade() => AddKeyword(CardKeyword.Innate);
 }

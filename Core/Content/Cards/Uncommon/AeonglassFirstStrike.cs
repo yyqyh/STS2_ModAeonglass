@@ -1,7 +1,4 @@
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
-using MegaCrit.Sts2.Core.ValueProps;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 
@@ -21,12 +18,11 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ 两档都要跟着升级涨（升级 +3 同时抬基础与首张档）；判据是"已打出张数"而不是"牌位"。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassFirstStrike() : AeonglassAttackTemplate(1, CardRarity.Uncommon, 9m, 3m)
+public sealed class AeonglassFirstStrike() : AeonglassCardTemplate(
+    AeonglassCardSpec.Attack(1, CardRarity.Uncommon, 9m, 3m)
+        .Var("FirstDamage", FirstDamage, upgradeDelta: 3m))
 {
     private const decimal FirstDamage = 13m;
-
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        [new DamageVar(Damage, ValueProp.Move), new DynamicVar("FirstDamage", FirstDamage)];
 
     protected override decimal DamageThisPlay
         => CombatHistory.CardsPlayedThisTurn(Owner) == 0 ? FirstDamage + UpgradeDelta : base.DamageThisPlay;
@@ -34,12 +30,4 @@ public sealed class AeonglassFirstStrike() : AeonglassAttackTemplate(1, CardRari
     /// <summary>升级加的那 3 点（"第一张"那一档也跟着涨）。</summary>
     private decimal UpgradeDelta => CurrentUpgradeLevel * 3m;
 
-    protected override void OnUpgrade()
-    {
-        DynamicVars.Damage.UpgradeValueBy(3m);
-        DynamicVars["FirstDamage"].UpgradeValueBy(3m);
-    }
-
-    protected override Task OnPlayExtra(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-        => Task.CompletedTask;
 }

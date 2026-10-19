@@ -22,7 +22,9 @@ namespace STS2_Aeonglass.Core.Content.Cards.Common;
 /// ④ ⚠️ 卡池侧按新定价公式（<c>aeonglass_pricing_formula_v2.md</c>）把本卡列入<b>亏模</b>清单，数值等用户拍上调幅度后再改。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassDoubleSplit() : AeonglassVariantBlockTemplate(0, CardRarity.Common, 3m, 2m)
+public sealed class AeonglassDoubleSplit() : AeonglassCardTemplate(
+    AeonglassCardSpec.Block(0, CardRarity.Common, 3m, 2m)
+        .Feature(new VariantFeature(runBlocks: false)))
 {
     /// <summary>格挡之后抽几张：基础 1，条件命中 +1。</summary>
     protected override async Task OnPlayExtra(PlayerChoiceContext choiceContext, CardPlay cardPlay)

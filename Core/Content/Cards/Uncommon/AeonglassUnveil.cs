@@ -6,6 +6,7 @@ using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
 using STS2_Aeonglass.Core.Config;
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Cards;
 
@@ -33,10 +34,10 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// </para>
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassUnveil() : ModCardTemplate(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
+public sealed class AeonglassUnveil() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(1, CardRarity.Uncommon)
+        .UpgradeEnergy(-1))
 {
-    protected override HashSet<CardTag> CanonicalTags => [];
-
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         if (Owner.PlayerCombatState is not { } piles)
@@ -69,6 +70,4 @@ public sealed class AeonglassUnveil() : ModCardTemplate(1, CardType.Skill, CardR
             $"[{Const.ModId}] {Const.Prefix.Host} 揭幕：抽牌堆顶 {top.Id.Entry} 已打上迟滞并自动打出");
     }
 
-    /// <summary>升级：费用 −1。</summary>
-    protected override void OnUpgrade() => EnergyCost.UpgradeBy(-1);
 }

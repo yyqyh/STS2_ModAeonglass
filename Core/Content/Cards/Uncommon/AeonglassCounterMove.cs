@@ -7,6 +7,7 @@ using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
 using STS2_Aeonglass.Core.Config;
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Intent;
 
@@ -30,15 +31,13 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// </para>
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassCounterMove() : ModCardTemplate(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy),
+public sealed class AeonglassCounterMove() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(1, CardRarity.Uncommon, TargetType.AnyEnemy)
+        .Var("DrawIfAttack", DrawIfAttackBase, upgradeDelta: 1m)),
     IIntentTargetCard
 {
     /// <summary>丢到攻击意图时补抽几张（升级 +1）。</summary>
     private const decimal DrawIfAttackBase = 3m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [new DynamicVar("DrawIfAttack", DrawIfAttackBase)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -65,5 +64,4 @@ public sealed class AeonglassCounterMove() : ModCardTemplate(1, CardType.Skill, 
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} 拆招：丢掉的是攻击意图 ⇒ 抽 {drawn}/{draw} 张");
     }
 
-    protected override void OnUpgrade() => DynamicVars["DrawIfAttack"].UpgradeValueBy(1m);
 }

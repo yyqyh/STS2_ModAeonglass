@@ -25,4 +25,8 @@
   "STS2_AEONGLASS_PROMPT_PUT_BACK_TOP": "选择要放入抽牌堆顶部的牌"
 ,
   "STS2_AEONGLASS_PROMPT_POUR_TOP": "选择要取回并放入抽牌堆顶部的牌"
+  ,
+  "STS2_AEONGLASS_PROMPT_REWRITE": "选择一张手牌（给予「重放 1」与「保留」）"
+  ,
+  "STS2_AEONGLASS_PROMPT_MOORING": "选择一张手牌（给予「搁浅 2」）"
 }

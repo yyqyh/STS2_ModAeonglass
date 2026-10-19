@@ -1,12 +1,8 @@
-using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
-using MegaCrit.Sts2.Core.ValueProps;
 
 using STS2RitsuLib.Interop.AutoRegistration;
-using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 
 namespace STS2_Aeonglass.Core.Content.Cards.Basic;
@@ -23,22 +19,8 @@ namespace STS2_Aeonglass.Core.Content.Cards.Basic;
 [RegisterCard(typeof(AeonglassCardPool))]
 [RegisterCharacterStarterCard(typeof(Aeonglass), 4)]
 public sealed class AeonglassStrike()
-    : ModCardTemplate(1, CardType.Attack, CardRarity.Basic, TargetType.AnyEnemy)
+    : AeonglassCardTemplate(
+        AeonglassCardSpec.Attack(1, CardRarity.Basic, 6m, 3m)
+            .Tag(CardTag.Strike))
 {
-    protected override HashSet<CardTag> CanonicalTags => [CardTag.Strike];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [new DamageVar(6m, ValueProp.Move)];
-
-    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-    {
-        ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
-
-        await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
-            .FromCard(this, cardPlay)
-            .Targeting(cardPlay.Target)
-            .WithHitFx("vfx/vfx_attack_blunt")
-            .Execute(choiceContext);
-    }
-
-    protected override void OnUpgrade() => DynamicVars.Damage.UpgradeValueBy(3m);
 }

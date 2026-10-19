@@ -1,8 +1,6 @@
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
-using MegaCrit.Sts2.Core.ValueProps;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 
@@ -26,16 +24,17 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassSowing()
-    : AeonglassVariantCardTemplate(2, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
+    : AeonglassCardTemplate(
+        new AeonglassCardSpec(2, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
+            .DamageVar(DamageA, upgradeDelta: 6m)
+            .Var("WitherB", WitherB, upgradeDelta: 2m)
+            .Feature(new VariantFeature(runBlocks: false)))
 {
     /// <summary>永时副的伤害（升级 +6）。</summary>
     private const decimal DamageA = 18m;
 
     /// <summary>消逝副塞的凋萎张数（升级 +2）。</summary>
     private const decimal WitherB = 6m;
-
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        [new DamageVar(DamageA, ValueProp.Move), new DynamicVar("WitherB", WitherB)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -57,10 +56,4 @@ public sealed class AeonglassSowing()
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 播种（永时副）：{DynamicVars.Damage.BaseValue} 伤");
     }
 
-    /// <summary>升级：两副各自那半边都抬（伤害 +6 / 凋萎 +2）。</summary>
-    protected override void OnUpgrade()
-    {
-        DynamicVars.Damage.UpgradeValueBy(6m);
-        DynamicVars["WitherB"].UpgradeValueBy(2m);
-    }
 }

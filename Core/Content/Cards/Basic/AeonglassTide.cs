@@ -1,15 +1,10 @@
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
-using MegaCrit.Sts2.Core.ValueProps;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 
 using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Decks;
-using STS2_Aeonglass.Core.Systems.Intent;
-
 using STS2_Aeonglass.Core.Systems.Wither;
 namespace STS2_Aeonglass.Core.Content.Cards.Basic;
 
@@ -26,7 +21,30 @@ namespace STS2_Aeonglass.Core.Content.Cards.Basic;
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 [RegisterCharacterStarterCard(typeof(Aeonglass), 1)]
-public sealed class AeonglassTide() : AeonglassVariantAttackTemplate(1, CardRarity.Basic, 9m, 3m)
+public sealed class AeonglassTide() : AeonglassCardTemplate(
+    AeonglassCardSpec.Attack(1, CardRarity.Basic, 9m, 3m)
+        .Var("VariantDamage", VariantDamage)
+        .Var("VariantWither", VariantWitherBase, upgradeDelta: 1m)
+        .Feature(new VariantFeature((side, context) =>
+        {
+            if (side != DeckSide.A || context.Play.Target is not { } target)
+            {
+                return [];
+            }
+
+            var count = (int)context.Card.DynamicVars["VariantWither"].BaseValue;
+            return
+            [
+                new DeckEffectBlock(
+                    $"wither+{count}",
+                    _ =>
+                    {
+                        Const.Logger.Info(
+                            $"[{Const.ModId}] {Const.Prefix.Wither} 潮汐（永时副）：{WitherEffects.Inject(target, count)}");
+                        return Task.CompletedTask;
+                    }),
+            ];
+        })))
 {
     /// <summary>永时副的伤害（定值 3，不随升级变 —— 卡表口径）。</summary>
     private const decimal VariantDamage = 3m;
@@ -34,40 +52,6 @@ public sealed class AeonglassTide() : AeonglassVariantAttackTemplate(1, CardRari
     /// <summary>永时副塞几张凋萎（升级 +1）。</summary>
     private const decimal VariantWitherBase = 2m;
 
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-    [
-        new DamageVar(Damage, ValueProp.Move),
-        new DynamicVar("VariantDamage", VariantDamage),
-        new DynamicVar("VariantWither", VariantWitherBase),
-    ];
-
     /// <summary>永时副走定值伤害；消逝副走模板的基础伤害。</summary>
     protected override decimal DamageThisPlay => Side == DeckSide.A ? VariantDamage : base.DamageThisPlay;
-
-    /// <summary>永时副：塞凋萎（目标就是被打的那只怪）。</summary>
-    public override IReadOnlyList<DeckEffectBlock> VariantBlocks(DeckSide side, DeckEffectContext context)
-    {
-        if (side != DeckSide.A || context.Play.Target is not { } target)
-        {
-            return [];
-        }
-
-        var count = (int)DynamicVars["VariantWither"].BaseValue;
-        return
-        [
-            new DeckEffectBlock(
-                $"wither+{count}",
-                _ =>
-                {
-                    Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 潮汐（永时副）：{WitherEffects.Inject(target, count)}");
-                    return Task.CompletedTask;
-                }),
-        ];
-    }
-
-    protected override void OnUpgrade()
-    {
-        DynamicVars.Damage.UpgradeValueBy(3m);
-        DynamicVars["VariantWither"].UpgradeValueBy(1m);
-    }
 }

@@ -46,6 +46,10 @@ internal static class MechanismBootstrap
         // 都是接线（订阅生命周期事件），角色门在运行时判 ⇒ 无条件注册。
         Register("时间主宰（NEW-5 彩蛋卡发放）", enabled: true, Wither.TimeLordTrigger.Register);
         Register("锚定之物（NEW-8 起手落点 + 进手牌触发）", enabled: true, Cards.AnchoredTrigger.Register);
+
+        // NEW-4 冻结形态：run 持久隐藏牌堆 + 记录（CardPlayedEvent）/ 回放（下场第一个玩家回合）。
+        // 同样是无条件接线（卡本身在池里，关掉记录会让它变成空牌）。
+        Register(FrozenForm.FrozenFormModule.DisplayName, enabled: true, FrozenForm.FrozenFormModule.Register);
     }
 
     /// <summary>注册单个机制模块（带开关判断与独立的错误隔离）。</summary>

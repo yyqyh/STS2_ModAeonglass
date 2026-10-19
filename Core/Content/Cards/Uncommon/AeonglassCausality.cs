@@ -7,6 +7,7 @@ using MegaCrit.Sts2.Core.ValueProps;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.History;
 
@@ -22,15 +23,13 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ 口径是"本局"而不是"本场"（v2 改动）；<b>无上限</b>（与年轮 / 刻痕同口径）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassCausality() : ModCardTemplate(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
+public sealed class AeonglassCausality() : AeonglassCardTemplate(
+    new AeonglassCardSpec(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
+        .DamageVar(DamageBase, upgradeDelta: 3m)
+        .Var("PerRewind", PerRewindBase, upgradeDelta: 1m))
 {
     private const decimal DamageBase = 9m;
     private const decimal PerRewindBase = 3m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        [new DamageVar(DamageBase, ValueProp.Move), new DynamicVar("PerRewind", PerRewindBase)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -49,10 +48,4 @@ public sealed class AeonglassCausality() : ModCardTemplate(1, CardType.Attack, C
             .Execute(choiceContext);
     }
 
-    /// <summary>升级：基础伤害 +3、每次回溯的加成 +1（9/3 → 12/4）。</summary>
-    protected override void OnUpgrade()
-    {
-        DynamicVars.Damage.UpgradeValueBy(3m);
-        DynamicVars["PerRewind"].UpgradeValueBy(1m);
-    }
 }

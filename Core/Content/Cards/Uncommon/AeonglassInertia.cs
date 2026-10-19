@@ -1,10 +1,6 @@
-using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 using STS2RitsuLib.Interop.AutoRegistration;
-using STS2RitsuLib.Scaffolding.Content;
 
 using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
@@ -22,20 +18,10 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ 升级档不变 ⇒ 价格上等于"没有升级收益"（卡池侧口径）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassInertia() : AeonglassPowerCardTemplate(1, CardRarity.Uncommon)
+public sealed class AeonglassInertia() : AeonglassCardTemplate(
+    AeonglassCardSpec.Power(1, CardRarity.Uncommon)
+        .Var("OnInvertDraw", OnInvertDrawBase)
+        .Effect(CardEffects.ApplyPower<AeonglassInertiaPower>("OnInvertDraw")))
 {
     private const decimal OnInvertDrawBase = 2m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [new DynamicVar("OnInvertDraw", OnInvertDrawBase)];
-
-    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-        => await PowerCmd.Apply<AeonglassInertiaPower>(
-            choiceContext, Owner.Creature, DynamicVars["OnInvertDraw"].BaseValue, Owner.Creature, this);
-
-    /// <summary>v2：升级不抬数值（卡表口径）。</summary>
-    protected override void OnUpgrade()
-    {
-    }
 }

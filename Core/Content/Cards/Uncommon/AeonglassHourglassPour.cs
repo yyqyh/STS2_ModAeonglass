@@ -2,11 +2,11 @@ using MegaCrit.Sts2.Core.CardSelection;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 
 namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
@@ -23,13 +23,11 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 ///    乱流生效期间"弃牌堆"是按对调后的那张堆取（本卡不特殊处理，与全池口径一致）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassHourglassPour() : ModCardTemplate(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
+public sealed class AeonglassHourglassPour() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(1, CardRarity.Uncommon)
+        .Var("Pick", PickBase, upgradeDelta: 1m))
 {
     private const decimal PickBase = 3m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [new DynamicVar("Pick", PickBase)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -59,6 +57,4 @@ public sealed class AeonglassHourglassPour() : ModCardTemplate(1, CardType.Skill
             + $"（{string.Join(",", picked.Select(card => card.Id.Entry))}）");
     }
 
-    /// <summary>升级只抬上限（3 → 4）。</summary>
-    protected override void OnUpgrade() => DynamicVars["Pick"].UpgradeValueBy(1m);
 }

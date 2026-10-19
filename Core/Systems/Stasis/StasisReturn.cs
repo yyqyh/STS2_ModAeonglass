@@ -20,7 +20,7 @@ namespace STS2_Aeonglass.Core.Systems.Stasis;
 /// ③ 依赖：<c>StasisStore</c>（存储牌堆）+ <c>DeckPiles</c>（回哪一副）+ 战斗结束顺序链。
 /// ④ ⚠️ 递减/归队按"战斗结束"计数；归队的母本要回"当时的当前卡组"。
 /// </remarks>
-internal static class StasisReturn
+internal static partial class StasisReturn
 {
 
     /// <summary>
@@ -60,10 +60,8 @@ internal static class StasisReturn
             await CardPileCmd.RemoveFromDeck(master, showPreview: false);
         }
 
-        if (master is IStasisCard stasis)
-        {
-            stasis.CombatsLeft = x + 1;
-        }
+        // 倒计时：实现 IStasisCard 的卡写它自己的 [SavedProperty]；任意卡（停泊 / 倾囊 弄进来的）走 run 级侧表。
+        StasisStore.Arm(master, x + 1);
 
         if (master.Pile is null)
         {
@@ -149,17 +147,27 @@ internal static class StasisReturn
 
             foreach (var master in zone.Cards.ToList())
             {
-                if (master is not IStasisCard stasis)
+                if (!StasisStore.TryGetCountdown(master, out var left))
                 {
-                    Const.Logger.Warn($"[{Const.ModId}] {Const.Prefix.Stasis} {master.Id.Entry} 在搁浅里但不是滞留卡，跳过倒计时。");
-                    continue;
+                    // 任意卡没有 [SavedProperty] ⇒ 读档会丢侧表；按兜底场数重新挂上，别让牌永远出不来。
+                    left = StasisStore.ReArmCombats;
+                    Const.Logger.Warn(
+                        $"[{Const.ModId}] {Const.Prefix.Stasis} {master.Id.Entry} 在搁浅里但没有倒计时（读档丢失？）"
+                        + $"⇒ 按 X={left - 1} 重新挂上");
                 }
 
-                stasis.CombatsLeft -= 1;
-                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Stasis} 倒计时 {master.Id.Entry} → {stasis.CombatsLeft}");
+                left -= 1;
+                StasisStore.SetCountdown(master, left);
+                Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Stasis} 倒计时 {master.Id.Entry} → {left}");
 
-                if (stasis.CombatsLeft <= 0)
+                if (left <= 0)
                 {
+                    // 远行（NEW-21）：在 Boss 层回归 ⇒ 进卡组前随机升级卡组里 3 张。
+                    if (master is Content.Cards.Rare.AeonglassLongJourney && LastCombatWasBoss)
+                    {
+                        UpgradeRandomDeckCards(player, 3);
+                    }
+
                     if (await ReturnToDeck(player, master))
                     {
                         returned++;

@@ -1,3 +1,5 @@
+using MegaCrit.Sts2.Core.Entities.Cards;
+
 using STS2RitsuLib;
 
 namespace STS2_Aeonglass.Core.Content.Keywords;
@@ -6,13 +8,16 @@ namespace STS2_Aeonglass.Core.Content.Keywords;
 /// <remarks>
 /// 写法与「凋萎」「迟滞」「搁浅」一致（<c>RegisterCardKeywordOwnedByLocNamespace</c>），
 /// 文案取 <c>card_keywords</c> 表的 <c>STS2_AEONGLASS_KEYWORD_ETERNAL.title / .description</c>。
-/// 与「搁浅」同样<b>暂时不挂到卡的 CanonicalKeywords 上</b>（mod 关键词共用 <c>CardKeyword.None</c> 槽位，
-/// 挂了会和占着该槽位的「凋萎」撞文本）—— 卡面先用文字写清楚这个词条。
+/// 2026-10-19 核实：RitsuLib 会为每个 mod 关键词生成独立的动态
+/// <c>CardKeywordValue</c> ⇒ 卡定义挂 <see cref="Value" /> 即可正确显示「永恒」。
 /// </remarks>
 internal static class EternalKeyword
 {
     /// <summary>本地 stem（id 会变成 <c>STS2_AEONGLASS_KEYWORD_ETERNAL</c>）。</summary>
     internal const string Stem = "eternal";
+
+    /// <summary>RitsuLib 为该关键词生成的动态 <see cref="CardKeyword" /> 值（注册后可用）。</summary>
+    internal static CardKeyword Value { get; private set; }
 
     /// <summary>注册一次（幂等；由 <c>Main.Initialize</c> 调，必须在内容冻结之前）。</summary>
     internal static void Register()
@@ -27,6 +32,8 @@ internal static class EternalKeyword
                     cardDescriptionPlacement:
                         STS2RitsuLib.Keywords.ModKeywordCardDescriptionPlacement.AfterCardDescription,
                     includeInCardHoverTip: true);
+
+            Value = definition.CardKeywordValue;
 
             Const.Logger.Info(
                 $"[{Const.ModId}] {Const.Prefix.Host} 关键词「永恒」已注册：id={definition.Id}"

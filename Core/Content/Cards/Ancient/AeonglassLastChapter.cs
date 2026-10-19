@@ -2,13 +2,13 @@ using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.Models;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
 using STS2_Aeonglass.Core.Config;
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Content.Powers;
 using STS2_Aeonglass.Core.Systems.Decks;
@@ -38,12 +38,9 @@ namespace STS2_Aeonglass.Core.Content.Cards.Ancient;
 /// </para>
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassLastChapter() : ModCardTemplate(3, CardType.Power, CardRarity.Ancient, TargetType.Self)
+public sealed class AeonglassLastChapter() : AeonglassCardTemplate(
+    AeonglassCardSpec.Power(3, CardRarity.Ancient))
 {
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [];
-
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         if (Owner.PlayerCombatState is not { } piles || Owner.Creature.CombatState is not CombatState combat)
@@ -76,8 +73,4 @@ public sealed class AeonglassLastChapter() : ModCardTemplate(3, CardType.Power, 
             + $" / 消耗堆 {piles.ExhaustPile.Cards.Count} / 副卡组副本 {copies.Count} → 抽牌堆并洗牌");
     }
 
-    /// <summary>升级档：表里"待定" ⇒ 先按不变施工。</summary>
-    protected override void OnUpgrade()
-    {
-    }
 }

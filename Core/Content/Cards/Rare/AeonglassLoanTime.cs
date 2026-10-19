@@ -1,7 +1,4 @@
-using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
@@ -22,16 +19,10 @@ namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 /// ④ ⚠️ 口径由实现侧默认："不限点数上限、下回合对应减少"；用户若改口径会追发。升级是"减费"（全池少见）⇒ 价格评估要按打折算。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassLoanTime() : AeonglassPowerCardTemplate(1, CardRarity.Rare)
+public sealed class AeonglassLoanTime() : AeonglassCardTemplate(
+    AeonglassCardSpec.Power(1, CardRarity.Rare)
+        .Var("Borrow", 1m)
+        .Effect(CardEffects.ApplyPower<AeonglassLoanTimePower>("Borrow"))
+        .UpgradeEnergy(-1))
 {
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [new DynamicVar("Borrow", 1m)];
-
-    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-        => await PowerCmd.Apply<AeonglassLoanTimePower>(
-            choiceContext, Owner.Creature, DynamicVars["Borrow"].BaseValue, Owner.Creature, this);
-
-    /// <summary>v2 二次更新：升级是费用 −1。</summary>
-    protected override void OnUpgrade() => EnergyCost.UpgradeBy(-1);
 }

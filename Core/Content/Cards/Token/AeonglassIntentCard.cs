@@ -4,6 +4,7 @@ using MegaCrit.Sts2.Core.Localization;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 
 namespace STS2_Aeonglass.Core.Content.Cards.Token;
@@ -18,13 +19,11 @@ namespace STS2_Aeonglass.Core.Content.Cards.Token;
 /// ④ ⚠️ 能"一个注册类撑起每张意图一张真卡"的前提是本体的 <c>CardModel.Title / PortraitPath</c> 是 virtual；本体若改这两个成员的可见性，这里会塌。
 /// </remarks>
 [RegisterCard(typeof(AeonglassTokenCardPool))]
-public sealed class AeonglassIntentCard : ModCardTemplate
+public sealed class AeonglassIntentCard : AeonglassCardTemplate
 {
-    public AeonglassIntentCard() : base(0, CardType.Skill, CardRarity.Basic, TargetType.Self)
+    public AeonglassIntentCard() : base(AeonglassCardSpec.Skill(0, CardRarity.Basic))
     {
     }
-
-    protected override HashSet<CardTag> CanonicalTags => [];
 
     // ======================= 计划 1 口：让**每个实例**显示自己的内容 =======================
     //

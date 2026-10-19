@@ -4,6 +4,7 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Bootstrap;
 
@@ -22,15 +23,14 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 ///    卡表若只要"抽 2 张"不要保护，改 <c>OnPlay</c> 里那一行即可。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassSlowRecall() : ModCardTemplate(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
+public sealed class AeonglassSlowRecall() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(1, CardRarity.Uncommon))
 {
     /// <summary>间隙里至少几张才跳过"丢手牌"（卡表写死的 4）。</summary>
     private const int GapThreshold = 4;
 
     /// <summary>升级档回归后再抽几张。</summary>
     private const int DrawOnReturn = 2;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
 
     protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -43,8 +43,4 @@ public sealed class AeonglassSlowRecall() : ModCardTemplate(1, CardType.Skill, C
         return Task.CompletedTask;
     }
 
-    /// <summary>升级内容写在 <c>OnPlay</c> 里（多叠一项补抽），所以不动 DynamicVars。</summary>
-    protected override void OnUpgrade()
-    {
-    }
 }

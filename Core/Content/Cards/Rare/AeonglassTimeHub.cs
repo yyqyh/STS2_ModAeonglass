@@ -1,7 +1,4 @@
-using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
@@ -22,15 +19,10 @@ namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 /// ④ ⚠️ 0 费换"每回合 +1 能量"，卡池体检表把它列进"0 费大效果"那一类 ⇒ 强度要盯（手牌上限 −1 是唯一的代价）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassTimeHub() : AeonglassPowerCardTemplate(0, CardRarity.Rare)
+public sealed class AeonglassTimeHub() : AeonglassCardTemplate(
+    AeonglassCardSpec.Power(0, CardRarity.Rare)
+        .Var("TurnEnergy", TurnEnergyBase)
+        .Effect(CardEffects.ApplyPower<AeonglassTimeHubPower>("TurnEnergy")))
 {
     private const decimal TurnEnergyBase = 1m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [new DynamicVar("TurnEnergy", TurnEnergyBase)];
-
-    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-        => await PowerCmd.Apply<AeonglassTimeHubPower>(
-            choiceContext, Owner.Creature, DynamicVars["TurnEnergy"].BaseValue, Owner.Creature, this);
 }

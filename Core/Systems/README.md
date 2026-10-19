@@ -10,6 +10,7 @@
 | `Sand/` | 时之沙：`SandResourceRegistry`（次级资源 + UI 注册）、`SandGapInvariant`（花沙砾必生空隙）、`SandInvertCmd`（倒置）、`SandPhase(s)`、`SandSpend`、`SandTurnCounters` |
 | `Gap/` | 时空裂隙：`GapStore`（存储/容量/读数）、`GapCollapseActions`/`GapRecallActions`（坍缩 / 回归动作）、`GapViewPile`（显示镜像）、`GapAlternation`（必须交替的闸）、`GapRecallGuard`/`GapEtherealGuard`/`GapCopyRestore` |
 | `Stasis/` | 搁浅：`StasisStore`（存储）、`StasisReturn`（滞留 / 归队）、`StasisRunHook`、`IStasisCard`、`IStasisReturnListener`（回溯接缝在 `Rewind/Bridges/StasisRewindExtension.cs`） |
+| `FrozenForm/` | 冻结形态（NEW-4）：`FrozenFormStore`（`RunPersistent + Headless` 记录堆）、`FrozenFormRecorder`（`CardPlayedEvent` → 克隆记录）、`FrozenFormReplay`（下场第一个玩家回合自动打出）、`FrozenFormModule`（注册） |
 | `Intent/` | 操作时间（意图）：`IntentDeck`（工厂 / 状态查找）、`EnemyIntentState`（三堆状态）、`IntentCycle`/`IntentHandCycle`（洗牌建堆 / 手牌循环）、`IntentTurnFlow`/`IntentDecision`/`IntentMoves`（回合流程 / 判定 / 动作）、`IntentOps`（状态机唯一写入口）、`IntentCard(Binder)`、`IntentTargeting`/`IntentTargetRegistry`、`IntentBeltBridge`（→表现层接缝）、`MonsterAccess`、`IntentModule` |
 | `Wither/` | 凋萎：`WitherPool`（注入 / 计数 / 清除） |
 | `Rewind/` | 回溯引擎：`Kernel/`（事务与快照环）、`StateCapture/`（模型/牌堆/RNG/UI 的抓取与恢复，含 `Guards/` 八个前置闸）、`Graph/`（字段图策略）、`Policy/`（扩展点）、`Bridges/`（搁浅/间隙/延宕/α or β 接缝）、`Host/`（门面与补丁） |
@@ -26,7 +27,7 @@
 - **按功能命名**：类名 = 它做的事（`GapStore` / `DeckSwitchService` / `WitherPool`），不要用 M 编号或旧机制名（`滞留X` → 搁浅）。
 - 域内**不再带 `Aeonglass` 前缀**（目录已自明）；对外接缝/表现层引用时才需要区分。
 - 巨类按 **存储 / 规则 / 流程** 三轴拆成独立类；拆完"存储"那一半持有共享状态，另两半通过它访问。
-- 日志前缀用机制名：`[沙砾]`/`[间隙]`/`[意图]`/`[回溯]`/`[凋萎]`/`[双卡组]`/`[搁浅]`。
+- 日志前缀用机制名：`[沙砾]`/`[间隙]`/`[意图]`/`[回溯]`/`[凋萎]`/`[双卡组]`/`[搁浅]`/`[冻结形态]`。
 
 ## 运行时段（2026-10-15 起，机制订阅同样适用）
 

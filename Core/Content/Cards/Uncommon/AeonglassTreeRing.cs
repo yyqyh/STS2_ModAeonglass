@@ -1,12 +1,12 @@
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.ValueProps;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.History;
 
@@ -22,15 +22,15 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ v2 去掉上限 ⇒ 想加 cap 必须回来加；0 费 + 无上限属"0 费大效果"，强度要盯。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassTreeRing() : ModCardTemplate(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
+public sealed class AeonglassTreeRing() : AeonglassCardTemplate(
+    new AeonglassCardSpec(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
+        {
+            GainsBlock = true,
+        }
+        .Tag(CardTag.Defend)
+        .Var("BlockPerCard", BlockPerCard, upgradeDelta: 1m))
 {
     private const decimal BlockPerCard = 2m;
-
-    protected override HashSet<CardTag> CanonicalTags => [CardTag.Defend];
-
-    public override bool GainsBlock => true;
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [new DynamicVar("BlockPerCard", BlockPerCard)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -45,5 +45,4 @@ public sealed class AeonglassTreeRing() : ModCardTemplate(0, CardType.Skill, Car
         }
     }
 
-    protected override void OnUpgrade() => DynamicVars["BlockPerCard"].UpgradeValueBy(1m);
 }

@@ -6,6 +6,7 @@ using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Content.Powers;
 
@@ -21,15 +22,13 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ 2026-10-15 delta：挂账 2 → 1 ⇒ <b>净值 +1（升级 +2）</b>，「借 X 还 X」的口径已被用户推翻。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassAdvancePay() : ModCardTemplate(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
+public sealed class AeonglassAdvancePay() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(0, CardRarity.Uncommon)
+        .Var("Draw", DrawBase, upgradeDelta: 1m)
+        .Var("Debt", DebtBase))
 {
     private const decimal DrawBase = 2m;
     private const decimal DebtBase = 1m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        [new DynamicVar("Draw", DrawBase), new DynamicVar("Debt", DebtBase)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -40,6 +39,4 @@ public sealed class AeonglassAdvancePay() : ModCardTemplate(0, CardType.Skill, C
         await PowerCmd.Apply<AeonglassDrawDebtPower>(choiceContext, Owner.Creature, debt, Owner.Creature, this);
     }
 
-    /// <summary>只抬本回合抽数（挂账固定 1）。</summary>
-    protected override void OnUpgrade() => DynamicVars["Draw"].UpgradeValueBy(1m);
 }

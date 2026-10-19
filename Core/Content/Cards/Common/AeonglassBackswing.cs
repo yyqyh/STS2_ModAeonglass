@@ -1,8 +1,5 @@
-using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
-using MegaCrit.Sts2.Core.ValueProps;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 
@@ -22,21 +19,15 @@ namespace STS2_Aeonglass.Core.Content.Cards.Common;
 /// ④ ⚠️ delta 把条件从"每翻转一次"放宽成"沙砾变换过" ⇒ 触发面大得多。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassBackswing() : AeonglassBlockTemplate(1, CardRarity.Common, 5m, 2m)
+public sealed class AeonglassBackswing() : AeonglassCardTemplate(
+    AeonglassCardSpec.Block(1, CardRarity.Common, 5m, 2m)
+        .Var("Bonus", BonusIfSandChanged)
+        .Effect(CardEffects.If(
+            "sand-changed",
+            context => SandTurnCounters.SandChangedThisTurn(context.Player),
+            CardEffects.GainBlockFixed(BonusIfSandChanged))))
 {
     /// <summary>"沙砾变换过"那一档的额外格挡（升级不变）。</summary>
     private const decimal BonusIfSandChanged = 3m;
 
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        [new BlockVar(Block, ValueProp.Move), new DynamicVar("Bonus", BonusIfSandChanged)];
-
-    protected override async Task OnPlayExtra(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-    {
-        if (!SandTurnCounters.SandChangedThisTurn(Owner))
-        {
-            return;
-        }
-
-        await CreatureCmd.GainBlock(Owner.Creature, BonusIfSandChanged, ValueProp.Move, cardPlay);
-    }
 }

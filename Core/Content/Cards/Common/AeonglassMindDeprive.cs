@@ -2,8 +2,8 @@ using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 
 using STS2RitsuLib.Interop.AutoRegistration;
-using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Intent;
 
@@ -19,10 +19,10 @@ namespace STS2_Aeonglass.Core.Content.Cards.Common;
 /// ④ ⚠️ v2 由「剥夺」改名；不可行动的意图不在候选里（与「提前 / 威吓」的候选口径一致）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassMindDeprive() : ModCardTemplate(1, CardType.Skill, CardRarity.Common, TargetType.AnyEnemy)
+public sealed class AeonglassMindDeprive() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(1, CardRarity.Common, TargetType.AnyEnemy)
+        .UpgradeAddKeyword(CardKeyword.Retain))
 {
-    protected override HashSet<CardTag> CanonicalTags => [];
-
     protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         if (cardPlay.Target is not { } target)
@@ -44,6 +44,4 @@ public sealed class AeonglassMindDeprive() : ModCardTemplate(1, CardType.Skill, 
         return Task.CompletedTask;
     }
 
-    /// <summary>v2：升级改为获得[保留]。</summary>
-    protected override void OnUpgrade() => AddKeyword(CardKeyword.Retain);
 }

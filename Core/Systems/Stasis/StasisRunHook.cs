@@ -29,6 +29,10 @@ public sealed class StasisRunHook : HookedSingletonModel
 
     public override async Task AfterCombatEnd(CombatRoom room)
     {
+        // 记录"刚打完的是不是 Boss 房"（「远行」在 Boss 层回归要随机升级卡组）。
+        // 放在角色门 / 口径分支之前：无论走新口径还是回退口径，这个事实都要记。
+        StasisReturn.LastCombatWasBoss = room.RoomType == RoomType.Boss;
+
         // 角色门（2026-10-15）：别人的局里不递减、不归队（回退口径那条日志也不会出现）。
         if (!ExtraPileModules.StasisEnabled || !CharacterGate.IsActive)
         {

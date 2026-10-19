@@ -6,7 +6,7 @@
 
   "STS2_AEONGLASS_CARD_AEONGLASS_TIDE.title": "潮汐",
   "STS2_AEONGLASS_CARD_AEONGLASS_TIDE.description": "{Variant}",
-  "STS2_AEONGLASS_CARD_AEONGLASS_TIDE.variant.a": "[gold]永时：[/gold]造成{Damage:diff()}点伤害。\n将{VariantWither}张[gold]凋萎[/gold]放入该敌人的[gold]弃牌堆[/gold]。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_TIDE.variant.a": "[gold]永时：[/gold]造成{VariantDamage}点伤害。\n将{VariantWither:diff()}张[gold]凋萎[/gold]放入该敌人的[gold]弃牌堆[/gold]。",
   "STS2_AEONGLASS_CARD_AEONGLASS_TIDE.variant.b": "[gold]消逝：[/gold]造成{Damage:diff()}点伤害。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_FORTIFY.title": "防护",
@@ -70,8 +70,8 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_MIND_DEPRIVE.title": "思维剥夺",
   "STS2_AEONGLASS_CARD_AEONGLASS_MIND_DEPRIVE.description": "随机丢弃该敌人的一张[gold]意图[/gold]，立刻放入它的[gold]弃牌堆[/gold]。",
   "STS2_AEONGLASS_CARD_AEONGLASS_BANK.title": "堤岸",
-  "STS2_AEONGLASS_CARD_AEONGLASS_BANK.description": "获得{Block:diff()}点[gold]格挡[/gold]。{Variant}",
-  "STS2_AEONGLASS_CARD_AEONGLASS_BANK.variant.a": "",
+  "STS2_AEONGLASS_CARD_AEONGLASS_BANK.description": "{Variant}",
+  "STS2_AEONGLASS_CARD_AEONGLASS_BANK.variant.a": "获得{Block:diff()}点[gold]格挡[/gold]。",
   "STS2_AEONGLASS_CARD_AEONGLASS_BANK.variant.b": "[gold]消逝副：[/gold]改为获得{VariantBlock}点[gold]格挡[/gold]。\n本回合你受到的伤害[gold]延宕[/gold]{Delay:diff()}。",
   "STS2_AEONGLASS_CARD_AEONGLASS_CAUSALITY.title": "因果",
   "STS2_AEONGLASS_CARD_AEONGLASS_CAUSALITY.description": "造成{Damage:diff()}点伤害。\n本局游戏中你每[gold]回溯[/gold]过一次，伤害就增加{PerRewind:diff()}点。",
@@ -144,5 +144,26 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_RETURN_TIDE.description": "获得{Block:diff()}点[gold]格挡[/gold]。\n将你的[gold]弃牌堆[/gold]中随机一张带[gold]迟滞[/gold]的牌放入[gold]抽牌堆[/gold]顶。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_COUNTER_MOVE.title": "拆招",
-  "STS2_AEONGLASS_CARD_AEONGLASS_COUNTER_MOVE.description": "随机丢弃敌人的一张[gold]意图[/gold]；若丢弃的是攻击意图，则抽{DrawIfAttack}张牌。"
+  "STS2_AEONGLASS_CARD_AEONGLASS_COUNTER_MOVE.description": "随机丢弃敌人的一张[gold]意图[/gold]；若丢弃的是攻击意图，则抽{DrawIfAttack}张牌。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_DETACH.title": "抽离",
+  "STS2_AEONGLASS_CARD_AEONGLASS_DETACH.description": "将敌人[gold]抽牌堆[/gold]上的牌全部放入其[gold]弃牌堆[/gold]；再将{Wither}张[gold]凋萎[/gold]放入其弃牌堆。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_REWRITE.title": "复写",
+  "STS2_AEONGLASS_CARD_AEONGLASS_REWRITE.description": "[gold]迟滞[/gold]。\n给予一张[gold]手牌[/gold]「[gold]重放[/gold] 1」与[gold]保留[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_SEAL_QUILL.title": "封笔",
+  "STS2_AEONGLASS_CARD_AEONGLASS_SEAL_QUILL.description": "给敌人当前的[gold]手牌[/gold]上[gold]迟滞[/gold]，立刻洗牌并抽{Draw}张。\n（该迟滞只对这次洗牌生效）"
+  ,
+  "STS2_AEONGLASS_CARD_AEONGLASS_MOORING.title": "停泊",
+  "STS2_AEONGLASS_CARD_AEONGLASS_MOORING.description": "给予一张[gold]手牌[/gold]「[gold]搁浅[/gold] 2」。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_POUR_OUT.title": "倾囊",
+  "STS2_AEONGLASS_CARD_AEONGLASS_POUR_OUT.description": "给予所有[gold]手牌[/gold]「[gold]搁浅[/gold] 1」，并打出它们。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_LONG_JOURNEY.title": "远行",
+  "STS2_AEONGLASS_CARD_AEONGLASS_LONG_JOURNEY.description": "「[gold]搁浅[/gold] 10」。\n若在 Boss 层回归，则进入卡组，并随机升级卡组中 3 张牌。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_FROZEN_FORM.title": "冻结形态",
+  "STS2_AEONGLASS_CARD_AEONGLASS_FROZEN_FORM.description": "记录接下来打出的其他能力；下场战斗开始时，自动打出这些牌。\n（不包括自己）"
 }

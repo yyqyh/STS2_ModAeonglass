@@ -19,4 +19,6 @@ namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassInscription()
-    : AeonglassStasisAttackTemplate(2, CardRarity.Rare, 32m, 6m, strandCombats: 3);
+    : AeonglassStasisCardTemplate(
+        AeonglassCardSpec.Attack(2, CardRarity.Rare, 32m, 6m),
+        strandCombats: 3);

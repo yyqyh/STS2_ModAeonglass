@@ -3,6 +3,7 @@ using MegaCrit.Sts2.Core.Entities.Cards;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 
 namespace STS2_Aeonglass.Core.Content.Cards.Token;
@@ -17,14 +18,11 @@ namespace STS2_Aeonglass.Core.Content.Cards.Token;
 /// ④ ⚠️ "游戏开始后累计 214 回合进手牌"那条触发<b>未做</b>（需要 run 级总回合计数，且效果内容本身未定）；定位是先古彩蛋，不参与强度评估。
 /// </remarks>
 [RegisterCard(typeof(AeonglassTokenCardPool))]
-public sealed class AeonglassTimeMagic : ModCardTemplate
+public sealed class AeonglassTimeMagic : AeonglassCardTemplate
 {
-    public AeonglassTimeMagic() : base(0, CardType.Status, CardRarity.Rare, TargetType.Self)
+    public AeonglassTimeMagic() : base(
+        AeonglassCardSpec.Status(0, CardRarity.Rare)
+            .Keyword(CardKeyword.Ethereal))
     {
     }
-
-    /// <summary>不可打出（展示件）。</summary>
-    protected override bool IsPlayable => false;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
 }

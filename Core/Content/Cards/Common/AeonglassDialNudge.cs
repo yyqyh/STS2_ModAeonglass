@@ -4,8 +4,8 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization;
 
 using STS2RitsuLib.Interop.AutoRegistration;
-using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Cards;
 using STS2_Aeonglass.Core.Systems.Sand;
@@ -22,10 +22,9 @@ namespace STS2_Aeonglass.Core.Content.Cards.Common;
 /// ④ ⚠️ 升级档把"平衡档"那半边一起抬（抽 3 弃 2）⇒ 升级增量比其他卡大；改口径只动 <c>OnPlay</c> 里那两行。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassDialNudge() : ModCardTemplate(0, CardType.Skill, CardRarity.Common, TargetType.Self)
+public sealed class AeonglassDialNudge() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(0, CardRarity.Common))
 {
-    protected override HashSet<CardTag> CanonicalTags => [];
-
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         // v2 口径：
@@ -39,11 +38,6 @@ public sealed class AeonglassDialNudge() : ModCardTemplate(0, CardType.Skill, Ca
 
         await CardPileCmd.Draw(choiceContext, draw, Owner);
         await HandDiscard.FromHandAsync(choiceContext, this, discard);
-    }
-
-    /// <summary>升级内容写在 <c>OnPlay</c> 里（抽/弃两半边各抬 1），所以这里不需要改 DynamicVars。</summary>
-    protected override void OnUpgrade()
-    {
     }
 
     // 2026-10-16：升级追加句改成**本体写法**（cards.json 的 description 里写

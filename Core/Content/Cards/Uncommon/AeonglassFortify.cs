@@ -1,8 +1,4 @@
-using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
-using MegaCrit.Sts2.Core.ValueProps;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 
@@ -22,22 +18,10 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ 2026-10-15 delta 只改稀有度：Common → <b>Uncommon</b>；升级只抬"下一张防御牌"那一档。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassFortify() : AeonglassBlockTemplate(1, CardRarity.Uncommon, 6m, 2m)
+public sealed class AeonglassFortify() : AeonglassCardTemplate(
+    AeonglassCardSpec.Block(1, CardRarity.Uncommon, 6m, 2m)
+        .Var("NextDefenseBonus", NextDefenseBonusBase, upgradeDelta: 1m)
+        .Effect(CardEffects.ApplyPower<AeonglassNextDefensePower>("NextDefenseBonus")))
 {
     private const decimal NextDefenseBonusBase = 3m;
-
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        [new BlockVar(Block, ValueProp.Move), new DynamicVar("NextDefenseBonus", NextDefenseBonusBase)];
-
-    /// <summary>v2：升级只抬"下一张防御牌"的增量（+3 → +4），格挡照模板走。</summary>
-    protected override void OnUpgrade()
-    {
-        base.OnUpgrade();
-        DynamicVars["NextDefenseBonus"].UpgradeValueBy(1m);
-    }
-
-    /// <summary>加成做成**可见的 buff**（<see cref="AeonglassNextDefensePower" />），不再用隐藏标记。</summary>
-    protected override async Task OnPlayExtra(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-        => await PowerCmd.Apply<AeonglassNextDefensePower>(
-            choiceContext, Owner.Creature, DynamicVars["NextDefenseBonus"].BaseValue, Owner.Creature, this);
 }

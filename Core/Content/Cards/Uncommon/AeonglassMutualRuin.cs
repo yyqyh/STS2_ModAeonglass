@@ -2,12 +2,12 @@ using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.Models;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Cards.Token;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Intent;
@@ -26,15 +26,13 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 public sealed class AeonglassMutualRuin()
-    : ModCardTemplate(0, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy)
+    : AeonglassCardTemplate(
+        AeonglassCardSpec.Skill(0, CardRarity.Uncommon, TargetType.AnyEnemy)
+            .Var("ToEnemy", ToEnemyBase, upgradeDelta: ToEnemyBase)
+            .Var("ToSelf", ToSelfBase, upgradeDelta: ToSelfBase))
 {
     private const decimal ToEnemyBase = 6m;
     private const decimal ToSelfBase = 4m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        [new DynamicVar("ToEnemy", ToEnemyBase), new DynamicVar("ToSelf", ToSelfBase)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -47,12 +45,6 @@ public sealed class AeonglassMutualRuin()
         }
 
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} 玉石俱焚：自己弃牌堆 +{await PutIntoOwnDiscardAsync(Owner, toSelf)} 张凋萎");
-    }
-
-    protected override void OnUpgrade()
-    {
-        DynamicVars["ToEnemy"].UpgradeValueBy(ToEnemyBase);
-        DynamicVars["ToSelf"].UpgradeValueBy(ToSelfBase);
     }
 
     /// <summary>把 N 张真卡实例的凋萎放进自己的弃牌堆（走本体 <c>CardPileCmd.Add</c> ⇒ 有正常移动表现）。</summary>

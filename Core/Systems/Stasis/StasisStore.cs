@@ -25,6 +25,60 @@ internal static class StasisStore
     private static PileType? _zonePileType;
     private static string _zoneId = string.Empty;
 
+    /// <summary>
+    /// <b>任意卡</b>的搁浅倒计时<b>侧表</b>（键 = 搁浅里的那张母本；值 = 还剩几次"战斗结束"）。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// 为什么需要：倒计时原来只存在 <see cref="IStasisCard.CombatsLeft" />（卡类型上的 <c>[SavedProperty]</c>），
+    /// 而「停泊 / 倾囊」这类卡会把<b>任意</b>手牌弄进搁浅（打击、防御……它们不实现接口）⇒ 用这张 run 级侧表兜住。
+    /// </para>
+    /// <para>
+    /// ⚠️ 侧表<b>不随存档走</b>：读档后若某张搁浅卡查不到倒计时，<c>StasisReturn.TickAfterCombatEnd</c>
+    /// 会按 <see cref="ReArmCombats" /> 重新挂上并留一行 Warn。归队后残留的条目无害（下次入堆会被覆盖）。
+    /// </para>
+    /// </remarks>
+    private static readonly Dictionary<CardModel, int> Countdowns = [];
+
+    /// <summary>读档丢了倒计时时的兜底重挂场数（内部按 X + 1 存 ⇒ 2 = 再搁浅 1 场）。</summary>
+    internal const int ReArmCombats = 2;
+
+    /// <summary>挂倒计时：实现了 <see cref="IStasisCard" /> 的卡写它自己的 [SavedProperty]，其余走侧表。</summary>
+    internal static void Arm(CardModel master, int combatsLeft)
+    {
+        if (master is IStasisCard stasis)
+        {
+            stasis.CombatsLeft = combatsLeft;
+            return;
+        }
+
+        Countdowns[master] = combatsLeft;
+    }
+
+    /// <summary>取倒计时（接口优先，其次侧表）；都没有返回 false（读档丢失）。</summary>
+    internal static bool TryGetCountdown(CardModel master, out int combatsLeft)
+    {
+        if (master is IStasisCard stasis)
+        {
+            combatsLeft = stasis.CombatsLeft;
+            return true;
+        }
+
+        return Countdowns.TryGetValue(master, out combatsLeft);
+    }
+
+    /// <summary>写回倒计时（接口优先，其次侧表）。</summary>
+    internal static void SetCountdown(CardModel master, int combatsLeft)
+    {
+        if (master is IStasisCard stasis)
+        {
+            stasis.CombatsLeft = combatsLeft;
+            return;
+        }
+
+        Countdowns[master] = combatsLeft;
+    }
+
     /// <summary>搁浅牌堆的完整 id（注册后才有值）。</summary>
     public static string ZoneId => _zoneId;
 
@@ -72,7 +126,7 @@ internal static class StasisStore
         }
 
         return "搁浅：" + string.Join(", ", zone.Cards.Select(card =>
-            card is IStasisCard stasis ? $"{card.Id.Entry}(剩{stasis.CombatsLeft})" : card.Id.Entry));
+            TryGetCountdown(card, out var left) ? $"{card.Id.Entry}(剩{left})" : card.Id.Entry));
     }
 
     /// <summary>牌堆名：模组牌堆打印注册 id，原版牌堆打印枚举名。</summary>

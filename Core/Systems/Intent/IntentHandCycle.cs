@@ -102,10 +102,14 @@ internal static class IntentHandCycle
     /// </para>
     /// <para>补足到 x 时复制出来的重复意图，在同一轮里会各出现一次（这正是"补到 x"的意义）。</para>
     /// </remarks>
-    public static string DrawHand(Creature creature, EnemyIntentState state)
+    /// <param name="count">
+    /// 抽到几张（默认 = <see cref="IntentDeck.DrawPerTurn" />，即常规的每回合 5 张）。
+    /// 传值用于"封笔"这类要求"立刻抽 N 张"的卡。
+    /// </param>
+    public static string DrawHand(Creature creature, EnemyIntentState state, int? count = null)
     {
         var mode = IntentRules.VoidMode;
-        var target = IntentDeck.DrawPerTurn;
+        var target = count ?? IntentDeck.DrawPerTurn;
         var drawn = 0;
         var drawnVoids = 0;
         var reshuffles = 0;

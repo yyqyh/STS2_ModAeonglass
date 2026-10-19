@@ -1,3 +1,5 @@
+using MegaCrit.Sts2.Core.Entities.Cards;
+
 using STS2RitsuLib;
 
 namespace STS2_Aeonglass.Core.Content.Keywords;
@@ -9,15 +11,18 @@ namespace STS2_Aeonglass.Core.Content.Keywords;
 /// 文案取 <c>card_keywords</c> 表的 <c>STS2_AEONGLASS_KEYWORD_STASIS.title / .description</c>。
 /// </para>
 /// <para>
-/// ⚠️ <b>暂时不把它挂到卡上</b>（不写进任何卡的 <c>CanonicalKeywords</c>）：mod 关键词默认共用
-/// <c>CardKeyword.None</c> 槽位，而 <c>None</c> 已经被「凋萎」占了 —— 再挂一张会让两张卡都显示同一个词条文本。
-/// 卡面要写这个词条时，先在卡自己的描述文案里写清楚（等 RitsuLib 支持独立槽位再切过去）。
+/// ✅ 2026-10-19 核实：RitsuLib 会为每个 mod 关键词生成独立的动态
+/// <c>CardKeywordValue</c>（原版枚举范围之外）⇒ 搁浅卡挂 <see cref="Value" /> 即可正确显示「搁浅」。
+/// 机制判定仍由 <c>IStasisCard</c> / <c>StasisStore</c> 负责。
 /// </para>
 /// </remarks>
 internal static class StasisKeyword
 {
     /// <summary>本地 stem（id 会变成 <c>STS2_AEONGLASS_KEYWORD_STASIS</c>）。</summary>
     internal const string Stem = "stasis";
+
+    /// <summary>RitsuLib 为该关键词生成的动态 <see cref="CardKeyword" /> 值（注册后可用）。</summary>
+    internal static CardKeyword Value { get; private set; }
 
     /// <summary>注册一次（幂等；由 <c>Main.Initialize</c> 调，必须在内容冻结之前）。</summary>
     internal static void Register()
@@ -32,6 +37,8 @@ internal static class StasisKeyword
                     cardDescriptionPlacement:
                         STS2RitsuLib.Keywords.ModKeywordCardDescriptionPlacement.AfterCardDescription,
                     includeInCardHoverTip: true);
+
+            Value = definition.CardKeywordValue;
 
             Const.Logger.Info(
                 $"[{Const.ModId}] {Const.Prefix.Stasis} 关键词「搁浅」已注册：id={definition.Id}（"

@@ -5,7 +5,9 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
+using STS2_Aeonglass.Core.Content.Keywords;
 using STS2_Aeonglass.Core.Content.Powers;
 using STS2_Aeonglass.Core.Systems.Cards;
 using STS2_Aeonglass.Core.Systems.Intent;
@@ -23,11 +25,12 @@ namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 ///    代价与眩晕是<b>两笔</b>——无论眩晕有没有落地，你的下一个回合照样被跳过。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassGamble() : ModCardTemplate(0, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy),
+public sealed class AeonglassGamble() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(0, CardRarity.Rare, TargetType.AnyEnemy)
+        .Keyword(HysteresisKeyword.Value)
+        .UpgradeAddKeyword(CardKeyword.Retain)),
     IHysteresisCard
 {
-    protected override HashSet<CardTag> CanonicalTags => [];
-
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         ArgumentNullException.ThrowIfNull(cardPlay.Target, "cardPlay.Target");
@@ -44,6 +47,4 @@ public sealed class AeonglassGamble() : ModCardTemplate(0, CardType.Skill, CardR
             choiceContext, Owner.Creature, 1m, Owner.Creature, this);
     }
 
-    /// <summary>v2：升级改为获得[保留]。</summary>
-    protected override void OnUpgrade() => AddKeyword(CardKeyword.Retain);
 }

@@ -1,11 +1,11 @@
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.History;
 
@@ -21,15 +21,13 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ 2026-10-15 delta 把上限 3 → 2 且改成定值（升级不再抬上限）—— 代码里原来还在抬上限，已按 delta 修掉。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassScrollStack() : ModCardTemplate(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self)
+public sealed class AeonglassScrollStack() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(1, CardRarity.Uncommon)
+        .Var("Draw", DrawBase, upgradeDelta: 1m)
+        .Var("Cap", CapBase))
 {
     private const decimal DrawBase = 2m;
     private const decimal CapBase = 2m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        [new DynamicVar("Draw", DrawBase), new DynamicVar("Cap", CapBase)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -42,8 +40,4 @@ public sealed class AeonglassScrollStack() : ModCardTemplate(1, CardType.Skill, 
         await CardPileCmd.Draw(choiceContext, total, Owner);
     }
 
-    /// <summary>
-    /// 升级只抬<b>基础抽数</b>（2 → 3）；翻转上限按 2026-10-15 delta 固定 <b>2</b>（升级不再抬上限）。
-    /// </summary>
-    protected override void OnUpgrade() => DynamicVars["Draw"].UpgradeValueBy(1m);
 }

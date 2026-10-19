@@ -1,7 +1,5 @@
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
-using MegaCrit.Sts2.Core.ValueProps;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 
@@ -25,7 +23,26 @@ namespace STS2_Aeonglass.Core.Content.Cards.Basic;
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 [RegisterCharacterStarterCard(typeof(Aeonglass), 1)]
-public sealed class AeonglassBank() : AeonglassVariantBlockTemplate(1, CardRarity.Basic, 6m, 3m)
+public sealed class AeonglassBank() : AeonglassCardTemplate(
+    AeonglassCardSpec.Block(1, CardRarity.Basic, 6m, 3m)
+        .Var("VariantBlock", VariantBlock)
+        .Var("Delay", DelayBase, upgradeDelta: 1m)
+        .Feature(new VariantFeature((side, context) =>
+        {
+            if (side != DeckSide.B)
+            {
+                return [];
+            }
+
+            var turns = context.Card.DynamicVars["Delay"].BaseValue;
+            return
+            [
+                new DeckEffectBlock(
+                    $"delay+{turns}",
+                    ctx => PowerCmd.Apply<AeonglassDeferralPower>(
+                        ctx.ChoiceContext, ctx.Player.Creature, turns, ctx.Player.Creature, context.Card)),
+            ];
+        })))
 {
     /// <summary>消逝副的格挡（升级不变）。</summary>
     private const decimal VariantBlock = 7m;
@@ -33,40 +50,6 @@ public sealed class AeonglassBank() : AeonglassVariantBlockTemplate(1, CardRarit
     /// <summary>消逝副的延宕回合数（升级 +1）。</summary>
     private const decimal DelayBase = 1m;
 
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-    [
-        new BlockVar(Block, ValueProp.Move),
-        new DynamicVar("VariantBlock", VariantBlock),
-        new DynamicVar("Delay", DelayBase),
-    ];
-
     /// <summary>消逝副走定值格挡；永时副走模板的基础格挡。</summary>
     protected override decimal BlockThisPlay => IsVariantB ? VariantBlock : base.BlockThisPlay;
-
-    /// <summary>
-    /// 消逝副：<b>新增一个延宕实例</b>（规则 5c，2026-10-15 用户口径）—— 不再撤掉旧实例，直接叠上去：
-    /// 每个实例各带自己的到期回合与待结算量，各自独立结算；"不可叠加"指的是同一笔伤害不会被二次延宕。
-    /// </summary>
-    public override IReadOnlyList<DeckEffectBlock> VariantBlocks(DeckSide side, DeckEffectContext context)
-    {
-        if (side != DeckSide.B)
-        {
-            return [];
-        }
-
-        var turns = DynamicVars["Delay"].BaseValue;
-        return
-        [
-            new DeckEffectBlock(
-                $"delay+{turns}",
-                ctx => PowerCmd.Apply<AeonglassDeferralPower>(
-                    ctx.ChoiceContext, Owner.Creature, turns, Owner.Creature, this)),
-        ];
-    }
-
-    protected override void OnUpgrade()
-    {
-        DynamicVars.Block.UpgradeValueBy(3m);
-        DynamicVars["Delay"].UpgradeValueBy(1m);
-    }
 }

@@ -1,10 +1,11 @@
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
+using STS2_Aeonglass.Core.Content.Keywords;
 using STS2_Aeonglass.Core.Systems.Cards;
 
 namespace STS2_Aeonglass.Core.Content.Cards.Curse;
@@ -21,19 +22,15 @@ namespace STS2_Aeonglass.Core.Content.Cards.Curse;
 /// ④ ⚠️ 2026-10-14 三次返工（内容交换 → 行为接管 → getter 替换 → <b>字段对调</b>）才通；UI 牌堆按钮仍绑物理堆（按用户口径不碰 UI）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassTokenCardPool))]
-public sealed class AeonglassRiot : ModCardTemplate, IHysteresisCard
+public sealed class AeonglassRiot : AeonglassCardTemplate, IHysteresisCard
 {
     public AeonglassRiot()
-        : base(-1, CardType.Curse, CardRarity.Curse, TargetType.Self)
+        : base(new AeonglassCardSpec(-1, CardType.Curse, CardRarity.Curse, TargetType.Self)
+        {
+            Playable = false,
+        }
+            .Keyword(HysteresisKeyword.Value)
+            .Keyword(EternalKeyword.Value))
     {
     }
-
-    /// <summary>不可打出（本体 <c>IsPlayable</c> 是 protected virtual，覆盖它即可）。</summary>
-    protected override bool IsPlayable => false;
-
-    /// <summary>诅咒不显示在卡池奖励里（挂 token 池 ⇒ 拿不到；进牌堆的入口由事件 / 机制给）。</summary>
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-        => Task.CompletedTask;
 }

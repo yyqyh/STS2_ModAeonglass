@@ -1,12 +1,12 @@
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
 using STS2_Aeonglass.Core.Config;
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Content.Powers;
 using STS2_Aeonglass.Core.Systems.Cards;
@@ -39,12 +39,9 @@ namespace STS2_Aeonglass.Core.Content.Cards.Token;
 /// </para>
 /// </remarks>
 [RegisterCard(typeof(AeonglassTokenCardPool))]
-public sealed class AeonglassTimeLord() : ModCardTemplate(0, CardType.Power, CardRarity.Ancient, TargetType.Self)
+public sealed class AeonglassTimeLord() : AeonglassCardTemplate(
+    AeonglassCardSpec.Power(0, CardRarity.Ancient))
 {
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [];
-
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         await PowerCmd.Apply<AeonglassTimeLordPower>(choiceContext, Owner.Creature, 1m, Owner.Creature, this);
@@ -56,8 +53,4 @@ public sealed class AeonglassTimeLord() : ModCardTemplate(0, CardType.Power, Car
             $"[{Const.ModId}] {Const.Prefix.Wither} 时间主宰：清凋萎 {purged} 张 ⇒ 本场不再被塞（闸门已挂）");
     }
 
-    /// <summary>升级档：表里是「—」⇒ 不变。</summary>
-    protected override void OnUpgrade()
-    {
-    }
 }

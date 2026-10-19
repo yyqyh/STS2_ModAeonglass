@@ -23,7 +23,7 @@ namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 /// ④ ⚠️ "上回合操作过"只看**上**回合的计数；本回合操作 ⇒ 下回合吃收益（与「年轮 / 刻痕」同一套历史层口径）。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassHighObserve() : AeonglassPowerCardTemplate(2, CardRarity.Rare)
+public sealed class AeonglassHighObserve() : AeonglassCardTemplate(AeonglassCardSpec.Power(2, CardRarity.Rare))
 {
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {

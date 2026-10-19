@@ -1,6 +1,4 @@
-using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 
@@ -20,9 +18,6 @@ namespace STS2_Aeonglass.Core.Content.Cards.Uncommon;
 /// ④ ⚠️ 判 0 费读的是**卡面基础费用**（Canonical），不是被减费后的实际费用 —— 与本体"0 费牌"类效果的通常口径一致。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassCogwheel() : AeonglassPowerCardTemplate(1, CardRarity.Uncommon)
-{
-    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-        => await PowerCmd.Apply<AeonglassCogwheelPower>(
-            choiceContext, Owner.Creature, 1m, Owner.Creature, this);
-}
+public sealed class AeonglassCogwheel() : AeonglassCardTemplate(
+    AeonglassCardSpec.Power(1, CardRarity.Uncommon)
+        .Effect(CardEffects.ApplyPower<AeonglassCogwheelPower>()));

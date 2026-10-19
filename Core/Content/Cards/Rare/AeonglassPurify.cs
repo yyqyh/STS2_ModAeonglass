@@ -1,12 +1,12 @@
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.ValueProps;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Cards.Token;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Cards;
@@ -25,14 +25,12 @@ namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 /// ④ ⚠️ "数量按消耗前结算"（用户 2026-10-14 定）：升级档多清的那些状态牌<b>不进</b>这个数；"场上"<b>包含玩家侧</b>。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassPurify() : ModCardTemplate(1, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies)
+public sealed class AeonglassPurify() : AeonglassCardTemplate(
+    new AeonglassCardSpec(1, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies)
+        .Var("PerWither", DamagePerWither))
 {
     /// <summary>每张凋萎换多少伤害（v2 定值 6）。</summary>
     private const decimal DamagePerWither = 6m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars => [new DynamicVar("PerWither", DamagePerWither)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -67,12 +65,4 @@ public sealed class AeonglassPurify() : ModCardTemplate(1, CardType.Attack, Card
             .Execute(choiceContext);
     }
 
-    /// <summary>升级只扩"消耗范围"（伤害公式不变）。</summary>
-    /// <remarks>
-    /// 2026-10-16：升级追加句改成**本体写法**（cards.json 的 description 里写 `{IfUpgraded:show:…}`）
-    /// ⇒ 这里不再注入 `{UpgradeText}`（口径与理由见 AeonglassDialNudge 的注释）。
-    /// </remarks>
-    protected override void OnUpgrade()
-    {
-    }
 }

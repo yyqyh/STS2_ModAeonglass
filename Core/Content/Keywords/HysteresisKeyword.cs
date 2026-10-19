@@ -1,3 +1,5 @@
+using MegaCrit.Sts2.Core.Entities.Cards;
+
 using STS2RitsuLib;
 
 namespace STS2_Aeonglass.Core.Content.Keywords;
@@ -13,17 +15,18 @@ namespace STS2_Aeonglass.Core.Content.Keywords;
 /// 与 <c>AeonglassCore.ModifyShuffleOrder</c>（执行）。
 /// </para>
 /// <para>
-/// ⚠️ <b>已知限制（2026-10-13 核实）</b>：RitsuLib 的 mod 关键词默认都落在同一个
-/// <c>CardKeyword.None</c> 槽位上（本 mod 的「凋萎」就是这么用的）⇒
-/// <b>槽位无法区分我们的两个 mod 关键词</b>，卡面词条注入只能映射到其中一个定义。
-/// 因此机制判定改用标记接口 <c>IHysteresisCard</c>（见其注释）；若将来要两个词条同时正确显示，
-/// 得先确认 RitsuLib 是否有"申请独立槽位"的入口。
+/// ✅ 2026-10-19 核实：RitsuLib 会为每个 mod 关键词生成独立的动态
+/// <c>CardKeywordValue</c>（原版枚举范围之外）⇒ 卡定义挂 <see cref="Value" /> 即可正确显示「迟滞」。
+/// 机制判定仍用标记接口 <c>IHysteresisCard</c>（见其注释），两者互不替代。
 /// </para>
 /// </remarks>
 internal static class HysteresisKeyword
 {
     /// <summary>本地 stem（id 会变成 <c>STS2_AEONGLASS_KEYWORD_HYSTERESIS</c>）。</summary>
     internal const string Stem = "hysteresis";
+
+    /// <summary>RitsuLib 为该关键词生成的动态 <see cref="CardKeyword" /> 值（注册后可用）。</summary>
+    internal static CardKeyword Value { get; private set; }
 
     /// <summary>注册一次（幂等；由 <c>Main.Initialize</c> 调，必须在内容冻结之前）。</summary>
     internal static void Register()
@@ -38,6 +41,8 @@ internal static class HysteresisKeyword
                     cardDescriptionPlacement:
                         STS2RitsuLib.Keywords.ModKeywordCardDescriptionPlacement.AfterCardDescription,
                     includeInCardHoverTip: true);
+
+            Value = definition.CardKeywordValue;
 
             Const.Logger.Info(
                 $"[{Const.ModId}] {Const.Prefix.Host} 关键词「迟滞」已注册：id={definition.Id}（"

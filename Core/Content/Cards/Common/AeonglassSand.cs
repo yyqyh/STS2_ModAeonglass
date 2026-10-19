@@ -1,12 +1,11 @@
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
 
 using STS2RitsuLib.Combat.SecondaryResources;
 using STS2RitsuLib.Interop.AutoRegistration;
-using STS2RitsuLib.Scaffolding.Content;
 
+using STS2_Aeonglass.Core.Content.Cards.Templates;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Systems.Sand;
 
@@ -22,15 +21,13 @@ namespace STS2_Aeonglass.Core.Content.Cards.Common;
 /// ④ ⚠️ 卡池侧标红过的<b>第二条「空隙 → 沙砾」回收路径</b>（用户 2026-10-15 决定要做）；实现成"从空隙划等量"故恒等式不破。
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
-public sealed class AeonglassSand() : ModCardTemplate(1, CardType.Skill, CardRarity.Common, TargetType.Self)
+public sealed class AeonglassSand() : AeonglassCardTemplate(
+    AeonglassCardSpec.Skill(1, CardRarity.Common)
+        .Var("Sand", SandBase)
+        .Var("Draw", DrawBase, upgradeDelta: 1m))
 {
     private const decimal SandBase = 2m;
     private const decimal DrawBase = 1m;
-
-    protected override HashSet<CardTag> CanonicalTags => [];
-
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        [new DynamicVar("Sand", SandBase), new DynamicVar("Draw", DrawBase)];
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
@@ -52,6 +49,4 @@ public sealed class AeonglassSand() : ModCardTemplate(1, CardType.Skill, CardRar
         await CardPileCmd.Draw(choiceContext, (int)DynamicVars["Draw"].BaseValue, Owner);
     }
 
-    /// <summary>升级只抬抽数（2 沙砾不变）。</summary>
-    protected override void OnUpgrade() => DynamicVars["Draw"].UpgradeValueBy(1m);
 }

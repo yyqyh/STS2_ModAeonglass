@@ -114,7 +114,7 @@ public static class DeckVariants
         // （用户 2026-10-14：图鉴里要么同时显示两副效果、要么只显示一端）。
         if (card.IsCanonical || card.Owner is not { } owner)
         {
-            description.Add("Variant", ReadAllVariants(card));
+            description.Add("Variant", ReadAllVariants(card, description));
             return;
         }
 
@@ -126,7 +126,10 @@ public static class DeckVariants
             // 用 LocString 自己格式化：把这张卡的 DynamicVars 作为参数传进去，
             // 这样 {Damage:diff()} / {VariantWither:diff()} 会走本体的 diff formatter，
             // 升级预览时保留绿色/红色，而不是被替换成死数字。
-            description.Add("Variant", FormatVariant(card, key));
+            // ⚠️ 必须复用**主描述已经装好的变量表**（DynamicVars + IfUpgraded + energyPrefix …）：
+            // 差分文本是二级 LocString，本体不会再替它解析一次；只塞 DynamicVars 时，
+            // `{IfUpgraded:…}` / 能量图标这类占位符会原样露出，升级预览的 diff 上下文也会与主文本分叉。
+            description.Add("Variant", FormatVariant(card, key, description));
         }
         catch (Exception ex)
         {
@@ -137,7 +140,7 @@ public static class DeckVariants
     }
 
     /// <summary>把两副（a / b）的文案都读出来拼成一段（空的那端跳过；图鉴用）。</summary>
-    private static string ReadAllVariants(CardModel card)
+    private static string ReadAllVariants(CardModel card, LocString? source)
     {
         var parts = new List<string>();
         foreach (var stem in new[] { "a", "b" })
@@ -145,7 +148,7 @@ public static class DeckVariants
             var key = card.Id.Entry + VariantKeySuffix + stem;
             try
             {
-                var text = FormatVariant(card, key);
+                var text = FormatVariant(card, key, source);
                 if (!string.IsNullOrWhiteSpace(text)) parts.Add(text);
             }
             catch (Exception ex)
@@ -158,15 +161,31 @@ public static class DeckVariants
         return string.Join(" ", parts);
     }
 
-    /// <summary>把变体原文按该卡的 DynamicVars 格式化（保留 :diff() 的升级变色）。</summary>
-    private static string FormatVariant(CardModel card, string key)
+    /// <summary>
+    /// 把变体原文按主描述的同一份变量表格式化（保留 <c>:diff()</c> 的升级变色）。
+    /// </summary>
+    /// <param name="source">
+    /// 主描述（<c>GetDescriptionForPile</c> 里已由本体装好 DynamicVars / IfUpgraded / OnTable / energyPrefix …）。
+    /// 为 null 时退回只装 DynamicVars（图鉴的极早期调用 / 单测）。
+    /// </param>
+    private static string FormatVariant(CardModel card, string key, LocString? source = null)
     {
         try
         {
             var text = new LocString("cards", key);
-            foreach (var pair in card.DynamicVars)
+            if (source is not null)
             {
-                text.Add(pair.Value);
+                foreach (var pair in source.Variables)
+                {
+                    text.AddObj(pair.Key, pair.Value);
+                }
+            }
+            else
+            {
+                foreach (var pair in card.DynamicVars)
+                {
+                    text.Add(pair.Value);
+                }
             }
 
             return text.GetFormattedText();

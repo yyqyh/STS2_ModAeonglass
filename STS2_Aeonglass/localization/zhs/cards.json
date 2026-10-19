@@ -165,5 +165,26 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_LONG_JOURNEY.description": "「[gold]搁浅[/gold] 10」。\n若在 Boss 层回归，则进入卡组，并随机升级卡组中 3 张牌。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_FROZEN_FORM.title": "冻结形态",
-  "STS2_AEONGLASS_CARD_AEONGLASS_FROZEN_FORM.description": "记录接下来打出的其他能力；下场战斗开始时，自动打出这些牌。\n（不包括自己）"
+  "STS2_AEONGLASS_CARD_AEONGLASS_FROZEN_FORM.description": "记录接下来打出的其他能力；下场战斗开始时，自动打出这些牌。\n（不包括自己）",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_SINK_SAND.title": "沉沙",
+  "STS2_AEONGLASS_CARD_AEONGLASS_SINK_SAND.description": "选择抽牌堆中的一张牌，将其变为[gold]凋萎[/gold]并给予其[gold]迟滞[/gold]。\n抽 3 张牌。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_SURGE_BACK.title": "回涌",
+  "STS2_AEONGLASS_CARD_AEONGLASS_SURGE_BACK.description": "获得{Block:diff()}点[gold]格挡[/gold]。\n打出时进入[gold]抽牌堆[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_TIDE_LOCK.title": "定潮",
+  "STS2_AEONGLASS_CARD_AEONGLASS_TIDE_LOCK.description": "造成{Damage:diff()}点伤害。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_SAND_TUNING.title": "调沙",
+  "STS2_AEONGLASS_CARD_AEONGLASS_SAND_TUNING.description": "回合结束时，选择一张[gold]迟滞[/gold]牌置于[gold]抽牌堆[/gold]顶。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_REFLECTION.title": "倒影",
+  "STS2_AEONGLASS_CARD_AEONGLASS_REFLECTION.description": "当你[gold]倒置[/gold]时，立刻进入手牌。\n将{Wither:diff()}张[gold]凋萎[/gold]放入该敌人的[gold]弃牌堆[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_CUT_TICK.title": "断刻",
+  "STS2_AEONGLASS_CARD_AEONGLASS_CUT_TICK.description": "造成{Damage:diff()}点伤害。\n回合结束时获得[gold]迟滞[/gold]；打出后失去[gold]迟滞[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_DOCK.title": "泊岸",
+  "STS2_AEONGLASS_CARD_AEONGLASS_DOCK.description": "获得{Block:diff()}点[gold]格挡[/gold]。"
 }

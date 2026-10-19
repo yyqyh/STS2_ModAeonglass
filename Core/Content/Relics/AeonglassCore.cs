@@ -70,6 +70,8 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
             if (creature.Player is { } player)
             {
                 CombatHistory.EndTurn(player);
+                // 「断刻」：玩家回合结束时给所有副本打上迟滞（打出时那张自己会去掉）。
+                CutTickMarking.MarkAll(player);
             }
         }
 

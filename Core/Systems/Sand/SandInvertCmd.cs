@@ -8,6 +8,7 @@ using STS2RitsuLib.Combat.SecondaryResources;
 using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Content.Characters;
 using STS2_Aeonglass.Core.Presentation.SecondaryResource;
+using STS2_Aeonglass.Core.Systems.Cards;
 
 namespace STS2_Aeonglass.Core.Systems.Sand;
 
@@ -77,6 +78,9 @@ internal static class SandInvertCmd
 
         // 翻转通知（能力牌用；例：INV-3 惯性 = 每翻转一次抽 1 张）。
         await NotifyInvertListeners(player);
+
+        // 「倒影」：倒置成功后，在抽/弃牌堆里的它立刻回手。
+        await InvertRecall.PullAsync(player);
 
         var source = sourceCard is null ? "计数器" : sourceCard.Id.Entry;
         Const.Logger.Info(

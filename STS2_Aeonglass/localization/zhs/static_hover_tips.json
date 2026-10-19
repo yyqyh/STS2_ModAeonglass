@@ -28,5 +28,9 @@
   ,
   "STS2_AEONGLASS_PROMPT_REWRITE": "选择一张手牌（给予「重放 1」与「保留」）"
   ,
-  "STS2_AEONGLASS_PROMPT_MOORING": "选择一张手牌（给予「搁浅 2」）"
+  "STS2_AEONGLASS_PROMPT_MOORING": "选择一张手牌（给予「搁浅 2」）",
+
+  "STS2_AEONGLASS_PROMPT_SINK_SAND": "选择抽牌堆中的一张牌（变为「凋萎」并给予「迟滞」）",
+
+  "STS2_AEONGLASS_PROMPT_SAND_TUNING": "选择一张「迟滞」牌（置于抽牌堆顶）"
 }

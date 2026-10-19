@@ -84,5 +84,9 @@
   "STS2_AEONGLASS_POWER_AEONGLASS_LAST_CHAPTER_POWER.smartDescription": "每回合开始时：额外获得 3 点能量，并额外抽 5 张牌。",
 
   "STS2_AEONGLASS_POWER_AEONGLASS_FROZEN_FORM_POWER.title": "冻结形态",
-  "STS2_AEONGLASS_POWER_AEONGLASS_FROZEN_FORM_POWER.description": "记录你打出的其他能力；下一场战斗开始时自动打出。"
+  "STS2_AEONGLASS_POWER_AEONGLASS_FROZEN_FORM_POWER.description": "记录你打出的其他能力；下一场战斗开始时自动打出。",
+
+  "STS2_AEONGLASS_POWER_AEONGLASS_SAND_TUNING_POWER.title": "调沙",
+  "STS2_AEONGLASS_POWER_AEONGLASS_SAND_TUNING_POWER.description": "回合结束时，选择一张[gold]迟滞[/gold]牌置于[gold]抽牌堆[/gold]顶。",
+  "STS2_AEONGLASS_POWER_AEONGLASS_SAND_TUNING_POWER.smartDescription": "回合结束时，选择一张[gold]迟滞[/gold]牌置于[gold]抽牌堆[/gold]顶。"
 }

@@ -152,15 +152,25 @@ public abstract class AeonglassStasisCardTemplate : AeonglassCardTemplate, IStas
 
     protected int StrandCombats { get; }
 
+    private int _strandLevel;
+
     /// <summary>
     /// 下一次归队要搁浅几场（「归岸」会在每次打出后 +1；其余卡恒等于构造值）。
     /// </summary>
     /// <remarks>
     /// 存在<b>母本</b>上（战斗副本不保存）⇒ 跨战斗 / 读档都保留成长；构造时用快照值兜旧存档。
     /// 只有「归岸」会写它，其它搁浅卡读到的永远是 <see cref="StrandCombats" />。
+    /// <para>
+    /// ⚠️ 2026-10-21：旧存档没有这个 <c>[SavedProperty]</c> 时会读到 0 ⇒ getter 回退到
+    /// <see cref="StrandCombats" />，否则卡面「搁浅N」会整行消失（裸关键词已按本体重放写法关闭）。
+    /// </para>
     /// </remarks>
     [SavedProperty]
-    public int StrandLevel { get; set; }
+    public int StrandLevel
+    {
+        get => _strandLevel > 0 ? _strandLevel : StrandCombats;
+        set => _strandLevel = value;
+    }
 
     /// <summary>本次送入搁浅区要用的场数；「归岸」可覆写做额外结算。</summary>
     protected virtual int StrandCombatsForSend() => StrandLevel;

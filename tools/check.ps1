@@ -3,7 +3,7 @@
 #
 # Usage:
 #   powershell -File tools/check.ps1
-#   powershell -File tools/check.ps1 -ExpectedPatches 19 -SkipGameLog
+#   powershell -File tools/check.ps1 -ExpectedPatches 20 -SkipGameLog
 #
 # Exit code: 0 = all green, 1 = at least one check failed.
 param(
@@ -11,7 +11,7 @@ param(
     [string]$DeployDir  = "E:\game_part2\SteamLibrary\steamapps\common\Slay the Spire 2\mods\STS2_Aeonglass",
     [string]$GameLog    = "$env:APPDATA\SlayTheSpire2\logs\godot.log",
     [string]$CharacterId = "STS2_AEONGLASS_CHARACTER_AEONGLASS",
-    [int]$ExpectedPatches = 19,
+    [int]$ExpectedPatches = 20,
     [switch]$SkipGameLog,
     [switch]$SkipPck
 )

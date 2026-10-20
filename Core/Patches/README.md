@@ -36,6 +36,7 @@ Harmony 的装卸要改方法裸指针、有并发与时机风险，RitsuLib 也
 |---|---|---|---|---|---|
 | `CombatUiMountPatch` | `NCombatRoom._Ready` (postfix) | 共享（战斗房初始化） | `CharacterGate.IsActive` | `TryAttach` 逐个 try/catch，挂不上只记日志、不影响其余 | `[HOST]`（2026-10-16 起只挂：坍缩/唤回按键 · 意图卡带 · 传送门 · 领域特效层；控制面板已删） |
 | `StasisNumberDescriptionPatch` | `CardModel.GetDescriptionForPile(PileType, Creature)` (postfix) | 共享（每次描述构建） | `CharacterGate.IsActive` + 卡类型判断 | try/catch，失败保持本体原文 | `[搁浅]`（照本体 `REPLAY.extraText` 追加 `[gold]搁浅[/gold]{Times}。`） |
+| `StasisNumberUpgradePreviewPatch` | `CardModel.GetDescriptionForUpgradePreview` (postfix) | 共享（升级预览 / 卡牌库） | 同上（复用 helper） | try/catch，失败保持本体原文 | `[搁浅]`（同一数字行） |
 | `DeckTipSwapPatch` | `NHoverTipSet.CreateAndShow` (prefix) | 共享（全局悬浮提示） | `CharacterGate` + `DeckModule.Enabled` + 只认那两颗按钮 | 整流 try/catch，异常原样放行 | `[双卡组]` |
 | `IntentTargetingPatches.IsValidTargetPatch` | `CardModel.IsValidTarget` (postfix) | 共享热 | `IIntentTargetCard` | try/catch，异常不动 `__result` | `[意图]` |
 | …`.AllowedToTargetNodePatch` | `NTargetManager.AllowedToTargetNode` (postfix) | 共享热 | `AimingOurCard` / `IsIntentNode` | 同上 | `[意图]` |

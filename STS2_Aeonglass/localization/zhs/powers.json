@@ -88,5 +88,13 @@
 
   "STS2_AEONGLASS_POWER_AEONGLASS_SAND_TUNING_POWER.title": "调沙",
   "STS2_AEONGLASS_POWER_AEONGLASS_SAND_TUNING_POWER.description": "回合结束时，选择一张[gold]迟滞[/gold]牌置于[gold]抽牌堆[/gold]顶。",
-  "STS2_AEONGLASS_POWER_AEONGLASS_SAND_TUNING_POWER.smartDescription": "回合结束时，选择一张[gold]迟滞[/gold]牌置于[gold]抽牌堆[/gold]顶。"
+  "STS2_AEONGLASS_POWER_AEONGLASS_SAND_TUNING_POWER.smartDescription": "回合结束时，选择一张[gold]迟滞[/gold]牌置于[gold]抽牌堆[/gold]顶。",
+
+  "STS2_AEONGLASS_POWER_AEONGLASS_DOUBLE_SOURCE_POWER.title": "双源取牌",
+  "STS2_AEONGLASS_POWER_AEONGLASS_DOUBLE_SOURCE_POWER.description": "回合开始时，从弃牌堆抽 {Amount} 张牌。",
+  "STS2_AEONGLASS_POWER_AEONGLASS_DOUBLE_SOURCE_POWER.smartDescription": "回合开始时，从弃牌堆抽 [blue]{Amount}[/blue] 张牌。",
+
+  "STS2_AEONGLASS_POWER_AEONGLASS_DREDGE_POWER.title": "沉底淘牌",
+  "STS2_AEONGLASS_POWER_AEONGLASS_DREDGE_POWER.description": "回合开始时，处理抽牌堆底部 {Amount} 张牌。",
+  "STS2_AEONGLASS_POWER_AEONGLASS_DREDGE_POWER.smartDescription": "回合开始时，处理抽牌堆底部 [blue]{Amount}[/blue] 张牌。"
 }

@@ -18,7 +18,9 @@ namespace STS2_Aeonglass.Core.Content.Cards.Basic;
 /// </remarks>
 [RegisterCard(typeof(AeonglassCardPool))]
 [RegisterCharacterStarterCard(typeof(Aeonglass), 4)]
-public sealed class AeonglassDefend()
-    : AeonglassCardTemplate(AeonglassCardSpec.Block(1, CardRarity.Basic, 5m, 3m))
+public sealed class AeonglassDefend() 
+    : AeonglassCardTemplate(
+        AeonglassCardSpec.Block(1, CardRarity.Basic, 5m, 3m)
+            .Tag(CardTag.Defend))
 {
 }

@@ -186,5 +186,20 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_CUT_TICK.description": "造成{Damage:diff()}点伤害。\n回合结束时获得[gold]迟滞[/gold]；打出后失去[gold]迟滞[/gold]。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_DOCK.title": "泊岸",
-  "STS2_AEONGLASS_CARD_AEONGLASS_DOCK.description": "获得{Block:diff()}点[gold]格挡[/gold]。"
+  "STS2_AEONGLASS_CARD_AEONGLASS_DOCK.description": "获得{Block:diff()}点[gold]格挡[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_TOUCH_TOP.title": "触顶",
+  "STS2_AEONGLASS_CARD_AEONGLASS_TOUCH_TOP.description": "本牌在[gold]抽牌堆[/gold]顶时，立刻进入手牌。\n从[gold]弃牌堆[/gold]抽{Draw:diff()}张牌。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_DOUBLE_SOURCE.title": "双源取牌",
+  "STS2_AEONGLASS_CARD_AEONGLASS_DOUBLE_SOURCE.description": "回合开始时，不再从[gold]抽牌堆[/gold]抽 5 张，而是从抽牌堆抽 3 张、从[gold]弃牌堆[/gold]抽{FromDiscard:diff()}张。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_BACKFLOW.title": "倒灌",
+  "STS2_AEONGLASS_CARD_AEONGLASS_BACKFLOW.description": "抽 5 张牌，然后从[gold]弃牌堆[/gold]抽 5 张牌。\n将 1 张带[gold]迟滞[/gold]的[gold]凋萎[/gold]放入[gold]弃牌堆[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_DREDGE.title": "沉底淘牌",
+  "STS2_AEONGLASS_CARD_AEONGLASS_DREDGE.description": "回合开始时，丢弃[gold]抽牌堆[/gold]底部{Pick:diff()}张牌；打出其中带[gold]迟滞[/gold]的牌，消耗其中状态牌。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_TURNOVER.title": "倒仓",
+  "STS2_AEONGLASS_CARD_AEONGLASS_TURNOVER.description": "抽 2 张牌，交换[gold]抽牌堆[/gold]与[gold]弃牌堆[/gold]，再次抽{Again:diff()}张牌。"
 }

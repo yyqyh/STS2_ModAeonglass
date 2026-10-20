@@ -1,4 +1,5 @@
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.Localization;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 
@@ -28,4 +29,10 @@ public sealed class AeonglassShoreStrike()
     protected override decimal DamageThisPlay =>
         DynamicVars["Damage"].BaseValue
         + StasisCount.CountAll(Owner) * DynamicVars["PerStrand"].BaseValue;
+
+    protected override void AddExtraArgsToDescription(LocString description)
+    {
+        base.AddExtraArgsToDescription(description);
+        description.Add("ActualDamage", DamageThisPlay);
+    }
 }

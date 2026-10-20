@@ -30,7 +30,7 @@ public sealed class AeonglassRiot : AeonglassCardTemplate, IHysteresisCard
             Playable = false,
         }
             .Keyword(HysteresisKeyword.Value)
-            .Keyword(EternalKeyword.Value))
+            .Keyword(CardKeyword.Eternal))
     {
     }
 }

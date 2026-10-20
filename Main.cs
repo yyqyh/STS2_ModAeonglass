@@ -94,7 +94,6 @@ public static class Main
 
         // 搁浅（搁浅）：注册 mod 关键词「搁浅」（同上）。
         Core.Content.Keywords.StasisKeyword.Register();
-        Core.Content.Keywords.EternalKeyword.Register();
 
         var (applied, failed) = InstallHarmonyPatches(assembly);
 

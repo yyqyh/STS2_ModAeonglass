@@ -1,4 +1,5 @@
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.HoverTips;
 
 using STS2RitsuLib;
 
@@ -30,6 +31,8 @@ internal static class WitherKeyword
 
     /// <summary>RitsuLib 为该关键词生成的动态 <see cref="CardKeyword" /> 值（注册后可用）。</summary>
     internal static CardKeyword Value { get; private set; }
+
+    internal static IHoverTip HoverTip => HoverTipFactory.FromKeyword(Value);
 
     /// <summary>注册一次（幂等；由 <c>Main.Initialize</c> 调）。</summary>
     internal static void Register()

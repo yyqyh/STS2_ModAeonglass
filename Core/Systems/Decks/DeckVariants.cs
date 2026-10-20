@@ -158,7 +158,8 @@ public static class DeckVariants
             }
         }
 
-        return string.Join(" ", parts);
+        // 图鉴没有"当前副"：两副各占一行，避免挤成一段看不出是两种模式。
+        return string.Join("\n", parts);
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.HoverTips;
 using MegaCrit.Sts2.Core.Saves.Runs;
 
 using STS2RitsuLib.Scaffolding.Content;
@@ -24,6 +25,9 @@ public abstract class AeonglassCardTemplate : ModCardTemplate, IDeckVariantCard
     }
 
     protected AeonglassCardSpec Spec { get; }
+
+    /// <summary>卡面提到 mod 关键词时自动补 tips（统一入口，所有派生卡生效）。</summary>
+    protected override IEnumerable<IHoverTip> AdditionalHoverTips => KeywordHoverTips.For(this);
 
     /// <summary>测试接缝：读取本卡的声明式配置。</summary>
     internal AeonglassCardSpec SpecForTests => Spec;

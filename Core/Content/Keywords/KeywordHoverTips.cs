@@ -24,6 +24,10 @@ internal static class KeywordHoverTips
         Add(text, "凋萎", WitherKeyword.Value, WitherKeyword.HoverTip, card, tips);
         Add(text, "迟滞", HysteresisKeyword.Value, HysteresisKeyword.HoverTip, card, tips);
         AddNative(text, "永恒", CardKeyword.Eternal, card, tips);
+        AddAny(text, ["空间间隙", "时空裂隙"], MechanicKeywords.SpaceGap.Value, MechanicKeywords.SpaceGap.HoverTip, card, tips);
+        Add(text, "坍缩", MechanicKeywords.Collapse.Value, MechanicKeywords.Collapse.HoverTip, card, tips);
+        Add(text, "唤回", MechanicKeywords.Recall.Value, MechanicKeywords.Recall.HoverTip, card, tips);
+        Add(text, "回溯", MechanicKeywords.Rewind.Value, MechanicKeywords.Rewind.HoverTip, card, tips);
         return tips;
     }
 
@@ -51,6 +55,21 @@ internal static class KeywordHoverTips
         if (text.Contains(word, StringComparison.Ordinal) && !card.Keywords.Contains(keyword))
         {
             tips.Add(HoverTipFactory.FromKeyword(keyword));
+        }
+    }
+
+    private static void AddAny(
+        string text,
+        IReadOnlyList<string> words,
+        CardKeyword keyword,
+        IHoverTip tip,
+        CardModel card,
+        List<IHoverTip> tips)
+    {
+        if (words.Any(word => text.Contains(word, StringComparison.Ordinal))
+            && !card.Keywords.Contains(keyword))
+        {
+            tips.Add(tip);
         }
     }
 

@@ -95,6 +95,9 @@ public static class Main
         // 搁浅（搁浅）：注册 mod 关键词「搁浅」（同上）。
         Core.Content.Keywords.StasisKeyword.Register();
 
+        // 机制词条：空间间隙 / 坍缩 / 唤回 / 回溯（只用于卡面 tips）。
+        Core.Content.Keywords.MechanicKeywords.RegisterAll();
+
         var (applied, failed) = InstallHarmonyPatches(assembly);
 
         // 本地化键对不上时看这几行最快。

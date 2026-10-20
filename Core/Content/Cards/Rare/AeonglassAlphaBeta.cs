@@ -26,6 +26,8 @@ namespace STS2_Aeonglass.Core.Content.Cards.Rare;
 public sealed class AeonglassAlphaBeta()
     : AeonglassCardTemplate(
         AeonglassCardSpec.Skill(0, CardRarity.Rare)
+            // 文案有两副：此处只做文案注入，被动效果由 AlphaBetaPassive 统一判定。
+            .Feature(new VariantFeature(runBlocks: false))
             .UpgradeAddKeyword(CardKeyword.Innate))
 {
     /// <summary>0 费、无立即效果（效果全是"带着它就有的"被动 + 回溯接缝）。</summary>

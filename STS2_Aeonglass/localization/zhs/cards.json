@@ -91,7 +91,7 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_FRAGMENT.description": "造成{Damage:diff()}点伤害。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_PHASE_LAW.title": "相位律",
-  "STS2_AEONGLASS_CARD_AEONGLASS_PHASE_LAW.description": "回合开始时：\n[gold]沙砾[/gold]>3:获得1能量。\n[gold]沙砾[/gold]=3:获得3点[gold]格挡[/gold]。\n[gold]沙砾[/gold]<3:抽1张牌。\n[gold]消逝[/gold]：\n[gold]沙砾[/gold]>3:抽1张牌。\n[gold]沙砾[/gold]=3:获得3点[gold]格挡[/gold]。\n[gold]沙砾[/gold]<3:获得1点能量。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_PHASE_LAW.description": "回合开始时：\n[gold]沙砾侧[/gold]（沙砾≥4）：获得1点能量。\n[gold]平衡档[/gold]（沙砾=3）：获得3点[gold]格挡[/gold]。\n[gold]空隙侧[/gold]（沙砾≤2）：抽1张牌。\n[gold]消逝[/gold]：\n沙砾侧：抽1张牌。\n平衡档：获得3点[gold]格挡[/gold]。\n空隙侧：获得1点能量。",
   
 
   "STS2_AEONGLASS_CARD_AEONGLASS_SAND.title": "沙",
@@ -107,7 +107,7 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_TIME_MAGIC.description": "2.14!",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_ALPHA_BETA.title": "α or β",
-  "STS2_AEONGLASS_CARD_AEONGLASS_ALPHA_BETA.description": "回溯后,进入[gold]手牌[/gold]和[gold]卡组[/gold]。\n如果本局没有[gold]回溯[/gold]：\n{Variant}",
+  "STS2_AEONGLASS_CARD_AEONGLASS_ALPHA_BETA.description": "回溯后，将一张复制加入[gold]手牌[/gold]（[gold]卡组[/gold]保留一份）。\n如果本局没有[gold]回溯[/gold]：\n{Variant}",
   "STS2_AEONGLASS_CARD_AEONGLASS_ALPHA_BETA.variant.a": "[gold]永时[/gold]：给予[gold]凋萎[/gold]时额外给予1张。",
   "STS2_AEONGLASS_CARD_AEONGLASS_ALPHA_BETA.variant.b": "[gold]消逝[/gold]：坍缩与唤回只消耗1点[gold]沙砾[/gold]。",
 
@@ -211,7 +211,7 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_DEADWOOD.description": "将1张带[gold]迟滞[/gold]的[gold]凋萎[/gold]放入手牌。\n获得{Energy:diff()}点[gold]能量[/gold]。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_BURIAL.title": "弃葬",
-  "STS2_AEONGLASS_CARD_AEONGLASS_BURIAL.description": "造成{ActualDamage}点伤害（[gold]弃牌堆[/gold]每有1张牌，伤害+{PerCard:diff()}）。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_BURIAL.description": "造成{ActualDamage}点伤害（基础1点，[gold]弃牌堆[/gold]每有1张牌就+{PerCard:diff()}）。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_TOP_EROSION.title": "顶蚀",
   "STS2_AEONGLASS_CARD_AEONGLASS_TOP_EROSION.description": "获得{Block:diff()}点[gold]格挡[/gold]。\n将一张带[gold]迟滞[/gold]的[gold]凋萎[/gold]放到[gold]抽牌堆[/gold]顶。",

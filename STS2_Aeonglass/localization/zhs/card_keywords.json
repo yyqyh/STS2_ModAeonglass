@@ -4,5 +4,13 @@
   "STS2_AEONGLASS_KEYWORD_HYSTERESIS.title": "迟滞",
   "STS2_AEONGLASS_KEYWORD_HYSTERESIS.description": "此牌不参与洗牌。",
   "STS2_AEONGLASS_KEYWORD_STASIS.title": "搁浅",
-  "STS2_AEONGLASS_KEYWORD_STASIS.description": "打出后离开你的[gold]牌组[/gold]，停在[gold]空域[/gold]。"
+  "STS2_AEONGLASS_KEYWORD_STASIS.description": "打出后离开你的[gold]牌组[/gold]，停在[gold]空域[/gold]。",
+  "STS2_AEONGLASS_KEYWORD_SPACE_GAP.title": "空间间隙",
+  "STS2_AEONGLASS_KEYWORD_SPACE_GAP.description": "跨战斗保留的额外牌区（也称时空裂隙）。坍缩时复制手牌进入其中；唤回时用其中的牌替换手牌。",
+  "STS2_AEONGLASS_KEYWORD_COLLAPSE.title": "坍缩",
+  "STS2_AEONGLASS_KEYWORD_COLLAPSE.description": "支付通常2点[gold]沙砾[/gold]，将手牌复制一份放入[gold]空间间隙[/gold]，然后把原手牌移出本场战斗。",
+  "STS2_AEONGLASS_KEYWORD_RECALL.title": "唤回",
+  "STS2_AEONGLASS_KEYWORD_RECALL.description": "支付通常2点[gold]沙砾[/gold]，丢弃当前手牌，用[gold]空间间隙[/gold]中的牌替换。",
+  "STS2_AEONGLASS_KEYWORD_REWIND.title": "回溯",
+  "STS2_AEONGLASS_KEYWORD_REWIND.description": "回到上一个回合开始时的状态；生命、死亡、空间间隙与敌人意图不回退。通常每场只能使用一次。"
 }

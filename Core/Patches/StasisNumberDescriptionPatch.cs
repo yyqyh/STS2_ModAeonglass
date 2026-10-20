@@ -7,7 +7,6 @@ using MegaCrit.Sts2.Core.Models;
 
 using STS2_Aeonglass.Core.Config;
 using STS2_Aeonglass.Core.Content.Cards.Templates;
-using STS2_Aeonglass.Core.Systems.Bootstrap;
 
 namespace STS2_Aeonglass.Core.Patches;
 
@@ -19,7 +18,7 @@ namespace STS2_Aeonglass.Core.Patches;
 /// ① 本体 <c>REPLAY.extraText</c> 就是用 <c>Times</c> 变量追加一行；这里完全同构。
 /// ② 数字取母本的 <see cref="AeonglassStasisCardTemplate.StrandLevel" />（设计 X，而不是内部 X+1）。
 /// ③ 关键词已经改为不注入裸标题（见 <c>StasisKeyword</c> 的 <c>None</c> 放置）⇒ 卡面只出现带数字的一行。
-/// ④ 纯表现补丁：角色门 + try/catch，异常不影响本体描述。
+/// ④ 纯表现补丁：按卡类型门（图鉴在主菜单也要显示）+ try/catch，异常不影响本体描述。
 /// </remarks>
 [HarmonyPatch(typeof(CardModel), nameof(CardModel.GetDescriptionForPile), typeof(PileType), typeof(Creature))]
 internal static class StasisNumberDescriptionPatch
@@ -34,9 +33,7 @@ internal static class StasisNumberDescriptionPatch
     {
         try
         {
-            if (!CharacterGate.IsActive
-                || card is not AeonglassStasisCardTemplate stasis
-                || stasis.StrandLevel <= 0)
+            if (!ShouldApply(card) || card is not AeonglassStasisCardTemplate stasis)
             {
                 return;
             }
@@ -53,6 +50,12 @@ internal static class StasisNumberDescriptionPatch
                 + $"{ex.GetType().Name}: {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// 只给我们的搁浅卡加行；不依赖角色门 —— 图鉴/卡牌库在主菜单也要能看到。
+    /// </summary>
+    internal static bool ShouldApply(CardModel card) =>
+        card is AeonglassStasisCardTemplate { StrandLevel: > 0 };
 }
 
 /// <summary>升级预览 / 卡牌库走的是另一个入口，同样补上搁浅数字行。</summary>
@@ -64,7 +67,7 @@ internal static class StasisNumberUpgradePreviewPatch
     {
         try
         {
-            if (!CharacterGate.IsActive)
+            if (!StasisNumberDescriptionPatch.ShouldApply(__instance))
             {
                 return;
             }

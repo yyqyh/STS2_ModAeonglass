@@ -34,8 +34,9 @@ internal static class StasisKeyword
                 .RegisterCardKeywordOwnedByLocNamespace(
                     Stem,
                     iconPath: null,
+                    // 2026-10-21：照本体「重放」——描述里不追加裸关键词，改由数字行补丁追加「搁浅N。」。
                     cardDescriptionPlacement:
-                        STS2RitsuLib.Keywords.ModKeywordCardDescriptionPlacement.AfterCardDescription,
+                        STS2RitsuLib.Keywords.ModKeywordCardDescriptionPlacement.None,
                     includeInCardHoverTip: true);
 
             Value = definition.CardKeywordValue;

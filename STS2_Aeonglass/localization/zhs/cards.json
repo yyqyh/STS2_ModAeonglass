@@ -42,9 +42,9 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_TIME_HUB.title": "时枢",
   "STS2_AEONGLASS_CARD_AEONGLASS_TIME_HUB.description": "获得{TurnEnergy}点[gold]时枢[/gold]。\n在你的回合开始时，获得等量能量。\n你的手牌上限减1。",
   "STS2_AEONGLASS_CARD_AEONGLASS_INSCRIPTION.title": "铭刻",
-  "STS2_AEONGLASS_CARD_AEONGLASS_INSCRIPTION.description": "造成{Damage:diff()}点伤害。\n[gold]搁浅[/gold]3。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_INSCRIPTION.description": "造成{Damage:diff()}点伤害。",
   "STS2_AEONGLASS_CARD_AEONGLASS_SAND_SEAL.title": "封沙",
-  "STS2_AEONGLASS_CARD_AEONGLASS_SAND_SEAL.description": "获得{Block:diff()}点[gold]格挡[/gold]。\n[gold]搁浅[/gold]3。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_SAND_SEAL.description": "获得{Block:diff()}点[gold]格挡[/gold]。",
   "STS2_AEONGLASS_CARD_AEONGLASS_LOAN_TIME.title": "贷时",
   "STS2_AEONGLASS_CARD_AEONGLASS_LOAN_TIME.description": "获得1点[gold]贷时[/gold]。\n在你的回合开始时，你可以将下回合的能量提前到本回合使用。\n下回合的能量相应减少。",
   "STS2_AEONGLASS_CARD_AEONGLASS_WITHERING.title": "枯萎",
@@ -82,13 +82,13 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_PURIFY.title": "净化",
   "STS2_AEONGLASS_CARD_AEONGLASS_PURIFY.description": "消耗所有[gold]凋萎[/gold]。\n对所有敌人造成伤害，每有一张[gold]凋萎[/gold]就增加{PerWither}点。{IfUpgraded:show:（升级档：改为消耗所有[gold]状态牌[/gold]。）|}",
   "STS2_AEONGLASS_CARD_AEONGLASS_DEAD_END.title": "穷途陌路",
-  "STS2_AEONGLASS_CARD_AEONGLASS_DEAD_END.description": "消耗所有[gold]沙砾[/gold]，立刻额外[gold]回溯[/gold]一次。\n[gold]搁浅[/gold]3。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_DEAD_END.description": "消耗所有[gold]沙砾[/gold]，立刻额外[gold]回溯[/gold]一次。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_BACKSWING.title": "回摆",
   "STS2_AEONGLASS_CARD_AEONGLASS_BACKSWING.description": "获得{Block:diff()}点[gold]格挡[/gold]。\n如果你在本回合[gold]变换[/gold]过[gold]沙砾[/gold]，则额外获得{Bonus}点[gold]格挡[/gold]。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_FRAGMENT.title": "破片",
-  "STS2_AEONGLASS_CARD_AEONGLASS_FRAGMENT.description": "造成{Damage:diff()}点伤害。\n[gold]搁浅[/gold]1。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_FRAGMENT.description": "造成{Damage:diff()}点伤害。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_PHASE_LAW.title": "相位律",
   "STS2_AEONGLASS_CARD_AEONGLASS_PHASE_LAW.description": "每回合开始时：\n[gold]沙砾侧[/gold]获得1点能量。\n[gold]平衡档[/gold]获得3点[gold]格挡[/gold]。\n[gold]空隙侧[/gold]抽1张牌。\n[gold]消逝：[/gold]\n[gold]沙砾侧[/gold]抽1张牌。\n[gold]平衡档[/gold]获得3点[gold]格挡[/gold]。\n[gold]空隙侧[/gold]获得1点能量。",
@@ -162,7 +162,7 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_POUR_OUT.description": "给予所有[gold]手牌[/gold]「[gold]搁浅[/gold] 1」，并打出它们。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_LONG_JOURNEY.title": "远行",
-  "STS2_AEONGLASS_CARD_AEONGLASS_LONG_JOURNEY.description": "「[gold]搁浅[/gold] 10」。\n若在 Boss 层回归，则进入卡组，并随机升级卡组中 3 张牌。",
+  "STS2_AEONGLASS_CARD_AEONGLASS_LONG_JOURNEY.description": "若在 Boss 层回归，则进入卡组，并随机升级卡组中 3 张牌。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_FROZEN_FORM.title": "冻结形态",
   "STS2_AEONGLASS_CARD_AEONGLASS_FROZEN_FORM.description": "记录接下来打出的其他能力；下场战斗开始时，自动打出这些牌。\n（不包括自己）",

@@ -33,4 +33,6 @@
   "STS2_AEONGLASS_PROMPT_SINK_SAND": "选择抽牌堆中的一张牌（变为「凋萎」并给予「迟滞」）",
 
   "STS2_AEONGLASS_PROMPT_SAND_TUNING": "选择一张「迟滞」牌（置于抽牌堆顶）"
+,
+  "STS2_AEONGLASS_STASIS.extraText": "[gold]搁浅[/gold]{Times}。"
 }

@@ -4,8 +4,11 @@ using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.Factories;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Rewards;
+using MegaCrit.Sts2.Core.Rooms;
 using MegaCrit.Sts2.Core.Saves.Runs;
 
 using STS2RitsuLib.Combat.Ui.ExtraCornerAmountLabels;
@@ -269,5 +272,44 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
     /// </remarks>
     [SavedProperty]
     public bool BrokenWatchPending { get; set; }
+
+    /// <summary>
+    /// 「蜡封」：还有几场战斗结束后要发一件蜡质遗物（随存档走）。
+    /// </summary>
+    /// <remarks>
+    /// 能力/牌在战斗结束时会先离场 ⇒ 待办必须挂在<b>跑局持有的初始遗物</b>上；
+    /// 结算形状照本体 <c>ToyBox</c>：<c>RelicFactory.PullNextRelicFromFront</c> + <c>IsWax = true</c> + 奖励。
+    /// </remarks>
+    [SavedProperty]
+    public int WaxSealsPending { get; set; }
+
+    /// <summary>把一张「蜡封」记到本场战斗结束后的待办里。</summary>
+    public static bool QueueWaxSeal(Player player)
+    {
+        if (player.Relics.OfType<AeonglassCore>().FirstOrDefault() is not { } core)
+        {
+            return false;
+        }
+
+        core.WaxSealsPending++;
+        return true;
+    }
+
+    /// <summary>战斗结束：有待办就发一件蜡质遗物（奖励形式，与 ToyBox 同一条本体链路）。</summary>
+    public override async Task AfterCombatEnd(CombatRoom room)
+    {
+        if (WaxSealsPending <= 0 || Owner is not { } player)
+        {
+            return;
+        }
+
+        WaxSealsPending--;
+        var relic = RelicFactory.PullNextRelicFromFront(player).ToMutable();
+        relic.IsWax = true;
+        await RewardsCmd.OfferCustom(player, [new RelicReward(relic, player)]);
+        Const.Logger.Info(
+            $"[{Const.ModId}] {Const.Prefix.Stasis} 蜡封：战斗结束发放蜡质遗物 {relic.Id.Entry}"
+            + $"（剩 {WaxSealsPending} 笔待办）");
+    }
 
 }

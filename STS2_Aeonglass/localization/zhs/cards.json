@@ -201,5 +201,32 @@
   "STS2_AEONGLASS_CARD_AEONGLASS_DREDGE.description": "回合开始时，丢弃[gold]抽牌堆[/gold]底部{Pick:diff()}张牌；打出其中带[gold]迟滞[/gold]的牌，消耗其中状态牌。",
 
   "STS2_AEONGLASS_CARD_AEONGLASS_TURNOVER.title": "倒仓",
-  "STS2_AEONGLASS_CARD_AEONGLASS_TURNOVER.description": "抽 2 张牌，交换[gold]抽牌堆[/gold]与[gold]弃牌堆[/gold]，再次抽{Again:diff()}张牌。"
+  "STS2_AEONGLASS_CARD_AEONGLASS_TURNOVER.description": "抽 2 张牌，交换[gold]抽牌堆[/gold]与[gold]弃牌堆[/gold]，再次抽{Again:diff()}张牌。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_DRIFTWOOD.title": "无锚漂流",
+  "STS2_AEONGLASS_CARD_AEONGLASS_DRIFTWOOD.description": "回合开始时，随机生成一张[gold]搁浅[/gold]牌。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_DEADWOOD.title": "枯薪",
+  "STS2_AEONGLASS_CARD_AEONGLASS_DEADWOOD.description": "将 1 张带[gold]迟滞[/gold]的[gold]凋萎[/gold]放入手牌。\n获得{Energy:diff()}点[gold]能量[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_BURIAL.title": "弃葬",
+  "STS2_AEONGLASS_CARD_AEONGLASS_BURIAL.description": "造成 1 点伤害，[gold]弃牌堆[/gold]每有 1 张牌，额外造成{PerCard:diff()}点伤害。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_TOP_EROSION.title": "顶蚀",
+  "STS2_AEONGLASS_CARD_AEONGLASS_TOP_EROSION.description": "获得{Block:diff()}点[gold]格挡[/gold]。\n将一张带[gold]迟滞[/gold]的[gold]凋萎[/gold]放入你的[gold]抽牌堆[/gold]顶。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_SHORE_STRIKE.title": "岸击",
+  "STS2_AEONGLASS_CARD_AEONGLASS_SHORE_STRIKE.description": "造成 1 点伤害，额外造成所有卡组中[gold]搁浅[/gold]牌数量之和的{PerStrand:diff()}倍伤害。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_KEEP_RIOT.title": "留乱",
+  "STS2_AEONGLASS_CARD_AEONGLASS_KEEP_RIOT.description": "获得一张[gold]乱流[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_WAX_SEAL.title": "蜡封",
+  "STS2_AEONGLASS_CARD_AEONGLASS_WAX_SEAL.description": "战斗结束后，获得一件[gold]蜡质遗物[/gold]。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_RETURN_TO_SHORE.title": "归岸",
+  "STS2_AEONGLASS_CARD_AEONGLASS_RETURN_TO_SHORE.description": "恢复{Heal:diff()}点生命。\n打出后，搁浅战斗数 +1。",
+
+  "STS2_AEONGLASS_CARD_AEONGLASS_HIGH_TIDE.title": "涨潮",
+  "STS2_AEONGLASS_CARD_AEONGLASS_HIGH_TIDE.description": "对所有敌人造成{Damage:diff()}点伤害 {Hits:diff()} 次。\n打出后，费用永久 +1。"
 }

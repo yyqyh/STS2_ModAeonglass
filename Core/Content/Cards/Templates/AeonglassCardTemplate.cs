@@ -147,9 +147,28 @@ public abstract class AeonglassStasisCardTemplate : AeonglassCardTemplate, IStas
         : base(spec)
     {
         StrandCombats = strandCombats;
+        StrandLevel = strandCombats;
     }
 
     protected int StrandCombats { get; }
+
+    /// <summary>
+    /// 下一次归队要搁浅几场（「归岸」会在每次打出后 +1；其余卡恒等于构造值）。
+    /// </summary>
+    /// <remarks>
+    /// 存在<b>母本</b>上（战斗副本不保存）⇒ 跨战斗 / 读档都保留成长；构造时用快照值兜旧存档。
+    /// 只有「归岸」会写它，其它搁浅卡读到的永远是 <see cref="StrandCombats" />。
+    /// </remarks>
+    [SavedProperty]
+    public int StrandLevel { get; set; }
+
+    /// <summary>本次送入搁浅区要用的场数；「归岸」可覆写做额外结算。</summary>
+    protected virtual int StrandCombatsForSend() => StrandLevel;
+
+    /// <summary>送入搁浅区之后的追加结算（母本已入堆）；默认无。</summary>
+    protected virtual void AfterSentToStasis(CardModel master)
+    {
+    }
 
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         base.CanonicalKeywords.Append(StasisKeyword.Value).Distinct();
@@ -188,6 +207,7 @@ public abstract class AeonglassStasisCardTemplate : AeonglassCardTemplate, IStas
         }
 
         DeckVersion = null;
-        await StasisReturn.SendToZone(Owner, master, StrandCombats);
+        await StasisReturn.SendToZone(Owner, master, StrandCombatsForSend());
+        AfterSentToStasis(master);
     }
 }

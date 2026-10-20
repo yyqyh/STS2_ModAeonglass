@@ -96,5 +96,9 @@
 
   "STS2_AEONGLASS_POWER_AEONGLASS_DREDGE_POWER.title": "沉底淘牌",
   "STS2_AEONGLASS_POWER_AEONGLASS_DREDGE_POWER.description": "回合开始时，处理抽牌堆底部 {Amount} 张牌。",
-  "STS2_AEONGLASS_POWER_AEONGLASS_DREDGE_POWER.smartDescription": "回合开始时，处理抽牌堆底部 [blue]{Amount}[/blue] 张牌。"
+  "STS2_AEONGLASS_POWER_AEONGLASS_DREDGE_POWER.smartDescription": "回合开始时，处理抽牌堆底部 [blue]{Amount}[/blue] 张牌。",
+
+  "STS2_AEONGLASS_POWER_AEONGLASS_DRIFTWOOD_POWER.title": "无锚漂流",
+  "STS2_AEONGLASS_POWER_AEONGLASS_DRIFTWOOD_POWER.description": "回合开始时，随机生成 {Amount} 张搁浅牌。",
+  "STS2_AEONGLASS_POWER_AEONGLASS_DRIFTWOOD_POWER.smartDescription": "回合开始时，随机生成 [blue]{Amount}[/blue] 张搁浅牌。"
 }

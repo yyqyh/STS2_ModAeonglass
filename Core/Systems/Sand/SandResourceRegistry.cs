@@ -77,8 +77,10 @@ internal static class SandResourceRegistry
     /// <summary>卡面费用样式。</summary>
     public static readonly SecondaryResourceCardCostUiStyle SandCardCostStyle = new()
     {
-        SlotSize = new Vector2(48f, 48f),
-        IconSize = new Vector2(46f, 46f),
+        // 2026-10-20：与本体 StarIcon 同尺寸/同位置（0.5 锚点，58×58）。
+        SlotSize = new Vector2(58f, 58f),
+        IconSize = new Vector2(58f, 58f),
+        ReserveVanillaStarCostSlot = true,
 
         FontSize = 28,
         OutlineSize = 7,

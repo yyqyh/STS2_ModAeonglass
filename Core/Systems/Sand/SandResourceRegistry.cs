@@ -3,6 +3,8 @@ using Godot;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.HoverTips;
+using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Nodes.Combat;
 
 using STS2RitsuLib;
@@ -52,6 +54,11 @@ internal static class SandResourceRegistry
 
     /// <summary>空隙的完整资源 ID。</summary>
     public static string VoidId => Void.Id;
+
+    /// <summary>沙砾费卡的卡面费用提示（卡牌 HoverTips 用）。</summary>
+    public static IHoverTip CardCostTip => new HoverTip(
+        new LocString("static_hover_tips", "STS2_AEONGLASS_SAND_COST.title"),
+        new LocString("static_hover_tips", "STS2_AEONGLASS_SAND_COST.description"));
 
     /// <summary>计数器样式（照堕化拉撒路的 <c>ChargeCounterStyle</c>，配色换成沙漏的青色系）。</summary>
     /// <remarks>

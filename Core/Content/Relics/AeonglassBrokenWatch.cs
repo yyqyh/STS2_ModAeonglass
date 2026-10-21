@@ -25,8 +25,14 @@ namespace STS2_Aeonglass.Core.Content.Relics;
 ///    <c>RewindModule.GrantTemporarilyIfMissing</c>（事件一落地就删掉那段）。
 /// </remarks>
 [RegisterRelic(typeof(AeonglassRelicPool))]
-public sealed class AeonglassBrokenWatch : ModRelicTemplate, IModRightClickableRelic, IRelicExtraIconAmountLabelSpecsProvider
+public sealed class AeonglassBrokenWatch : ModRelicTemplate, IModRightClickableRelic,
+    IRelicExtraIconAmountLabelSpecsProvider, IRelicExtraIconAmountLabelsChangeSource
 {
+    public event Action? RelicExtraIconAmountLabelsInvalidated;
+
+    /// <summary>回溯用掉后主动刷新角标。</summary>
+    public void NotifyBadgeChanged() => RelicExtraIconAmountLabelsInvalidated?.Invoke();
+
     /// <summary>事件遗物。</summary>
     public override RelicRarity Rarity => RelicRarity.Event;
 
@@ -55,7 +61,7 @@ public sealed class AeonglassBrokenWatch : ModRelicTemplate, IModRightClickableR
         return Task.CompletedTask;
     }
 
-    /// <summary>角标：<b>左上 = 回溯</b>（本场还剩几次可用，<c>剩余/1</c>）。</summary>
+    /// <summary>角标：<b>右下 = 回溯</b>（本场还剩几次可用，<c>剩余/1</c>）。</summary>
     public IReadOnlyList<ExtraIconAmountLabelSpec> GetRelicExtraIconAmountLabelSpecs()
     {
         if (Owner is not { } player)
@@ -67,7 +73,7 @@ public sealed class AeonglassBrokenWatch : ModRelicTemplate, IModRightClickableR
         return
         [
             ExtraIconAmountLabelSpec.RichText(
-                ExtraIconAmountLabelCorner.TopLeft,
+                ExtraIconAmountLabelCorner.BottomRight,
                 $"[color=#7FE7DD]{rewindLeft}/1[/color]"),
         ];
     }

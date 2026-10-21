@@ -1,5 +1,6 @@
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
+using MegaCrit.Sts2.Core.HoverTips;
 
 using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Combat.SecondaryResources;
@@ -50,4 +51,7 @@ public sealed class AeonglassBackswing : AeonglassCardTemplate, ISandCostCard
     /// <summary>已放在 <c>images/cards/</c> 的卡面。</summary>
     public override CardAssetProfile AssetProfile =>
         new(PortraitPath: Const.Paths.CardArt.Backswing);
+
+    protected override IEnumerable<IHoverTip> AdditionalHoverTips =>
+        base.AdditionalHoverTips.Append(SandResourceRegistry.CardCostTip);
 }

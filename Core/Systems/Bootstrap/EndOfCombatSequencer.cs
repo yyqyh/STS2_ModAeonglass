@@ -4,6 +4,7 @@ using STS2RitsuLib.Interop.AutoRegistration;
 using STS2RitsuLib.Models;
 
 using STS2_Aeonglass.Core.Config;
+using STS2_Aeonglass.Core.Content.Relics;
 using STS2_Aeonglass.Core.Systems.Decks;
 using STS2_Aeonglass.Core.Systems.Bootstrap;
 
@@ -47,6 +48,9 @@ public sealed class EndOfCombatSequencer : HookedSingletonModel
 
         Const.Logger.Info(
             $"[{Const.ModId}] {Const.Prefix.Stasis} 结束序列（显式链）：双卡组 轮换={deckRotation} → 搁浅 递减+归队={stasisTick}");
+
+        // 战斗结束后冷却 / 回溯次数都变了：主动刷新遗物角标（不依赖 DisplayAmountChanged）。
+        AeonglassRelicBadges.Refresh(runState);
     }
 
     /// <summary>第 1 段：双卡组 自动轮换（关掉 双卡组 或关掉自动轮换时跳过）。</summary>

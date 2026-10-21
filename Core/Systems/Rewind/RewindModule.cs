@@ -10,6 +10,7 @@ using STS2RitsuLib;
 using STS2RitsuLib.Combat.SecondaryResources;
 
 using STS2_Aeonglass.Core.Config;
+using STS2_Aeonglass.Core.Content.Relics;
 using STS2_Aeonglass.Core.Systems.Rewind.StateCapture;
 using STS2_Aeonglass.Core.Systems.Rewind.Bridges;
 using STS2_Aeonglass.Core.Systems.Rewind.Host;
@@ -217,6 +218,7 @@ internal static class RewindModule
                       && SandResourceRegistry.Sand is not null;
 
         RewindCombatLimit.Mark(player);
+        AeonglassRelicBadges.Refresh(player);
         message = charged ? "回溯中…（成功后消耗全部沙砾）" : "回溯中…";
 
         facade.RequestRewindToPreviousTurn(ok =>
@@ -224,6 +226,7 @@ internal static class RewindModule
             if (!ok)
             {
                 RewindCombatLimit.Unmark(player);
+                AeonglassRelicBadges.Refresh(player);
                 return;
             }
 

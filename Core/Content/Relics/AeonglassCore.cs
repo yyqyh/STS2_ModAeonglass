@@ -42,8 +42,14 @@ namespace STS2_Aeonglass.Core.Content.Relics;
 ///    2026-10-14 用户定档：回溯的右键入口已搬到「破碎的怀表」，本遗物只留"切卡组"。
 /// </remarks>
 [RegisterRelic(typeof(AeonglassRelicPool))]
-public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, IRelicExtraIconAmountLabelSpecsProvider
+public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic,
+    IRelicExtraIconAmountLabelSpecsProvider, IRelicExtraIconAmountLabelsChangeSource
 {
+    public event Action? RelicExtraIconAmountLabelsInvalidated;
+
+    /// <summary>机制层状态变化后主动刷新角标（战斗结束 / 换副）。</summary>
+    public void NotifyBadgeChanged() => RelicExtraIconAmountLabelsInvalidated?.Invoke();
+
     /// <summary>初始遗物。</summary>
     public override RelicRarity Rarity => RelicRarity.Starter;
 
@@ -201,7 +207,7 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
     // 角落：TopLeft / TopRight / BottomLeft / BottomRight（BottomRight 是原版主计数，别占）。
 
     /// <summary>
-    /// 一个角标：<b>右上 = 切换冷却</b>（<c>已积累/需要</c>，就是用户说的 <c>x/2</c> 那种形态）。
+    /// 一个角标：<b>右下 = 切换冷却</b>（<c>已积累/需要</c>，就是用户说的 <c>x/2</c> 那种形态）。
     /// </summary>
     /// <remarks>
     /// 数值来源在机制层（<c>DeckState</c>），这里只做显示；
@@ -222,7 +228,7 @@ public sealed class AeonglassCore : ModRelicTemplate, IModRightClickableRelic, I
         return
         [
             ExtraIconAmountLabelSpec.RichText(
-                ExtraIconAmountLabelCorner.TopRight,
+                ExtraIconAmountLabelCorner.BottomRight,
                 $"[color=gold]{switchText}[/color]"),
         ];
     }

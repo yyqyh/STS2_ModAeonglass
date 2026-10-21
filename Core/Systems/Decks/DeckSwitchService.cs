@@ -8,6 +8,7 @@ using MegaCrit.Sts2.Core.Models;
 using STS2RitsuLib.CardPiles;
 
 using STS2_Aeonglass.Core.Config;
+using STS2_Aeonglass.Core.Content.Relics;
 
 namespace STS2_Aeonglass.Core.Systems.Decks;
 
@@ -102,6 +103,7 @@ internal static class DeckSwitchService
 
         DeckSwitchLimit.Mark(player);
         DeckState.NoteManualSwitch(player);
+        AeonglassRelicBadges.Refresh(player);
         return outcome;
     }
 
@@ -143,6 +145,7 @@ internal static class DeckSwitchService
         Core.Presentation.Combat.DeckButtonIcons.Refresh(player);
 
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Decks} 切换卡组：{text}");
+        AeonglassRelicBadges.Refresh(player);
         return DeckSwitchOutcome.Done(text);
     }
 

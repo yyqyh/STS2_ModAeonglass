@@ -25,5 +25,5 @@ public sealed class AeonglassStrike()
             .Tag(CardTag.Strike))
 {
     public override CardAssetProfile AssetProfile =>
-        new(PortraitPath: "res://STS2_Aeonglass/images/cards/aeonglass_strike.png");
+        new(PortraitPath: Const.Paths.CardArt.Strike);
 }

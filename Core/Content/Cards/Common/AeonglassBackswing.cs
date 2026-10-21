@@ -49,5 +49,5 @@ public sealed class AeonglassBackswing : AeonglassCardTemplate, ISandCostCard
 
     /// <summary>已放在 <c>images/cards/</c> 的卡面。</summary>
     public override CardAssetProfile AssetProfile =>
-        new(PortraitPath: "res://STS2_Aeonglass/images/cards/aeonglass_backswing.png");
+        new(PortraitPath: Const.Paths.CardArt.Backswing);
 }

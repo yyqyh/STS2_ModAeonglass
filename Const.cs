@@ -145,6 +145,16 @@ internal static class Const
             public const string ButtonThemeFont = "res://themes/kreon_bold_glyph_space_two.tres";
         }
 
+        /// <summary>卡牌美术（已就位的三张）。</summary>
+        public static class CardArt
+        {
+            private const string Dir = Root + "/images/cards/";
+
+            public const string Strike = Dir + "aeonglass_strike.png";
+            public const string Defend = Dir + "aeonglass_defend.png";
+            public const string Backswing = Dir + "aeonglass_backswing.png";
+        }
+
         /// <summary>角色：战斗外观场景 + 骨架数据。</summary>
         public static class Character
         {

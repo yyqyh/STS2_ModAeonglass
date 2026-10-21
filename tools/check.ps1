@@ -82,6 +82,16 @@ foreach ($file in (Get-ChildItem -Recurse -File -Filter *.cs (Join-Path $ModRoot
 }
 if ($bigFiles.Count -eq 0) { Ok "0 oversized file(s)" } else { Fail ("oversized: " + ($bigFiles -join ", ")) }
 
+# ---------------------------------------------------------------- 4b. res:// literals only in Const
+Head "4b. No res:// literals outside Const.cs"
+$badResPaths = @()
+foreach ($file in (Get-CoreFiles)) {
+    if ($file.Name -eq 'Const.cs') { continue }
+    if ((ReadText $file.FullName) -match '"res://') { $badResPaths += $file.Name }
+}
+if ($badResPaths.Count -eq 0) { Ok "all res:// literals live in Const.Paths" }
+else { Fail ("res:// literal outside Const.cs: " + (($badResPaths | Sort-Object -Unique) -join ", ")) }
+
 # ---------------------------------------------------------------- 5. live-game scope gate (4.1)
 Head "5. Scope gate: no mod lines after the last 'Run started' (protocol 4.1)"
 if ($SkipGameLog) {

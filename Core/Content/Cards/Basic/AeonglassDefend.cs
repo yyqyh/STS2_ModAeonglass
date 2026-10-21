@@ -25,5 +25,5 @@ public sealed class AeonglassDefend()
             .Tag(CardTag.Defend))
 {
     public override CardAssetProfile AssetProfile =>
-        new(PortraitPath: "res://STS2_Aeonglass/images/cards/aeonglass_defend.png");
+        new(PortraitPath: Const.Paths.CardArt.Defend);
 }

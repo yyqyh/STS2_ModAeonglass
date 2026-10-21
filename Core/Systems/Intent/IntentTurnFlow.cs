@@ -137,6 +137,27 @@ internal static class IntentTurnFlow
         return $"结算：打出 {played.MoveId} → 弃牌堆";
     }
 
+    /// <summary>
+    /// 敌人回合结束：立刻结算打出的牌，并把剩余手牌立刻弃掉。
+    /// 旧的“下个玩家回合开始再结算”仍保留为漏事件的兜底。
+    /// </summary>
+    internal static string SettleAtEnemyTurnEnd(Creature creature)
+    {
+        if (!IntentDeck.TryGet(creature, out var state)
+            || (!state.EnemyTurnSeen && state.Pending is null))
+        {
+            return "skip: 没有待结算的敌人回合";
+        }
+
+        var settled = SettlePending(creature, state);
+        var cleared = IntentHandCycle.ClearHand(creature, state);
+        IntentOps.Touch(state);
+
+        var text = $"敌人行动结束：{settled}｜{cleared}｜{state.Counts()}";
+        Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Intent} {text}");
+        return text;
+    }
+
     // ============================ 判定（§2.8.2）============================
 
     // ======================= 玩家动词（用户 2026-10-12 定稿：三个动作）=======================

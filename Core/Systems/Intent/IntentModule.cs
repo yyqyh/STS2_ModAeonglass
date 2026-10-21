@@ -45,6 +45,7 @@ internal static class IntentModule
         RitsuLibFramework.SubscribeLifecycle<CombatEndedEvent>(_ => ResetRuntimeState());
         RitsuLibFramework.SubscribeLifecycle<SideTurnStartingEvent>(OnSideTurnStarting);
         RitsuLibFramework.SubscribeLifecycle<SideTurnStartedEvent>(OnSideTurnStarted);
+        RitsuLibFramework.SubscribeLifecycle<SideTurnEndedEvent>(OnSideTurnEnded);
 
         Const.Logger.Info(
             $"[{Const.ModId}] {Const.Prefix.Intent} 敌人时间已就绪：{IntentRules.Describe()}"
@@ -99,6 +100,29 @@ internal static class IntentModule
             {
                 Const.Logger.Error(
                     $"[{Const.ModId}] {Const.Prefix.Intent} 解析 {MonsterAccess.IdOf(enemy)} 失败（跳过未连坐）："
+                    + $"{ex.GetType().Name}: {ex.Message}");
+            }
+        }
+    }
+
+    /// <summary>敌人行动一结束就结算打出的牌并弃掉剩余手牌（不再等玩家回合开始）。</summary>
+    private static void OnSideTurnEnded(SideTurnEndedEvent evt)
+    {
+        if (!Enabled || !CharacterGate.IsActive || evt.Side != CombatSide.Enemy)
+        {
+            return;
+        }
+
+        foreach (var enemy in MonsterAccess.Enemies)
+        {
+            try
+            {
+                IntentTurnFlow.SettleAtEnemyTurnEnd(enemy);
+            }
+            catch (Exception ex)
+            {
+                Const.Logger.Warn(
+                    $"[{Const.ModId}] {Const.Prefix.Intent} 敌人回合结束弃牌失败（已跳过）："
                     + $"{ex.GetType().Name}: {ex.Message}");
             }
         }

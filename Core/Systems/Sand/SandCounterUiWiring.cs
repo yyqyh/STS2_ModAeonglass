@@ -111,12 +111,25 @@ internal static class SandCounterUiWiring
             new LocString("static_hover_tips", "STS2_AEONGLASS_SAND_INVERT.title"),
             $"点击：沙砾与空隙对调（{SandInvertCmd.EnergyCost} 费）");
 
+        // 用零尺寸锚点把官方 tips 放到计数器右边缘再向右 40px。
+        var tipAnchor = new Control
+        {
+            Name = "AeonglassSandTipAnchor",
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            CustomMinimumSize = Vector2.Zero,
+            Size = Vector2.Zero,
+        };
+        control.AddChild(tipAnchor);
+
         control.MouseEntered += () =>
+        {
+            tipAnchor.Position = new Vector2(control.Size.X + 40f, 0f);
             NHoverTipSet.CreateAndShow(
-                control,
+                tipAnchor,
                 new IHoverTip[] { sandTip, invertTip },
                 HoverTipAlignment.Right);
-        control.MouseExited += () => NHoverTipSet.Remove(control);
+        };
+        control.MouseExited += () => NHoverTipSet.Remove(tipAnchor);
 
         control.GuiInput += evt =>
         {

@@ -88,7 +88,7 @@ public partial class AeonglassIntentBelt : Control
     private Creature? _creature;
     private Control? _anchor;
     private HBoxContainer _row = null!;
-    private HBoxContainer _pileRow = null!;
+    private Control _pileRow = null!;
     private Control? _pilePopup;
     private bool? _popupIsDrawPile;
     private Control? _picker;
@@ -198,8 +198,10 @@ public partial class AeonglassIntentBelt : Control
         AddChild(_row);
 
         // 抽 / 弃牌堆单独一行，放在**第一张卡正下方**（用户 2026-10-12）。
-        _pileRow = new HBoxContainer();
-        _pileRow.AddThemeConstantOverride("separation", (int)SlotGap);
+        _pileRow = new Control
+        {
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
         AddChild(_pileRow);
 
         // 牌堆行的位置是常量 ⇒ 建好就摆一次，之后不再每帧写。

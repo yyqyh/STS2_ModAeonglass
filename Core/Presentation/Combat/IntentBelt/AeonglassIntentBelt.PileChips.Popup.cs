@@ -131,7 +131,10 @@ public partial class AeonglassIntentBelt
         }
 
         AddChild(panel);
-        panel.Position = anchor.Position + new Vector2(0f, anchor.Size.Y + 2f) + _pileRow.Position;
+        var anchorPosition = ReferenceEquals(anchor, _pileRow)
+            ? anchor.Position
+            : anchor.Position + _pileRow.Position;
+        panel.Position = anchorPosition + new Vector2(0f, anchor.Size.Y + 2f);
         panel.ZIndex = 200;
         panel.MouseFilter = MouseFilterEnum.Stop;
         _pilePopup = panel;

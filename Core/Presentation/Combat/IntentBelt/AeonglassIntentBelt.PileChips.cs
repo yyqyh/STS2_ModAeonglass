@@ -62,6 +62,9 @@ public partial class AeonglassIntentBelt : Control
     /// <summary>待排版的小卡（建好但还没量到尺寸 ⇒ 推迟做缩放/居中/摆标签）。</summary>
     private readonly List<PileChipSlot> _pendingChips = [];
 
+    /// <summary>第五个手牌槽的列原点（固定列宽，不随手牌张数变化）。</summary>
+    private const float FifthSlotX = (SlotWidth + SlotGap) * 4f;
+
     /// <summary>抽 / 弃两张**常驻**小卡（懒建；之后只改内容，不再重建）。</summary>
     private PileChipSlot? _drawChip;
     private PileChipSlot? _discardChip;
@@ -119,8 +122,8 @@ public partial class AeonglassIntentBelt : Control
 
             _pileRow.AddChild(slot.Cell);
             WirePileChip(slot, title);
-            // 顺序固定：抽在前、弃在后（MoveChild 到同一位置是空操作）。
-            _pileRow.MoveChild(slot.Cell, Math.Clamp(isDraw ? 0 : 1, 0, Math.Max(0, _pileRow.GetChildCount() - 1)));
+            slot.Cell.Size = slot.Cell.CustomMinimumSize;
+            slot.Cell.Position = new Vector2(isDraw ? 0f : FifthSlotX, 0f);
         }
 
         UpdatePileChip(slot, title, pile);
@@ -152,7 +155,7 @@ public partial class AeonglassIntentBelt : Control
             if (CurrentPile(isDraw) is { } live)
             {
                 _popupIsDrawPile = isDraw;
-                ShowPilePopup(title, live, _pileRow);
+                ShowPilePopup(title, live, cell);
             }
         };
 
@@ -212,7 +215,7 @@ public partial class AeonglassIntentBelt : Control
 
         if (_popupIsDrawPile == slot.IsDraw)
         {
-            ShowPilePopup(title, pile, _pileRow);
+            ShowPilePopup(title, pile, slot.Cell);
         }
     }
 
@@ -600,7 +603,11 @@ public partial class AeonglassIntentBelt : Control
         // 这既修"自动修改后没刷新"，也修"关掉再点还是旧内容"（每次刷新时面板都跟着重算）。
         if (openKind is { } wasDraw)
         {
-            ShowPilePopup(wasDraw ? "抽" : "弃", wasDraw ? state.Deck : state.Discard, _pileRow);
+            var chip = wasDraw ? _drawChip : _discardChip;
+            ShowPilePopup(
+                wasDraw ? "抽" : "弃",
+                wasDraw ? state.Deck : state.Discard,
+                chip?.Cell ?? _pileRow);
         }
 
         _rowWidthDirty = true;

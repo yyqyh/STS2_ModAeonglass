@@ -112,7 +112,10 @@ internal static class SandCounterUiWiring
             $"点击：沙砾与空隙对调（{SandInvertCmd.EnergyCost} 费）");
 
         control.MouseEntered += () =>
-            NHoverTipSet.CreateAndShow(control, new IHoverTip[] { sandTip, invertTip });
+            NHoverTipSet.CreateAndShow(
+                control,
+                new IHoverTip[] { sandTip, invertTip },
+                HoverTipAlignment.Right);
         control.MouseExited += () => NHoverTipSet.Remove(control);
 
         control.GuiInput += evt =>

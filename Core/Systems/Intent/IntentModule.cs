@@ -70,6 +70,12 @@ internal static class IntentModule
         {
             if (IntentDeck.TryGet(enemy, out var state))
             {
+                if (state.Pending is { } pending)
+                {
+                    var index = state.Hand.IndexOf(pending);
+                    IntentAnimationBus.Played(enemy, pending, index);
+                }
+
                 state.EnemyTurnSeen = true;
             }
         }

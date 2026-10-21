@@ -43,8 +43,9 @@ internal static class IntentHandCycle
         var removed = 0;
         var settledVoids = new List<IntentCard>();
 
-        foreach (var card in state.Hand)
+        for (var i = 0; i < state.Hand.Count; i++)
         {
+            var card = state.Hand[i];
             card.Eaten = false;
 
             if (card.IsVoid && voidMode == VoidDrawMode.RemoveAfterFirstDraw)
@@ -56,6 +57,7 @@ internal static class IntentHandCycle
 
             if (handEnd == HandEndMode.ToDiscard)
             {
+                IntentAnimationBus.Discarded(creature, card, i);
                 state.Discard.Add(card);
                 discarded++;
                 continue;
@@ -132,6 +134,7 @@ internal static class IntentHandCycle
             card.TimesDrawn++;
             drawn++;
             state.Hand.Add(card);
+            IntentAnimationBus.Drawn(creature, card, state.Hand.Count - 1);
 
             if (!card.IsVoid)
             {

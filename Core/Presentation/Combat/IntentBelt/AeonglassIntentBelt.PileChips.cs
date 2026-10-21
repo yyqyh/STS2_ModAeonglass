@@ -434,6 +434,7 @@ public partial class AeonglassIntentBelt : Control
     {
         if (state is null)
         {
+            _animationsRefreshed = false;
             // 发牌特效放着放着"手牌空了"：立刻收尾（卡反正要消失，别让它停在半透明）。
             if (_dealing)
             {
@@ -606,6 +607,7 @@ public partial class AeonglassIntentBelt : Control
 
         // 发牌特效：卡带第一次出图（= 进入战斗后的首次有牌）时起一次，之后不再放。
         BeginDealIfNeeded(state);
+        _animationsRefreshed = true;
 
         // 性能探针（默认关）：重建次数 + 耗时 —— 这条链路里唯一贵的操作就是重建（视图/卡面/登记），
         // 以后要收窄刷新粒度或池化前，先看这两行数据。

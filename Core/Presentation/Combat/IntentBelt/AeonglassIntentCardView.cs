@@ -287,6 +287,18 @@ internal sealed partial class AeonglassIntentCardView
     /// <summary>卡节点（布局 / 点击都直接用它）。</summary>
     internal NCard Card => _card;
 
+    internal Vector2 SlotSize => _slotSize;
+
+    /// <summary>移动动画副本：无鼠标命中、无悬停，不参与卡带布局。</summary>
+    internal void SetGhostMode()
+    {
+        _wrapper.MouseFilter = Control.MouseFilterEnum.Ignore;
+        _wrapper.ZIndex = 200;
+        _card.MouseFilter = Control.MouseFilterEnum.Ignore;
+        SetInteractable(false);
+        SetHovered(false);
+    }
+
     internal bool IsAlive => GodotObject.IsInstanceValid(_card) && _card.IsInsideTree();
 
     /// <summary>造一张意图卡视图并挂到 <paramref name="parent" /> 下，按 <paramref name="slotSize" /> 缩放。</summary>

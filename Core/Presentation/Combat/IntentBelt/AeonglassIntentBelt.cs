@@ -180,11 +180,13 @@ public partial class AeonglassIntentBelt : Control
     {
         MouseFilter = MouseFilterEnum.Ignore;
         SetProcess(true);
+        SubscribeIntentAnimations();
     }
 
     /// <summary>卡带销毁（怪死 / 换房间）时把自己登记过的意图节点撤掉，别在全局登记表里留悬挂节点。</summary>
     public override void _ExitTree()
     {
+        UnsubscribeIntentAnimations();
         UnregisterOwnNodes();
         AbortDeal();
     }
@@ -239,6 +241,9 @@ public partial class AeonglassIntentBelt : Control
 
         // 发牌特效：每只怪每场战斗一次（触发时机见 AeonglassIntentBelt.Deal 的 Trigger）。
         StepDeal(delta);
+
+        // 四段位移动画：只消费表现 cue，不影响状态 / 命中 / 指向。
+        DrainAnimationCues();
 
         if (_numberTimer >= NumberRefreshInterval)
         {

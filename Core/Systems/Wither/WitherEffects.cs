@@ -81,6 +81,7 @@ internal static partial class WitherEffects
         state.Total += count;
         state.VoidsInjected += count;
         IntentOps.Touch(state);
+        IntentAnimationBus.WithersInjected(creature, count);
 
         var text = $"塞虚无 ×{count} → 弃牌堆｜{state.Counts()}｜discard[{WitherPool.DescribePile(state.Discard)}]";
         Const.Logger.Info($"[{Const.ModId}] {Const.Prefix.Wither} {text}");

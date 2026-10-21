@@ -143,6 +143,9 @@ internal static class Const
         {
             /// <summary>本体按钮主题字体（时空裂隙按键的文案与那块底板同套）。</summary>
             public const string ButtonThemeFont = "res://themes/kreon_bold_glyph_space_two.tres";
+
+            /// <summary>本体铁甲战士的卡牌移动轨迹粒子（意图卡动画复用）。</summary>
+            public const string CardTrailIronclad = "res://scenes/vfx/card_trail_ironclad.tscn";
         }
 
         /// <summary>卡牌美术（已就位的三张）。</summary>
@@ -489,6 +492,9 @@ internal static class Const
                 Ui.SandCounterArtScene,
                 Ui.SandCardCostScene,
                 Ui.DomainScene,
+
+                // 意图卡移动的官方轨迹粒子
+                BaseGame.CardTrailIronclad,
 
                 // 代码里直接 Load 的贴图
                 Vfx.Ray,

@@ -27,7 +27,8 @@ public sealed class AeonglassBurial()
 {
     protected override decimal DamageThisPlay =>
         DynamicVars["Damage"].BaseValue
-        + (Owner.PlayerCombatState?.DiscardPile.Cards.Count ?? 0) * DynamicVars["PerCard"].BaseValue;
+        + (DescriptionOwner?.PlayerCombatState?.DiscardPile.Cards.Count ?? 0)
+        * DynamicVars["PerCard"].BaseValue;
 
     protected override void AddExtraArgsToDescription(LocString description)
     {

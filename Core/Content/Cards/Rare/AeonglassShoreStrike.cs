@@ -28,7 +28,8 @@ public sealed class AeonglassShoreStrike()
 {
     protected override decimal DamageThisPlay =>
         DynamicVars["Damage"].BaseValue
-        + StasisCount.CountAll(Owner) * DynamicVars["PerStrand"].BaseValue;
+        + (DescriptionOwner is { } owner ? StasisCount.CountAll(owner) : 0)
+        * DynamicVars["PerStrand"].BaseValue;
 
     protected override void AddExtraArgsToDescription(LocString description)
     {

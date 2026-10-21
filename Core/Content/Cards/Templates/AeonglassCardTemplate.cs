@@ -1,4 +1,5 @@
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
@@ -25,6 +26,9 @@ public abstract class AeonglassCardTemplate : ModCardTemplate, IDeckVariantCard
     }
 
     protected AeonglassCardSpec Spec { get; }
+
+    /// <summary>描述构建用的安全 Owner：图鉴里的 canonical 卡不能读 Owner。</summary>
+    protected Player? DescriptionOwner => IsCanonical ? null : Owner;
 
     /// <summary>卡面提到 mod 关键词时自动补 tips（统一入口，所有派生卡生效）。</summary>
     protected override IEnumerable<IHoverTip> AdditionalHoverTips => KeywordHoverTips.For(this);

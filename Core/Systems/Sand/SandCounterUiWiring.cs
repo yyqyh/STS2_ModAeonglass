@@ -3,7 +3,10 @@ using Godot;
 using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.HoverTips;
+using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Nodes.Combat;
+using MegaCrit.Sts2.Core.Nodes.HoverTips;
 
 using STS2RitsuLib;
 using STS2RitsuLib.Combat.SecondaryResources;
@@ -65,6 +68,7 @@ internal static class SandCounterUiWiring
                 if (ctx.Node is AeonglassSandCounterUi sandUi && ctx.Player is { } sandPlayer)
                 {
                     sandUi.PushLevel(SecondaryResourceCmd.Get(sandPlayer, SandResourceRegistry.SandId));
+                    sandUi.ScheduleInvertWiring();
                 }
 
                 // ⚠️ 要**递归**：计数器在内层的 HBoxContainer 里（框架 `_Ready` 建 `_row`，再把计数器塞进它），
@@ -98,15 +102,18 @@ internal static class SandCounterUiWiring
         control.SetMeta(SandResourceRegistry.InvertClickMetaKey, true);
         control.MouseFilter = Control.MouseFilterEnum.Stop;
 
-        // 悬停说明走**官方**那套 hover tip：框架已经给计数器绑了一个提示集合（沙砾的 title/description 就在
-        // 我们自己的 static_hover_tips.json 里），`AddTipToOwner` 是**往同一个集合里追加一条** ——
-        // 于是"点击 = 倒置"这一行和官方说明长在同一个框里。
-        // ⚠️ 2026-10-13：这里**不要**用 `TooltipText`（Godot 原生 tooltip）—— 那是另一个黑框，用户实测要的是官方样式。
-        // 追加失败（该节点没有官方提示集合）时才退回原生 tooltip，保证"至少看得到"。
-        if (!HoverTipHelper.AddTipToOwner(control, SandResourceRegistry.InvertTipTitle, SandResourceRegistry.InvertTipText))
-        {
-            control.TooltipText = $"{SandResourceRegistry.InvertTipTitle}：{SandResourceRegistry.InvertTipText}";
-        }
+        // 自己建官方 hover set：资源说明 + “点击倒置”说明。
+        // 不能只调 AddTipToOwner：那要求框架的 hover set **已经存在**，而计数器悬停 binder 的创建时机不稳定。
+        var sandTip = new HoverTip(
+            new LocString("static_hover_tips", "STS2_AEONGLASS_SECONDARY_RESOURCE_SAND.title"),
+            new LocString("static_hover_tips", "STS2_AEONGLASS_SECONDARY_RESOURCE_SAND.description"));
+        var invertTip = new HoverTip(
+            new LocString("static_hover_tips", "STS2_AEONGLASS_SAND_INVERT.title"),
+            $"点击：沙砾与空隙对调（{SandInvertCmd.EnergyCost} 费）");
+
+        control.MouseEntered += () =>
+            NHoverTipSet.CreateAndShow(control, new IHoverTip[] { sandTip, invertTip });
+        control.MouseExited += () => NHoverTipSet.Remove(control);
 
         control.GuiInput += evt =>
         {
@@ -124,20 +131,29 @@ internal static class SandCounterUiWiring
     /// </summary>
     internal static void WireInvertClickTree(Node node)
     {
+        var found = false;
         foreach (var child in node.GetChildren())
         {
+            if (child is NSecondaryResourceCounter counter)
+            {
+                WireInvertClick(counter);
+                found = true;
+            }
+
             if (child is NSecondaryResourceCounterRow)
             {
                 WireInvertClickTree(child);
                 continue;
             }
 
-            if (child is Control control)
-            {
-                WireInvertClick(control);
-            }
-
             WireInvertClickTree(child);
+        }
+
+        // 子树可能还没建好：等下一个子节点出现时再试一次（幂等）。
+        if (!found && !node.HasMeta("aeonglass_sand_watch_children"))
+        {
+            node.SetMeta("aeonglass_sand_watch_children", true);
+            node.ChildEnteredTree += _ => WireInvertClickTree(node);
         }
     }
 

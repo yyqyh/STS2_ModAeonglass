@@ -70,6 +70,11 @@ public partial class AeonglassSandCounterUi : NSecondaryResourceCounterRow
         _art.SetLevel(level);
     }
 
+    /// <summary>等框架把内层计数器建好后再挂点击 / tips。</summary>
+    internal void ScheduleInvertWiring() => CallDeferred(nameof(ApplyInvertWiring));
+
+    private void ApplyInvertWiring() => SandCounterUiWiring.WireInvertClickTree(this);
+
     /// <summary>倒置成功 → 播 180° 翻转（<paramref name="newLevel" /> = 交换后的新沙砾值）。</summary>
     public void NotifyInvertSucceeded(int newLevel)
     {

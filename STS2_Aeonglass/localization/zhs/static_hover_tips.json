@@ -36,5 +36,6 @@
 ,
   "STS2_AEONGLASS_STASIS.extraText": "[gold]搁浅[/gold]{Times}。",
   "STS2_AEONGLASS_SAND_COST.title": "沙砾费用",
-  "STS2_AEONGLASS_SAND_COST.description": "打出这张牌需要支付对应数量的[gold]沙砾[/gold]。\n沙砾不足时无法打出。"
+  "STS2_AEONGLASS_SAND_COST.description": "打出这张牌需要支付对应数量的[gold]沙砾[/gold]。\n沙砾不足时无法打出。",
+  "STS2_AEONGLASS_SAND_INVERT.title": "倒置"
 }
